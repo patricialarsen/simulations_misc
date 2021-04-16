@@ -107,7 +107,7 @@ void make_mass_hist(vector<float> x, vector<float> m, float m_min, float m_max, 
   if (rank == 0){
      for (int i=0; i<nbins; i++){
         for (int j=0; j<nbins;j++){
-        bin_count_tot_float[i] = (float)bin_count_tot[i]/count_tot;
+        bin_count_tot_float[i,j] = (float)bin_count_tot[i,j]/count_tot;
        }
      }
      write_bins_2d(filename,bin_count_tot_float,nbins);
@@ -265,7 +265,7 @@ void angularmomentum_histograms(string fof_file, float ammax, int nbins, int ran
 
   vector<float> s;
   make_spins(x,y,z,m,s);
-  make_log_histogram(s,nbins,1.e-5,1000.,"outputs/spin_hist.txt",rank);
+  make_log_histogram(s,nbins,1.e-2,10.,"outputs/spin_hist.txt",rank);
   make_mass_hist(s,m,m_min,m_max, nbins, 1.e-2, 10., "outputs/spin_hist2d.txt",rank);
 }
 
@@ -325,7 +325,7 @@ int main( int argc, char** argv ) {
 
   position_histograms(fof_file, 256.,nbins,rank);
   velocity_histograms(fof_file,1000.,nbins,rank);
-  angularmomentum_histograms(fof_file,1.e17,nbins,rank);
+  angularmomentum_histograms(fof_file,1.e16,nbins,rank);
 
   Partition::finalize();
   MPI_Finalize();
