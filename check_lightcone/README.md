@@ -92,6 +92,13 @@ ______________________________________
 
 ```
 
+### To-do
+I intend to extend this by
+
+- Including code to compare lightcones that do not have a one-to-one matching at the distribution level 
+- Computing the angular power spectrum of the lightcone to test convergence on that property
+- Allow for checks of halo lightcone properties 
+
 ### Please note
 This is largely based off Steve's match-up code to connect halo properties with halo lightcones, and re-uses code scripts from there. It also relies on the hacc code.
 It is intended currently as a convenience script for internal hacc development. If you are using this to test hacc outupts and find that an iteration of the code has 
