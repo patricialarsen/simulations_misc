@@ -41,8 +41,6 @@ typedef struct lc_halo {
   unsigned int destination_rank;
 } lc_halo;
 
-
-
 bool comp_by_lc_dest(const lc_halo &a, const lc_halo &b) {
   return a.destination_rank < b.destination_rank;
 }
@@ -54,6 +52,55 @@ bool comp_by_id(const lc_halo &a, const lc_halo &b) {
 bool comp_by_rep(const lc_halo &a, const lc_halo &b) {
   return a.rr < b.rr;
 }
+
+void  compute_mean_std_dist(vector<float> val1 , vector<float> val2 , float diff_tot ,string var_name){
+  // compute the mean and std of the differences and make a histogram to look more closely
+  int rank, n_ranks;
+  rank = Partition::getMyProc();
+  n_ranks = Partition::getNumProc();
+
+  int count = val1.size();
+  double diff=0; 
+  double diff_frac=0;
+  int n_tot;
+  double frac_max;
+  double mean;
+  double stddev;
+
+  for (int i=0; i<count; i++){
+      diff += (double)(val1[i]-val2[i]);
+      if (val1[i]!=0){
+        double frac = (double)(fabs(val1[i]-val2[i])/fabs(val1[i]));
+         diff_frac = (diff_frac<frac)?frac:diff_frac;
+      }
+   }
+
+      MPI_Reduce(&diff, &mean, 1, MPI_DOUBLE, MPI_SUM, 0, Partition::getComm());
+      MPI_Reduce(&diff_frac, &frac_max, 1, MPI_DOUBLE, MPI_MAX, 0, Partition::getComm());
+      MPI_Reduce(&count, &n_tot, 1, MPI_INT, MPI_SUM, 0, Partition::getComm());  
+   mean = mean/n_tot;   
+
+   for (int i=0; i< count; i++){
+      stddev += (double) ((val1[i]-val2[i]-(float)mean)*(val1[i]-val2[i]-(float)mean)/(n_tot-1));
+   }
+   double stddev_tot;
+   MPI_Reduce(&stddev, &stddev_tot, 1, MPI_DOUBLE, MPI_SUM, 0, Partition::getComm());
+   stddev_tot = sqrt(stddev_tot);
+
+   if (rank==0){
+     cout << var_name << endl;
+     cout << "______________________________________" <<endl;
+     cout << " mean difference = "<< mean << endl;
+     cout << " maximum fractional difference = "<< frac_max<< endl;
+     cout << " standard deviation of difference = " << stddev_tot << endl;
+     cout << endl;
+   }
+
+
+
+  return;
+}
+
 
 
 
@@ -79,6 +126,33 @@ struct IO_Buffers { // this is the order of lc_halo struct above
 
 IO_Buffers IOB;
 IO_Buffers IOB2;
+
+void erase_element_IOB2(int i){
+  IOB2.x.erase(IOB2.x.begin()+i);
+  IOB2.y.erase(IOB2.y.begin()+i);
+  IOB2.z.erase(IOB2.z.begin()+i);
+  IOB2.vx.erase(IOB2.vx.begin()+i);
+  IOB2.vy.erase(IOB2.vy.begin()+i);
+  IOB2.vz.erase(IOB2.vz.begin()+i);
+  IOB2.a.erase(IOB2.a.begin()+i);
+  IOB2.replication.erase(IOB2.replication.begin()+i);
+  IOB2.id.erase(IOB2.id.begin()+i);
+  IOB2.phi.erase(IOB2.phi.begin()+i);
+}
+
+
+void erase_element_IOB(int i){
+  IOB.x.erase(IOB.x.begin()+i);
+  IOB.y.erase(IOB.y.begin()+i);
+  IOB.z.erase(IOB.z.begin()+i);
+  IOB.vx.erase(IOB.vx.begin()+i);
+  IOB.vy.erase(IOB.vy.begin()+i);
+  IOB.vz.erase(IOB.vz.begin()+i);
+  IOB.a.erase(IOB.a.begin()+i);
+  IOB.replication.erase(IOB.replication.begin()+i);
+  IOB.id.erase(IOB.id.begin()+i);
+  IOB.phi.erase(IOB.phi.begin()+i);
+}
 
 void clear_IO_buffers() {
   IOB.x.clear();
@@ -205,36 +279,11 @@ int main( int argc, char** argv ) {
   string lc_file     = string(argv[1]);
   string lc_file2    = string(argv[2]);
 
-
-
-#ifdef _OPENMP
-
-
-
-   if (rank==0){
-    int nthreads, tid;
-
-
-
-#pragma omp parallel private(nthreads, tid)
- {
- /* Obtain thread number */
- tid = omp_get_thread_num();
- /* Only master thread does this */
- if (tid == 0) 
- {
-  nthreads = omp_get_num_threads();
- printf("Number of threads = %d\n", nthreads);
- }
- } /* All threads join master thread and disband */
-     printf("OpenMP is defined \n");
-   }
-#endif
-
+  int err = 0;
+  bool skip_err = true;
 
   // LC HALOS
   read_lc_file(lc_file, lc_file2);                  // read the file
-
 
   if (rank == 0)
     cout << "Done reading LC" << endl;
@@ -405,8 +454,54 @@ int main( int argc, char** argv ) {
     cout << "Assigned to buffers" << endl;
 
 
-  if (lc_halo_recv_total != lc_halo_recv_total2)
-    cout << "The number of elements is different in the two files" << endl;
+  if (lc_halo_recv_total != lc_halo_recv_total2){
+    err += 1;
+    //if (rank==0)
+      cout << "The number of elements is different in the two files for rank " << rank << endl;
+      cout << lc_halo_recv_total << " , and " << lc_halo_recv_total2 << " for rank "<< rank<< endl;
+    }
+   else{
+
+    for (int i=0;i<lc_halo_recv_total;i++){
+       if((IOB.id[i]!=IOB2.id[i])||(IOB.replication[i]!=IOB2.replication[i]))
+         err+=1;
+     }
+   }
+
+
+
+    if (skip_err&&(err>0)){
+       err = 0;
+       cout << "Skipping over missing particles for rank "<< rank << endl;
+       int i = 0;
+       while (i < IOB.id.size()){
+          if ((IOB.id[i]==IOB2.id[i])&&(IOB.replication[i]==IOB2.replication[i])){
+             i += 1;
+           }
+          else {
+           bool not_found = true;
+           for (int j=0;j<32;j++){
+               if ((IOB.id[i]==IOB2.id[i+j])&&(IOB.replication[i]==IOB2.replication[i+j])){
+                  for (int k=0; k<j; k++)
+                      erase_element_IOB2(i+k);
+                     //IOB2.id.erase(IOB2.id.begin()+i+k); // if the particle is found within the next 32 elements then delete section before that
+                not_found = false;
+                i+=1;
+                }
+              }
+           if (not_found)
+             erase_element_IOB(i); 
+      //       IOB.id.erase(IOB.id.begin()+i); // delete and just continue until we find 
+         }
+     }
+
+    cout<< "number of elements before was " <<  lc_halo_recv_total2 << " , and "<<lc_halo_recv_total <<endl;
+    cout<< "number of elements now is " <<  IOB.id.size() << " , and "<< IOB2.id.size() <<endl;
+    // err = 1; // for now, to supress later outputs
+    lc_halo_recv_total = IOB.id.size();
+    lc_halo_recv_total2 = IOB2.id.size();
+    }
+
 
     float da=0;
     float dx=0;
@@ -419,7 +514,8 @@ int main( int argc, char** argv ) {
     int diff_rep = 0;
     float dphi=0;
 
-  if (lc_halo_recv_total == lc_halo_recv_total2){
+//  if (lc_halo_recv_total == lc_halo_recv_total2){
+    if (err==0){
     for (int i=0;i<lc_halo_recv_total;++i){
          float xdiff = fabs(IOB.x[i]-IOB2.x[i]);
          float ydiff = fabs(IOB.y[i]-IOB2.y[i]);
@@ -441,15 +537,17 @@ int main( int argc, char** argv ) {
          diff_id = (iddiff<diff_id)?diff_id:iddiff;
          diff_rep = (repdiff<diff_rep)?diff_rep:repdiff;
          dphi = (dphi<phidiff)?phidiff:dphi;
+      }
+   }
 
-    }
-}
-
-
-    if (diff_id>0)
+    if ((diff_id>0)||(diff_rep>0)){
+      err +=1;
+      if (rank==0)
        cout <<"Ids don't match up!"<<endl;
-    if (diff_rep>0)
-       cout <<"Reps don't match up!"<<endl;
+    }
+
+
+
 
     float dx_tot;
     float dy_tot;
@@ -459,6 +557,7 @@ int main( int argc, char** argv ) {
     float dvz_tot;
     float da_tot; 
     float dphi_tot; 
+    int err_tot;
 
    if (rank == 0)
     cout << "Starting reduction" << endl;
@@ -470,10 +569,11 @@ int main( int argc, char** argv ) {
     MPI_Reduce(&dvz, &dvz_tot, 1, MPI_FLOAT, MPI_MAX, 0, Partition::getComm());
     MPI_Reduce(&da, &da_tot, 1, MPI_FLOAT, MPI_MAX, 0, Partition::getComm());
     MPI_Reduce(&dphi, &dphi_tot, 1, MPI_FLOAT, MPI_MAX, 0, Partition::getComm());
+    MPI_Reduce(&err, &err_tot, 1, MPI_INT, MPI_SUM, 0, Partition::getComm());
 
 
 
-  if (rank == 0){
+  if ((rank == 0) && (err_tot ==0)){
     cout << "Maximum dx = "<< dx_tot << endl;
     cout << "Maximum dy = "<< dy_tot << endl;
     cout << "Maximum dz = "<< dz_tot << endl;
@@ -486,6 +586,27 @@ int main( int argc, char** argv ) {
   }
 
 // communicate these between ranks and find the maximum
+
+  // now if the difference in values is >0 , then create histograms of the differences to check they're unbiased
+  // compute the mean and standard deviation of the differences and look at the fractional errors.   
+  if (err_tot == 0){
+  if ((dx_tot>0)||(dy_tot>0)||(dz_tot>0)){
+    compute_mean_std_dist(IOB.x,IOB2.x,dx_tot,"x position");
+    compute_mean_std_dist(IOB.y,IOB2.y,dy_tot,"y position");
+    compute_mean_std_dist(IOB.z,IOB2.z,dz_tot,"z position");
+  }
+  if ((dvx_tot>0)||(dvy_tot>0)||(dvz_tot>0)){
+    compute_mean_std_dist(IOB.vx,IOB2.vx,dvx_tot,"x velocity");
+    compute_mean_std_dist(IOB.vy,IOB2.vy,dvy_tot,"y velocity");
+    compute_mean_std_dist(IOB.vz,IOB2.vz,dvz_tot,"z velocity");
+  }
+  if (da_tot>0){
+    compute_mean_std_dist(IOB.a,IOB2.a,da_tot,"scale factor");
+  }
+  if (dphi_tot>0){
+    compute_mean_std_dist(IOB.phi,IOB2.phi,dphi_tot,"potential");
+  }
+  }
  
 
 

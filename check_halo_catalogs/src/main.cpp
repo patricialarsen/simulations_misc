@@ -29,7 +29,7 @@ using namespace cosmotk;
 
 
 int find_log_bin(float value, float min_val, float bin_width){
-    int bin_idx = (int)((log(value)-log(min_val))/bin_width);
+    int bin_idx = (int)((log10(value)-log10(min_val))/bin_width);
     return bin_idx;
 }
 
@@ -52,13 +52,13 @@ void read_halo_file(string file_name, string var, vector<float> &x) {
   return; 
 }
 
-void write_bins_2d(string file_name, vector<float> bin_count_tot, int nbins){
+void write_bins_2d(string file_name, vector<vector<float>> bin_count_tot, int nbins){
   ofstream file_bins (file_name);
   if (file_bins.is_open())
   {
    for (int i=0;i<nbins;i++){
        for (int j=0; j<nbins; j++){
-       file_bins << bin_count_tot[i,j]<< " ";
+       file_bins << bin_count_tot[i][j]<< " ";
       }
        file_bins <<"\n";
     }
@@ -83,31 +83,35 @@ void write_bins(string file_name, vector<float> bin_count_tot, int nbins){
 
 void make_mass_hist(vector<float> x, vector<float> m, float m_min, float m_max, int nbins, float min_val, float max_val, string filename, int rank){
    int count = (int)x.size();
-   vector<int> bin_count(nbins,nbins);
-   
-   float bin_width = (log(max_val)-log(min_val))/nbins;
-   float bin_width_mass = (log(m_max)- log(m_min))/nbins;
+   vector<vector<int>> bin_count(nbins);
+   for (int i=0;i<nbins;i++)
+      bin_count[i].resize(nbins);
+   float bin_width = (log10(max_val)-log10(min_val))/nbins;
+   float bin_width_mass = (log10(m_max)- log10(m_min))/nbins;
    for (int i=0; i< count; ++i){
       int idx_tmp1 = find_log_bin(x[i],min_val, bin_width);
       int idx_tmp2 = find_log_bin(m[i],m_min, bin_width_mass);
       if ((idx_tmp1>=0)&&(idx_tmp1<nbins)&&(idx_tmp2>0)&&(idx_tmp2<nbins)){
-          bin_count[idx_tmp1,idx_tmp2]+=1;
+          bin_count[idx_tmp1][idx_tmp2]+=1;
       }
    }
 
 
   int count_tot;
-  vector<int> bin_count_tot(nbins,nbins);
-  vector<float> bin_count_tot_float(nbins,nbins);
-
+  vector<vector<int>> bin_count_tot(nbins);
+  vector<vector<float>> bin_count_tot_float(nbins);
+  for (int i=0;i<nbins;i++){
+      bin_count_tot[i].resize(nbins);
+      bin_count_tot_float[i].resize(nbins);
+}
   MPI_Reduce(&count,&count_tot,1,MPI_INT,MPI_SUM,0,Partition::getComm());
   for (int i=0; i<nbins; i++){
-  MPI_Reduce(&bin_count[i,0],&bin_count_tot[i,0],nbins,MPI_INT,MPI_SUM,0,Partition::getComm());
+  MPI_Reduce(&bin_count[i][0],&bin_count_tot[i][0],nbins,MPI_INT,MPI_SUM,0,Partition::getComm());
   }
   if (rank == 0){
      for (int i=0; i<nbins; i++){
         for (int j=0; j<nbins;j++){
-        bin_count_tot_float[i,j] = (float)bin_count_tot[i,j]/count_tot;
+        bin_count_tot_float[i][j] = (float)bin_count_tot[i][j]/count_tot;
        }
      }
      write_bins_2d(filename,bin_count_tot_float,nbins);
@@ -257,16 +261,16 @@ void angularmomentum_histograms(string fof_file, float ammax, int nbins, int ran
 
   float min_val = -ammax;
   float max_val = ammax;
-  float m_min = 1.e12;
-  float m_max = 1.e15;
+  float m_min = 1.e11;
+  float m_max = 1.e14;
   make_linear_histogram_mbins(x, m, m_min, m_max, nbins, min_val, max_val, "outputs/amx_hist.txt", rank);
   make_linear_histogram_mbins(y, m, m_min, m_max,  nbins, min_val, max_val, "outputs/amy_hist.txt", rank);
   make_linear_histogram_mbins(z, m, m_min, m_max, nbins, min_val, max_val, "outputs/amz_hist.txt", rank);
 
   vector<float> s;
   make_spins(x,y,z,m,s);
-  make_log_histogram(s,nbins,1.e-2,10.,"outputs/spin_hist.txt",rank);
-  make_mass_hist(s,m,m_min,m_max, nbins, 1.e-2, 10., "outputs/spin_hist2d.txt",rank);
+  make_log_histogram(s,nbins,1.e-2,1.,"outputs/spin_hist.txt",rank);
+  make_mass_hist(s,m,m_min,m_max, nbins, 1.e-2, 1., "outputs/spin_hist2d.txt",rank);
 }
 
 
@@ -325,7 +329,7 @@ int main( int argc, char** argv ) {
 
   position_histograms(fof_file, 256.,nbins,rank);
   velocity_histograms(fof_file,1000.,nbins,rank);
-  angularmomentum_histograms(fof_file,1.e16,nbins,rank);
+  angularmomentum_histograms(fof_file,1.e14,nbins,rank);
 
   Partition::finalize();
   MPI_Finalize();
