@@ -1,6 +1,6 @@
-# dc2_misc
+# simulations_misc
 
-This contains miscellaneous codes to create simulation products, including DC2 codes
+This contains miscellaneous codes to create and test simulation products, including DC2 codes
 
 Directories:
 
@@ -13,3 +13,4 @@ Directories:
 
 - Check halos:
   Creates histograms of halo property distributions for testing purposes
+  (in early development)

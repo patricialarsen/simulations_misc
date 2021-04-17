@@ -106,3 +106,10 @@ caused significant differences in the lightcones please contact me directly.
 
 Also please do note that non-zero differences at the level of machine precision (and somewhat higher after evolution from a restart) are expected and not cause for alarm.
 These often cause a handful of particles to belong to different lightcone outputs and small number differences do not signify true particle loss or creation in the simulation. 
+
+
+
+
+## Python script 
+
+This is a more in-depth but less scalable testing code. It runs as a serial python script, reading in the data, making density plots, making sure missing ids are on the boundaries, creating histograms of values and plotting an angular power spectrum comparison. Once you have confirmed that differences exist using the lc_check code you may want to use this to look at the output comparisons in more detail. 
