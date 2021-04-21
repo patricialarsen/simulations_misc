@@ -71,37 +71,33 @@ bool comp_by_fof_id(const halo_properties_test &a, const halo_properties_test &b
   return a.fof_halo_tag < b.fof_halo_tag;
 }
 
-
-
-void  compute_mean_std_dist(vector<float> val1 , vector<float> val2 , float diff_tot ,string var_name){
-  // compute the mean and std of the differences and make a histogram to look more closely
+void compute_mean_float(vector<float> *val1, vector<float> *val2, int num_halos , string var_name){
   int rank, n_ranks;
   rank = Partition::getMyProc();
   n_ranks = Partition::getNumProc();
 
-  int count = val1.size();
-  double diff=0; 
+  double diff=0;
   double diff_frac=0;
   int n_tot;
   double frac_max;
   double mean;
   double stddev;
 
-  for (int i=0; i<count; i++){
-      diff += (double)(val1[i]-val2[i]);
-      if (val1[i]!=0){
-        double frac = (double)(fabs(val1[i]-val2[i])/fabs(val1[i]));
+  for (int i=0; i<num_halos; i++){
+      diff += (double)(val1->at(i)-val2->at(i));
+      if (val1->at(i)!=0){
+        double frac = (double)(fabs(val1->at(i)-val2->at(i))/fabs(val1->at(i)));
          diff_frac = (diff_frac<frac)?frac:diff_frac;
       }
    }
 
       MPI_Reduce(&diff, &mean, 1, MPI_DOUBLE, MPI_SUM, 0, Partition::getComm());
       MPI_Reduce(&diff_frac, &frac_max, 1, MPI_DOUBLE, MPI_MAX, 0, Partition::getComm());
-      MPI_Reduce(&count, &n_tot, 1, MPI_INT, MPI_SUM, 0, Partition::getComm());  
-   mean = mean/n_tot;   
+      MPI_Reduce(&num_halos, &n_tot, 1, MPI_INT, MPI_SUM, 0, Partition::getComm());
+   mean = mean/n_tot;
 
-   for (int i=0; i< count; i++){
-      stddev += (double) ((val1[i]-val2[i]-(float)mean)*(val1[i]-val2[i]-(float)mean)/(n_tot-1));
+   for (int i=0; i< num_halos; i++){
+      stddev += (double) ((val1->at(i)-val2->at(i)-(float)mean)*(val1->at(i)-val2->at(i)-(float)mean)/(n_tot-1));
    }
    double stddev_tot;
    MPI_Reduce(&stddev, &stddev_tot, 1, MPI_DOUBLE, MPI_SUM, 0, Partition::getComm());
@@ -116,7 +112,21 @@ void  compute_mean_std_dist(vector<float> val1 , vector<float> val2 , float diff
      cout << endl;
    }
 
+}
 
+void  compute_mean_std_dist(Halos_test H_1 , Halos_test H_2 ){
+  // compute the mean and std of the differences and make a histogram to look more closely
+  int rank, n_ranks;
+  rank = Partition::getMyProc();
+  n_ranks = Partition::getNumProc();
+
+  int count = H_1.num_halos;
+
+//    this->float_data[i]->at(idx)
+  for (int i =0; i<N_HALO_FLOATS; i++){
+    string var_name = float_var_names_test[i];
+    compute_mean_float(H_1.float_data[i],H_2.float_data[i],count,var_name);
+  }
 
   return;
 }
@@ -160,8 +170,6 @@ int main( int argc, char** argv ) {
   string fof_file     = string(argv[1]);
   string fof_file2    = string(argv[2]);
 
-  int err = 0;
-  bool skip_err = true;
 
 
 
@@ -307,53 +315,46 @@ MPI_Datatype halo_properties_MPI_Type;
 
    }
 
-
-
-  if (rank == 0)
-    cout << "Assigned to buffers" << endl;
+  int err = 0;
+  bool skip_err = true;
 
 
   if (fof_halo_recv_total != fof_halo_recv_total2){
-    err += 1;
+      err += 1;
       cout << "The number of elements is different in the two files for rank " << rank << endl;
       cout << fof_halo_recv_total << " , and " << fof_halo_recv_total2 << " for rank "<< rank<< endl;
     }
    else{
     for (int i=0;i<fof_halo_recv_total;i++){
-       if (H_1.fof_halo_tag[i]!=H_2.fof_halo_tag[i])
+       if (H_1.fof_halo_tag->at(i)!=H_2.fof_halo_tag->at(i))
          err+=1;
      }
    }
-   cout << "num_halos = "<<H_1.num_halos << endl;
-   cout << "num_halos = "<<H_2.num_halos << endl;
-   skip_err = true;
-   err=1;
    if (skip_err&&(err>0)){
    cout << "Skipping over missing particles for rank "<<rank << endl;
   }
 
+
+
+   int numh1 = H_1.num_halos;
+   int numh2 = H_2.num_halos;
+
+   int min_n = min(numh1,numh2);
+
+
     if (skip_err&&(err>0)){
-      // max_halos = 
        err = 0;
        cout << "Skipping over missing particles for rank "<< rank << endl;
-       int sum_i = 0;
-      
-       for (int j=0; j<H_1.num_halos; j++){
-          if (H_1.fof_halo_tag[j]==H_2.fof_halo_tag[j]){
-             sum_i +=1;
-      }
-       cout << " sum _i = "<<sum_i<<endl;
-} 
-   
-/*
-       while (i < H_1.num_halos) {
-          if (H_1.fof_halo_tag[i]==H_2.fof_halo_tag[i]){
+
+       int i=0;
+       while (i < min_n) {
+          if (H_1.fof_halo_tag->at(i)==H_2.fof_halo_tag->at(i)){
              i += 1;
            }
           else {
            bool not_found = true;
            for (int j=0;j<32;j++){
-               if (H_1.fof_halo_tag[i]==H_2.fof_halo_tag[i+j]){
+               if (H_1.fof_halo_tag->at(i)==H_2.fof_halo_tag->at(i+j)){
                   for (int k=0; k<j; k++)
                       H_2.Erase(i+k);
                 not_found = false;
@@ -364,123 +365,17 @@ MPI_Datatype halo_properties_MPI_Type;
              H_1.Erase(i);
          }
      }
-*/
- //   cout<< "number of elements before was " <<  fof_halo_recv_total2 << " , and "<<fof_halo_recv_total <<endl;
- //   cout<< "number of elements now is " <<  H_1.num_halos << " , and "<< H_2.num_halos <<endl;
- //    err = 1; // for now, to supress later outputs
-//
-  //  fof_halo_recv_total = H_1.num_halos;
-   // fof_halo_recv_total2 = H_2.num_halos;
-}
-    //}
-
-/*
-    float da=0;
-    float dx=0;
-    float dy=0;
-    float dz=0;
-    float dvx=0;
-    float dvy=0;
-    float dvz=0;
-    int64_t diff_id =0;
-    int diff_rep = 0;
-    float dphi=0;
-
-//  if (lc_halo_recv_total == lc_halo_recv_total2){
-    if (err==0){
-    for (int i=0;i<lc_halo_recv_total;++i){
-         float xdiff = fabs(IOB.x[i]-IOB2.x[i]);
-         float ydiff = fabs(IOB.y[i]-IOB2.y[i]);
-         float zdiff = fabs(IOB.z[i]-IOB2.z[i]);
-         float vxdiff = fabs(IOB.vx[i]-IOB2.vx[i]);
-         float vydiff = fabs(IOB.vy[i]-IOB2.vy[i]);
-         float vzdiff = fabs(IOB.vz[i]-IOB2.vz[i]);
-         float adiff = fabs(IOB.a[i]-IOB2.a[i]);
-         float phidiff = fabs(IOB.phi[i]-IOB2.phi[i]);
-         dx = (dx<xdiff)?xdiff:dx;
-         dy = (dy<ydiff)?ydiff:dy;
-         dz = (dz<zdiff)?zdiff:dz;
-         dvx = (dvx<vxdiff)?vxdiff:dvx;
-         dvy = (dvy<vydiff)?vydiff:dvy;
-         dvz = (dvz<vzdiff)?vzdiff:dvz;
-         da = (da<adiff)?adiff:da;
-         int64_t  iddiff = abs(IOB.id[i]-IOB2.id[i]);
-         int repdiff = abs(IOB.replication[i]-IOB2.replication[i]);
-         diff_id = (iddiff<diff_id)?diff_id:iddiff;
-         diff_rep = (repdiff<diff_rep)?diff_rep:repdiff;
-         dphi = (dphi<phidiff)?phidiff:dphi;
-      }
-   }
-
-    if ((diff_id>0)||(diff_rep>0)){
-      err +=1;
-      if (rank==0)
-       cout <<"Ids don't match up!"<<endl;
     }
 
+    cout<< "number of elements before was " <<  fof_halo_recv_total2 << " , and "<<fof_halo_recv_total <<endl;
+    cout<< "number of elements now is " <<  H_1.num_halos << " , and "<< H_2.num_halos <<endl;
 
 
+    fof_halo_recv_total = H_1.num_halos;
+    fof_halo_recv_total2 = H_2.num_halos;
 
-    float dx_tot;
-    float dy_tot;
-    float dz_tot;
-    float dvx_tot;
-    float dvy_tot;
-    float dvz_tot;
-    float da_tot; 
-    float dphi_tot; 
-    int err_tot;
+    compute_mean_std_dist(H_1 ,H_2);
 
-   if (rank == 0)
-    cout << "Starting reduction" << endl;
-    MPI_Reduce(&dx, &dx_tot, 1, MPI_FLOAT, MPI_MAX, 0, Partition::getComm());
-    MPI_Reduce(&dy, &dy_tot, 1, MPI_FLOAT, MPI_MAX, 0, Partition::getComm());
-    MPI_Reduce(&dz, &dz_tot, 1, MPI_FLOAT, MPI_MAX, 0, Partition::getComm());
-    MPI_Reduce(&dvx, &dvx_tot, 1, MPI_FLOAT, MPI_MAX, 0, Partition::getComm());
-    MPI_Reduce(&dvy, &dvy_tot, 1, MPI_FLOAT, MPI_MAX, 0, Partition::getComm());
-    MPI_Reduce(&dvz, &dvz_tot, 1, MPI_FLOAT, MPI_MAX, 0, Partition::getComm());
-    MPI_Reduce(&da, &da_tot, 1, MPI_FLOAT, MPI_MAX, 0, Partition::getComm());
-    MPI_Reduce(&dphi, &dphi_tot, 1, MPI_FLOAT, MPI_MAX, 0, Partition::getComm());
-    MPI_Reduce(&err, &err_tot, 1, MPI_INT, MPI_SUM, 0, Partition::getComm());
-
-
-
-  if ((rank == 0) && (err_tot ==0)){
-    cout << "Maximum dx = "<< dx_tot << endl;
-    cout << "Maximum dy = "<< dy_tot << endl;
-    cout << "Maximum dz = "<< dz_tot << endl;
-    cout << "Maximum dvx = "<< dvx_tot << endl;
-    cout << "Maximum dvy = "<< dvy_tot << endl;
-    cout << "Maximum dvz = "<< dvz_tot << endl;
-    cout << "Maximum da = "<< da_tot << endl;
-    cout << "Maximum dphi = "<< dphi_tot << endl;
-
-  }
-
-// communicate these between ranks and find the maximum
-
-  // now if the difference in values is >0 , then create histograms of the differences to check they're unbiased
-  // compute the mean and standard deviation of the differences and look at the fractional errors.   
-  if (err_tot == 0){
-  if ((dx_tot>0)||(dy_tot>0)||(dz_tot>0)){
-    compute_mean_std_dist(IOB.x,IOB2.x,dx_tot,"x position");
-    compute_mean_std_dist(IOB.y,IOB2.y,dy_tot,"y position");
-    compute_mean_std_dist(IOB.z,IOB2.z,dz_tot,"z position");
-  }
-  if ((dvx_tot>0)||(dvy_tot>0)||(dvz_tot>0)){
-    compute_mean_std_dist(IOB.vx,IOB2.vx,dvx_tot,"x velocity");
-    compute_mean_std_dist(IOB.vy,IOB2.vy,dvy_tot,"y velocity");
-    compute_mean_std_dist(IOB.vz,IOB2.vz,dvz_tot,"z velocity");
-  }
-  if (da_tot>0){
-    compute_mean_std_dist(IOB.a,IOB2.a,da_tot,"scale factor");
-  }
-  if (dphi_tot>0){
-    compute_mean_std_dist(IOB.phi,IOB2.phi,dphi_tot,"potential");
-  }
-  }
- 
-*/
 
   MPI_Barrier(Partition::getComm());
   H_1.Deallocate();
