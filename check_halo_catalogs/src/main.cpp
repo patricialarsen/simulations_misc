@@ -315,6 +315,12 @@ void position_histograms(string fof_file, float boxsize, int nbins, int rank){
 
 }
 
+void mass_checks(){
+// 
+
+}
+
+
 int main( int argc, char** argv ) {
   MPI_Init( &argc, &argv );
   Partition::initialize();
