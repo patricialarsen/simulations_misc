@@ -137,7 +137,7 @@ inline unsigned int tag_to_rank(int64_t fof_tag, int n_ranks) {
 }
 
 
-void read_halos(Halos_test &H0, string file_name) {
+void read_halos(Halos_test &H0, string file_name, int file_opt) {
  // may need a pointer to H0
   GenericIO GIO(Partition::getComm(),file_name,GenericIO::FileIOMPI);
   GIO.openAndReadHeader(GenericIO::MismatchRedistribute);
@@ -150,8 +150,14 @@ void read_halos(Halos_test &H0, string file_name) {
   if (H0.has_sod)
     GIO.addVariable("sod_halo_count", *(H0.sod_halo_count), true);
 
+ if (file_opt==1){
   for (int i=0; i<N_HALO_FLOATS; ++i)
     GIO.addVariable((const string)float_var_names_test[i], *(H0.float_data[i]), true);
+   }
+ else{
+  for (int i=0; i<N_HALO_FLOATS; ++i)
+    GIO.addVariable((const string)float_var_names_test2[i], *(H0.float_data[i]), true);
+ }
 
   GIO.readData();
   H0.Resize(num_elems);
@@ -179,8 +185,8 @@ int main( int argc, char** argv ) {
   H_2.has_sod = true;
 
   // LC HALOS
-  read_halos(H_1, fof_file);
-  read_halos(H_2, fof_file2);
+  read_halos(H_1, fof_file, 1);
+  read_halos(H_2, fof_file2, 2);
 
   if (rank == 0)
     cout << "Done reading halos" << endl;
