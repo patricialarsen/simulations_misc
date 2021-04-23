@@ -34,6 +34,7 @@ public:
   int descendant_step_number;
   size_t num_halos;
   float particle_mass;
+  MPI_Datatype halo_properties_MPI_Type;
 
   vector<int64_t>* fof_halo_tag;
   vector<int32_t>* fof_halo_count;
@@ -69,6 +70,7 @@ public:
   void PushBack(halo_properties_test);
   void Resize(size_t);
   void Erase(size_t);
+  void Set_MPIType();
 };
 
 //#endif

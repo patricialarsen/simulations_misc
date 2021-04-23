@@ -36,33 +36,6 @@ using namespace cosmotk;
 Halos_test H_1;
 Halos_test H_2;
 
-typedef struct fof_halo {
-  float mass;
-  int64_t id;
-  unsigned int destination_rank;
-} fof_halo;
-
-
-typedef struct halo_struct {
-  float posvel_a_m[7];
-  float phi;
-  int rr;
-  int64_t id;
-  unsigned int destination_rank;
-} lc_halo;
-
-bool comp_by_lc_dest(const lc_halo &a, const lc_halo &b) {
-  return a.destination_rank < b.destination_rank;
-}
-
-bool comp_by_id(const lc_halo &a, const lc_halo &b) {
-  return a.id < b.id;
-}
-
-bool comp_by_rep(const lc_halo &a, const lc_halo &b) {
-  return a.rr < b.rr;
-}
-
 bool comp_by_fof_dest(const halo_properties_test &a, const halo_properties_test &b) {
   return a.rank < b.rank;
 }
@@ -81,34 +54,51 @@ void compute_mean_float(vector<float> *val1, vector<float> *val2, int num_halos 
   int n_tot;
   double frac_max;
   double mean;
-  double stddev;
+  double stddev=0;
+  double stddevq=0;
+  double meanq=0;
+  double meanq_tot;
 
   for (int i=0; i<num_halos; i++){
       diff += (double)(val1->at(i)-val2->at(i));
+      meanq += (double)(val1->at(i));
       if (val1->at(i)!=0){
         double frac = (double)(fabs(val1->at(i)-val2->at(i))/fabs(val1->at(i)));
          diff_frac = (diff_frac<frac)?frac:diff_frac;
       }
    }
-
-      MPI_Reduce(&diff, &mean, 1, MPI_DOUBLE, MPI_SUM, 0, Partition::getComm());
-      MPI_Reduce(&diff_frac, &frac_max, 1, MPI_DOUBLE, MPI_MAX, 0, Partition::getComm());
-      MPI_Reduce(&num_halos, &n_tot, 1, MPI_INT, MPI_SUM, 0, Partition::getComm());
+      MPI_Barrier(Partition::getComm());
+      MPI_Allreduce(&diff, &mean, 1, MPI_DOUBLE, MPI_SUM,  Partition::getComm());
+      MPI_Allreduce(&diff_frac, &frac_max, 1, MPI_DOUBLE, MPI_MAX,  Partition::getComm());
+      MPI_Allreduce(&meanq, &meanq_tot, 1, MPI_DOUBLE, MPI_SUM, Partition::getComm());
+      MPI_Allreduce(&num_halos, &n_tot, 1, MPI_INT, MPI_SUM,  Partition::getComm());
    mean = mean/n_tot;
+   meanq_tot = meanq_tot/n_tot;
 
+   double diffq;
+   double diff_tmp;
    for (int i=0; i< num_halos; i++){
-      stddev += (double) ((val1->at(i)-val2->at(i)-(float)mean)*(val1->at(i)-val2->at(i)-(float)mean)/(n_tot-1));
+      diff_tmp = (double)(val1->at(i)-val2->at(i))-mean;
+      diffq = (double)(val1->at(i))- meanq_tot;
+      stddev += diff_tmp*diff_tmp/(n_tot-1);
+      stddevq += diffq*diffq/(n_tot-1);
    }
    double stddev_tot;
-   MPI_Reduce(&stddev, &stddev_tot, 1, MPI_DOUBLE, MPI_SUM, 0, Partition::getComm());
+   double stddevq_tot;
+   MPI_Allreduce(&stddev, &stddev_tot, 1, MPI_DOUBLE, MPI_SUM,  Partition::getComm());
+   MPI_Allreduce(&stddevq, &stddevq_tot, 1, MPI_DOUBLE, MPI_SUM,  Partition::getComm());
    stddev_tot = sqrt(stddev_tot);
+   stddevq_tot = sqrt(stddevq_tot);
+
 
    if (rank==0){
      cout << var_name << endl;
      cout << "______________________________________" <<endl;
-     cout << " mean difference = "<< mean << endl;
-     cout << " maximum fractional difference = "<< frac_max<< endl;
+     cout << " mean difference = " << mean << endl;
+     cout << " maximum fractional difference = " << frac_max<< endl;
      cout << " standard deviation of difference = " << stddev_tot << endl;
+     cout << " mean of quantity = " << meanq_tot << endl;
+     cout << " standard deviation of quantity = " << stddevq_tot << endl;
      cout << endl;
    }
 
@@ -122,7 +112,6 @@ void  compute_mean_std_dist(Halos_test H_1 , Halos_test H_2 ){
 
   int count = H_1.num_halos;
 
-//    this->float_data[i]->at(idx)
   for (int i =0; i<N_HALO_FLOATS; i++){
     string var_name = float_var_names_test[i];
     compute_mean_float(H_1.float_data[i],H_2.float_data[i],count,var_name);
@@ -138,12 +127,12 @@ inline unsigned int tag_to_rank(int64_t fof_tag, int n_ranks) {
 
 
 void read_halos(Halos_test &H0, string file_name, int file_opt) {
- // may need a pointer to H0
+ // Read halo files into a buffer
   GenericIO GIO(Partition::getComm(),file_name,GenericIO::FileIOMPI);
   GIO.openAndReadHeader(GenericIO::MismatchRedistribute);
   size_t num_elems = GIO.readNumElems();
 
-  H0.Resize(num_elems + GIO.requestedExtraSpace()); // think this works, may need a pointer
+  H0.Resize(num_elems + GIO.requestedExtraSpace()); 
 
   GIO.addVariable("fof_halo_tag",   *(H0.fof_halo_tag),true);
   GIO.addVariable("fof_halo_count", *(H0.fof_halo_count), true);
@@ -163,7 +152,6 @@ void read_halos(Halos_test &H0, string file_name, int file_opt) {
   H0.Resize(num_elems);
 }  
 
-
 int main( int argc, char** argv ) {
   MPI_Init( &argc, &argv );
   Partition::initialize();
@@ -178,13 +166,15 @@ int main( int argc, char** argv ) {
 
 
 
-
+  // Create halo buffers
   H_1.Allocate();
   H_1.has_sod = true;
   H_2.Allocate();
   H_2.has_sod = true;
+  H_1.Set_MPIType();
+  H_2.Set_MPIType();
 
-  // LC HALOS
+  // Reading halos
   read_halos(H_1, fof_file, 1);
   read_halos(H_2, fof_file2, 2);
 
@@ -192,12 +182,11 @@ int main( int argc, char** argv ) {
     cout << "Done reading halos" << endl;
 
 
-
+  // determine destination ranks
   vector<halo_properties_test> fof_halo_send;
   vector<int> fof_halo_send_cnt(n_ranks,0);
   vector<halo_properties_test> fof_halo_send2;
   vector<int> fof_halo_send_cnt2(n_ranks,0);
-
 
   for (int i=0; i<H_1.num_halos; ++i) {
     halo_properties_test tmp = H_1.GetProperties(i);
@@ -212,8 +201,10 @@ int main( int argc, char** argv ) {
     ++fof_halo_send_cnt2[tmp.rank];
   }
 
+  // sort by destination rank
   sort(fof_halo_send.begin(),fof_halo_send.end(), comp_by_fof_dest);
   sort(fof_halo_send2.begin(),fof_halo_send2.end(), comp_by_fof_dest);
+  MPI_Barrier(Partition::getComm());
 
 
   if (rank == 0)
@@ -222,7 +213,7 @@ int main( int argc, char** argv ) {
   H_1.Resize(0);
   H_2.Resize(0);
 
-  MPI_Barrier(Partition::getComm());
+  // create send and receive buffers and offsets
   vector<int> fof_halo_recv_cnt;
   vector<int> fof_halo_recv_cnt2;
   fof_halo_recv_cnt.resize(n_ranks,0);
@@ -267,63 +258,39 @@ int main( int argc, char** argv ) {
   if (rank == 0)
     cout << "About to send data" << endl;
 
- // MPI_Datatype halo_properties_MPI_Type;
- // get_MPI_Type(halo_properties_MPI_Type);
+  //send data 
+  MPI_Alltoallv(&fof_halo_send[0],&fof_halo_send_cnt[0],&fof_halo_send_off[0], H_1.halo_properties_MPI_Type,\
+                   &fof_halo_recv[0],&fof_halo_recv_cnt[0],&fof_halo_recv_off[0], H_1.halo_properties_MPI_Type, Partition::getComm());
 
-MPI_Datatype halo_properties_MPI_Type;
-{
-    MPI_Datatype type[5] = { MPI_INT64_T, MPI_INT, MPI_INT64_T, MPI_INT, MPI_FLOAT };
-    int blocklen[5] = {1,1,1,1,N_HALO_FLOATS};
-    halo_properties_test hp;
-
-    MPI_Aint base;
-    MPI_Aint disp[5];
-
-    MPI_Get_address(&hp, &base);
-    MPI_Get_address(&hp.fof_halo_tag,     &disp[0]);
-    MPI_Get_address(&hp.fof_halo_count,   &disp[1]);
-    MPI_Get_address(&hp.sod_halo_count,   &disp[2]);
-    MPI_Get_address(&hp.rank,             &disp[3]);
-    MPI_Get_address(&hp.float_data,       &disp[4]);
-
-    disp[0]-=base; disp[1]-=base; disp[2]-=base; disp[3]-=base;
-    disp[4]-=base;
+  MPI_Alltoallv(&fof_halo_send2[0],&fof_halo_send_cnt2[0],&fof_halo_send_off2[0], H_2.halo_properties_MPI_Type,\
+                   &fof_halo_recv2[0],&fof_halo_recv_cnt2[0],&fof_halo_recv_off2[0], H_2.halo_properties_MPI_Type, Partition::getComm());
 
 
-    MPI_Type_struct(5,blocklen,disp,type,&halo_properties_MPI_Type);
-    MPI_Type_commit(&halo_properties_MPI_Type);
-}
-
-
-  MPI_Alltoallv(&fof_halo_send[0],&fof_halo_send_cnt[0],&fof_halo_send_off[0], halo_properties_MPI_Type,\
-                   &fof_halo_recv[0],&fof_halo_recv_cnt[0],&fof_halo_recv_off[0], halo_properties_MPI_Type, Partition::getComm());
-
-  MPI_Alltoallv(&fof_halo_send2[0],&fof_halo_send_cnt2[0],&fof_halo_send_off2[0], halo_properties_MPI_Type,\
-                   &fof_halo_recv2[0],&fof_halo_recv_cnt2[0],&fof_halo_recv_off2[0], halo_properties_MPI_Type, Partition::getComm());
-
+  // sort by fof halo tag
   if (rank == 0)
     cout << "About to sort" << endl;
-
   std::sort(fof_halo_recv.begin(),fof_halo_recv.end(),comp_by_fof_id);
   std::sort(fof_halo_recv2.begin(),fof_halo_recv2.end(),comp_by_fof_id);
 
 
+
+  // write into buffers
   H_1.Resize(0);
   H_2.Resize(0);
-
   for (int i=0; i<fof_halo_recv_total; ++i) {
     halo_properties_test tmp =  fof_halo_recv[i];
     H_1.PushBack(tmp);
-   }
+  }
   for (int i=0; i<fof_halo_recv_total2; ++i){
        halo_properties_test tmp = fof_halo_recv2[i];
     H_2.PushBack(tmp);
+  }
+  fof_halo_recv.resize(0);
+  fof_halo_recv2.resize(0);
 
-   }
 
   int err = 0;
   bool skip_err = true;
-
 
   if (fof_halo_recv_total != fof_halo_recv_total2){
       err += 1;
@@ -336,24 +303,17 @@ MPI_Datatype halo_properties_MPI_Type;
          err+=1;
      }
    }
-   if (skip_err&&(err>0)){
-   cout << "Skipping over missing particles for rank "<<rank << endl;
-  }
-
-
-
    int numh1 = H_1.num_halos;
    int numh2 = H_2.num_halos;
 
-   int min_n = min(numh1,numh2);
-
-
-    if (skip_err&&(err>0)){
+   if (skip_err&&(err>0)){
+       // if you want to skip over missing particles: note only do this if the catalogs should mostly match up.
        err = 0;
        cout << "Skipping over missing particles for rank "<< rank << endl;
 
+
        int i=0;
-       while (i < min_n) {
+       while (i < numh1) {
           if (H_1.fof_halo_tag->at(i)==H_2.fof_halo_tag->at(i)){
              i += 1;
            }
@@ -364,23 +324,21 @@ MPI_Datatype halo_properties_MPI_Type;
                   for (int k=0; k<j; k++)
                       H_2.Erase(i+k);
                 not_found = false;
-                i+=1;
+                i+=1; // iterate once found
                 }
               }
-           if (not_found)
+           if (not_found){
              H_1.Erase(i);
+	     --numh1;
+	   }
          }
      }
-    }
+  cout<< "number of elements before was " <<  fof_halo_recv_total2 << " , and "<<fof_halo_recv_total <<endl;
+  cout<< "number of elements now is " <<  H_1.num_halos << " , and "<< H_2.num_halos <<endl;
 
-    cout<< "number of elements before was " <<  fof_halo_recv_total2 << " , and "<<fof_halo_recv_total <<endl;
-    cout<< "number of elements now is " <<  H_1.num_halos << " , and "<< H_2.num_halos <<endl;
-
-
-    fof_halo_recv_total = H_1.num_halos;
-    fof_halo_recv_total2 = H_2.num_halos;
-
-    compute_mean_std_dist(H_1 ,H_2);
+  }
+  // compute the error characteristics for the catalogs
+  compute_mean_std_dist(H_1 ,H_2);
 
 
   MPI_Barrier(Partition::getComm());

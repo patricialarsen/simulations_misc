@@ -65,7 +65,7 @@ void  compute_mean_std_dist(vector<float> val1 , vector<float> val2 , float diff
   int n_tot;
   double frac_max;
   double mean;
-  double stddev;
+  double stddev=0;
 
   for (int i=0; i<count; i++){
       diff += (double)(val1[i]-val2[i]);
@@ -75,9 +75,9 @@ void  compute_mean_std_dist(vector<float> val1 , vector<float> val2 , float diff
       }
    }
 
-      MPI_Reduce(&diff, &mean, 1, MPI_DOUBLE, MPI_SUM, 0, Partition::getComm());
+      MPI_Allreduce(&diff, &mean, 1, MPI_DOUBLE, MPI_SUM,  Partition::getComm());
       MPI_Reduce(&diff_frac, &frac_max, 1, MPI_DOUBLE, MPI_MAX, 0, Partition::getComm());
-      MPI_Reduce(&count, &n_tot, 1, MPI_INT, MPI_SUM, 0, Partition::getComm());  
+      MPI_Allreduce(&count, &n_tot, 1, MPI_INT, MPI_SUM,  Partition::getComm());  
    mean = mean/n_tot;   
 
    for (int i=0; i< count; i++){

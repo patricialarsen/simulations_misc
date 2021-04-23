@@ -16,6 +16,10 @@ This inputs quantities from a halo catalog output and makes histograms of distri
 - SOD checks 
 - vmax checks 
 
+Also needed
+- Hydro version
+
+
 ### How to run
 Source the hacc environment scripts, edit the makefile to link to the latest version of trunk then type make, the syntax for running this is 
 

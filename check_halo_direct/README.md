@@ -33,11 +33,59 @@ mpirun -n nprocesses ./halo_check $FILE1 $FILE2
 a typical output is, e.g. 
 
 ```
+fof_halo_mass
+______________________________________
+ mean difference = 0
+ maximum fractional difference = 0
+ standard deviation of difference = 0
+ mean of quantity = 2.96247e+11
+ standard deviation of quantity = 3.95643e+12
+
+fof_halo_ke
+______________________________________
+ mean difference = 6.56153e+06
+ maximum fractional difference = 2.4446e-06
+ standard deviation of difference = 3.39499e+10
+ mean of quantity = 9.68491e+16
+ standard deviation of quantity = 4.60448e+18
+
+fof_halo_center_x
+______________________________________
+ mean difference = -1.64744e-08
+ maximum fractional difference = 0.000502153
+ standard deviation of difference = 2.29718e-05
+ mean of quantity = 127.54
+ standard deviation of quantity = 72.4255
+
+fof_halo_center_y
+______________________________________
+ mean difference = 2.73343e-08
+ maximum fractional difference = 0.000324737
+ standard deviation of difference = 3.46306e-05
+ mean of quantity = 125.18
+ standard deviation of quantity = 72.6656
+
+fof_halo_center_z
+______________________________________
+ mean difference = 6.55633e-08
+ maximum fractional difference = 0.000861824
+ standard deviation of difference = 8.76335e-05
+ mean of quantity = 122.127
+ standard deviation of quantity = 72.2195
+
+fof_halo_angmom_x
+______________________________________
+ mean difference = 1.02118e+11
+ maximum fractional difference = 217188
+ standard deviation of difference = 8.24155e+14
+ mean of quantity = 1.51496e+11
+ standard deviation of quantity = 1.05413e+15
+
 
 ```
 
 ### To-do
-Update variables
+Add integer comparisons
 
 ### Please note
 This is largely based off Steve's match-up code to connect halo properties with halo lightcones, and re-uses code scripts from there. It also relies on the hacc code.

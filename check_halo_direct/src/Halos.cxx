@@ -31,6 +31,30 @@ void Halos_test::Allocate(size_t n) {
   }
 }
 
+void Halos_test::Set_MPIType(){
+    MPI_Datatype type[5] = { MPI_INT64_T, MPI_INT, MPI_INT64_T, MPI_INT, MPI_FLOAT };
+    int blocklen[5] = {1,1,1,1,N_HALO_FLOATS};
+    halo_properties_test hp;
+
+    MPI_Aint base;
+    MPI_Aint disp[5];
+
+    MPI_Get_address(&hp, &base);
+    MPI_Get_address(&hp.fof_halo_tag,     &disp[0]);
+    MPI_Get_address(&hp.fof_halo_count,   &disp[1]);
+    MPI_Get_address(&hp.sod_halo_count,   &disp[2]);
+    MPI_Get_address(&hp.rank,             &disp[3]);
+    MPI_Get_address(&hp.float_data,       &disp[4]);
+
+    disp[0]-=base; disp[1]-=base; disp[2]-=base; disp[3]-=base;
+    disp[4]-=base;
+
+
+    MPI_Type_struct(5,blocklen,disp,type,&this->halo_properties_MPI_Type);
+    MPI_Type_commit(&this->halo_properties_MPI_Type);
+
+}
+
 
 void Halos_test::Deallocate() {
 
