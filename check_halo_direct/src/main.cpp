@@ -44,7 +44,7 @@ bool comp_by_fof_id(const halo_properties_test &a, const halo_properties_test &b
   return a.fof_halo_tag < b.fof_halo_tag;
 }
 
-void compute_mean_float(vector<float> *val1, vector<float> *val2, int num_halos , string var_name){
+void compute_mean_float(vector<float> *val1, vector<float> *val2, int num_halos , string var_name, string var_name2){
   int rank, n_ranks;
   rank = Partition::getMyProc();
   n_ranks = Partition::getNumProc();
@@ -90,9 +90,14 @@ void compute_mean_float(vector<float> *val1, vector<float> *val2, int num_halos 
    stddev_tot = sqrt(stddev_tot);
    stddevq_tot = sqrt(stddevq_tot);
 
-
+   bool print_out = true;
    if (rank==0){
+
+     if ((frac_max<0.01)||((fabs(stddev_tot/stddevq_tot)<0.01)&&(fabs(mean/meanq_tot)<0.01))) // no values change by more than a percent
+       print_out=false;
+     if (print_out){
      cout << var_name << endl;
+     cout << var_name2 << endl;
      cout << "______________________________________" <<endl;
      cout << " mean difference = " << mean << endl;
      cout << " maximum fractional difference = " << frac_max<< endl;
@@ -100,6 +105,7 @@ void compute_mean_float(vector<float> *val1, vector<float> *val2, int num_halos 
      cout << " mean of quantity = " << meanq_tot << endl;
      cout << " standard deviation of quantity = " << stddevq_tot << endl;
      cout << endl;
+     }
    }
 
 }
@@ -114,7 +120,8 @@ void  compute_mean_std_dist(Halos_test H_1 , Halos_test H_2 ){
 
   for (int i =0; i<N_HALO_FLOATS; i++){
     string var_name = float_var_names_test[i];
-    compute_mean_float(H_1.float_data[i],H_2.float_data[i],count,var_name);
+    string var_name2 = float_var_names_test2[i];
+    compute_mean_float(H_1.float_data[i],H_2.float_data[i],count,var_name,var_name2);
   }
 
   return;
