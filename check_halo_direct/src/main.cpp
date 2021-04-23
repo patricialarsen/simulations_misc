@@ -44,7 +44,7 @@ bool comp_by_fof_id(const halo_properties_test &a, const halo_properties_test &b
   return a.fof_halo_tag < b.fof_halo_tag;
 }
 
-void compute_mean_float(vector<float> *val1, vector<float> *val2, int num_halos , string var_name, string var_name2){
+int compute_mean_float(vector<float> *val1, vector<float> *val2, int num_halos , string var_name, string var_name2, float lim){
   int rank, n_ranks;
   rank = Partition::getMyProc();
   n_ranks = Partition::getNumProc();
@@ -93,24 +93,26 @@ void compute_mean_float(vector<float> *val1, vector<float> *val2, int num_halos 
    bool print_out = true;
    if (rank==0){
 
-     if ((frac_max<0.01)||((fabs(stddev_tot/stddevq_tot)<0.01)&&(fabs(mean/meanq_tot)<0.01))) // no values change by more than a percent
+     if ((frac_max<lim)||((fabs(stddev_tot/stddevq_tot)<lim)&&(fabs(mean/meanq_tot)<lim))) // no values change by more than a percent
        print_out=false;
      if (print_out){
-     cout << var_name << endl;
-     cout << var_name2 << endl;
-     cout << "______________________________________" <<endl;
+     cout << " " << var_name << endl;
+     cout << " " << var_name2 << endl;
+     cout << " ______________________________________" <<endl;
      cout << " mean difference = " << mean << endl;
      cout << " maximum fractional difference = " << frac_max<< endl;
      cout << " standard deviation of difference = " << stddev_tot << endl;
      cout << " mean of quantity = " << meanq_tot << endl;
      cout << " standard deviation of quantity = " << stddevq_tot << endl;
      cout << endl;
+     return 1;
      }
    }
+   return 0;
 
 }
 
-void  compute_mean_std_dist(Halos_test H_1 , Halos_test H_2 ){
+int  compute_mean_std_dist(Halos_test H_1 , Halos_test H_2, float lim ){
   // compute the mean and std of the differences and make a histogram to look more closely
   int rank, n_ranks;
   rank = Partition::getMyProc();
@@ -118,13 +120,13 @@ void  compute_mean_std_dist(Halos_test H_1 , Halos_test H_2 ){
 
   int count = H_1.num_halos;
 
+  int err=0;
   for (int i =0; i<N_HALO_FLOATS; i++){
     string var_name = float_var_names_test[i];
     string var_name2 = float_var_names_test2[i];
-    compute_mean_float(H_1.float_data[i],H_2.float_data[i],count,var_name,var_name2);
+    err += compute_mean_float(H_1.float_data[i],H_2.float_data[i],count,var_name,var_name2,lim);
   }
-
-  return;
+  return err;
 }
 
 
@@ -170,8 +172,10 @@ int main( int argc, char** argv ) {
 
   string fof_file     = string(argv[1]);
   string fof_file2    = string(argv[2]);
-
-
+  stringstream thresh{ argv[3] };
+  float lim{};
+  if (!(thresh >> lim))
+	  lim = 0.01;
 
   // Create halo buffers
   H_1.Allocate();
@@ -185,8 +189,6 @@ int main( int argc, char** argv ) {
   read_halos(H_1, fof_file, 1);
   read_halos(H_2, fof_file2, 2);
 
-  if (rank == 0)
-    cout << "Done reading halos" << endl;
 
 
   // determine destination ranks
@@ -214,8 +216,6 @@ int main( int argc, char** argv ) {
   MPI_Barrier(Partition::getComm());
 
 
-  if (rank == 0)
-    cout << "Sorted halos " << endl;
 
   H_1.Resize(0);
   H_2.Resize(0);
@@ -262,8 +262,6 @@ int main( int argc, char** argv ) {
   MPI_Barrier(Partition::getComm());
 
 
-  if (rank == 0)
-    cout << "About to send data" << endl;
 
   //send data 
   MPI_Alltoallv(&fof_halo_send[0],&fof_halo_send_cnt[0],&fof_halo_send_off[0], H_1.halo_properties_MPI_Type,\
@@ -274,8 +272,6 @@ int main( int argc, char** argv ) {
 
 
   // sort by fof halo tag
-  if (rank == 0)
-    cout << "About to sort" << endl;
   std::sort(fof_halo_recv.begin(),fof_halo_recv.end(),comp_by_fof_id);
   std::sort(fof_halo_recv2.begin(),fof_halo_recv2.end(),comp_by_fof_id);
 
@@ -301,8 +297,6 @@ int main( int argc, char** argv ) {
 
   if (fof_halo_recv_total != fof_halo_recv_total2){
       err += 1;
-      cout << "The number of elements is different in the two files for rank " << rank << endl;
-      cout << fof_halo_recv_total << " , and " << fof_halo_recv_total2 << " for rank "<< rank<< endl;
     }
    else{
     for (int i=0;i<fof_halo_recv_total;i++){
@@ -312,13 +306,12 @@ int main( int argc, char** argv ) {
    }
    int numh1 = H_1.num_halos;
    int numh2 = H_2.num_halos;
+   int dn_1 = 0;
+   int dn_2 = 0;
 
    if (skip_err&&(err>0)){
        // if you want to skip over missing particles: note only do this if the catalogs should mostly match up.
        err = 0;
-       cout << "Skipping over missing particles for rank "<< rank << endl;
-
-
        int i=0;
        while (i < numh1) {
           if (H_1.fof_halo_tag->at(i)==H_2.fof_halo_tag->at(i)){
@@ -340,12 +333,41 @@ int main( int argc, char** argv ) {
 	   }
          }
      }
-  cout<< "number of elements before was " <<  fof_halo_recv_total2 << " , and "<<fof_halo_recv_total <<endl;
-  cout<< "number of elements now is " <<  H_1.num_halos << " , and "<< H_2.num_halos <<endl;
+
+   dn_1 =  fof_halo_recv_total - H_1.num_halos;
+   dn_2 =  fof_halo_recv_total2 - H_2.num_halos;
 
   }
+  int ndiff_tot = 0;
+  int ndiff_tot2 = 0;
+  MPI_Allreduce(&dn_1, &ndiff_tot, 1, MPI_INT, MPI_SUM,  Partition::getComm());
+  MPI_Allreduce(&dn_2, &ndiff_tot2, 1, MPI_INT, MPI_SUM,  Partition::getComm());
+
   // compute the error characteristics for the catalogs
-  compute_mean_std_dist(H_1 ,H_2);
+  err = compute_mean_std_dist(H_1 ,H_2, lim);
+
+    if ((rank==0)&&(err==0)){
+      cout << " Results " << endl;
+      cout << " ______________________________ " << endl;
+      cout << endl;      
+      cout << " Comparison test passed! " << endl;
+      cout << " All variables within threshold of "  << lim << endl;
+      cout << " Total number of non-matching halos = "<< ndiff_tot+ndiff_tot2 << endl;
+      cout << endl;
+      cout << " ______________________________ " << endl;
+  }
+  if ((rank==0)&&(err>0)){
+      cout << " Results " << endl;
+      cout << " ______________________________ " << endl;
+      cout << endl;
+      cout << " Comparison exceeded threshold of " << lim << " for " << err << " variables" << endl;
+      cout << " out of a total of " <<  N_HALO_FLOATS << " variables " << endl;
+      cout << " See above outputs for details  "<< endl;
+      cout << " Total number of non-matching halos = "<< ndiff_tot+ndiff_tot2 << endl;
+      cout << endl;
+      cout << " ______________________________ " << endl;
+  }
+
 
 
   MPI_Barrier(Partition::getComm());

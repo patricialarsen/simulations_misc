@@ -27,4 +27,4 @@ $(OBJDIR)/compare_dist.o: $(SRCDIR)/compare_dist.cpp
 
 
 clean:
-	rm $(OBJDIR)/*.o halo_check
+	rm $(OBJDIR)/*.o halo_check compare_dist

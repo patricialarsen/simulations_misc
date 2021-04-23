@@ -44,7 +44,7 @@ bool comp_by_fof_id(const halo_properties_test &a, const halo_properties_test &b
   return a.fof_halo_tag < b.fof_halo_tag;
 }
 
-void compute_mean_float(vector<float> *val1, vector<float> *val2, int num_halos , int num_halos2, string var_name, string var_name2){
+int compute_mean_float(vector<float> *val1, vector<float> *val2, int num_halos , int num_halos2, string var_name, string var_name2, float lim){
   int rank, n_ranks;
   rank = Partition::getMyProc();
   n_ranks = Partition::getNumProc();
@@ -59,6 +59,7 @@ void compute_mean_float(vector<float> *val1, vector<float> *val2, int num_halos 
   double max2,max1;
   double mean, mean2;
   double stddev_tot, stddev_tot2;
+  int err = 0;
 
   // mean computation
   for (int i=0; i<num_halos; i++){
@@ -103,9 +104,10 @@ void compute_mean_float(vector<float> *val1, vector<float> *val2, int num_halos 
    bool print_out = true;
    if (rank==0){
 
-     if ((fabs((stddev_tot-stddev_tot2)/stddev_tot)<0.01)&&(fabs((mean-mean2)/mean)<0.01))
+     if ((fabs((stddev_tot-stddev_tot2)/stddev_tot)<lim)&&(fabs((mean-mean2)/mean)<lim))
 	 print_out=false;    
      if (print_out){
+     err ++;
      cout << var_name << endl;
      cout << var_name2 << endl;
      cout << "______________________________________" <<endl;
@@ -114,10 +116,10 @@ void compute_mean_float(vector<float> *val1, vector<float> *val2, int num_halos 
      cout << endl;
      }
    }
-
+   return err;
 }
 
-void  compute_mean_std_dist(Halos_test H_1 , Halos_test H_2 ){
+int compute_mean_std_dist(Halos_test H_1 , Halos_test H_2, float lim ){
   // compute the mean and std of the differences and make a histogram to look more closely
   int rank, n_ranks;
   rank = Partition::getMyProc();
@@ -125,14 +127,15 @@ void  compute_mean_std_dist(Halos_test H_1 , Halos_test H_2 ){
 
   int count = H_1.num_halos;
   int count2 = H_2.num_halos;
+  int err = 0;
 
   for (int i =0; i<N_HALO_FLOATS; i++){
     string var_name = float_var_names_test[i];
     string var_name2 = float_var_names_test2[i];
-    compute_mean_float(H_1.float_data[i],H_2.float_data[i],count,count2,var_name,var_name2);
+    err += compute_mean_float(H_1.float_data[i],H_2.float_data[i],count,count2,var_name,var_name2, lim);
   }
 
-  return;
+  return err;
 }
 
 
@@ -179,6 +182,10 @@ int main( int argc, char** argv ) {
   string fof_file     = string(argv[1]);
   string fof_file2    = string(argv[2]);
 
+  stringstream thresh{ argv[3] };
+  float lim{};
+  if (!(thresh >> lim))
+          lim = 0.01;
 
 
   // Create halo buffers
@@ -196,9 +203,40 @@ int main( int argc, char** argv ) {
   if (rank == 0)
     cout << "Done reading halos" << endl;
 
+  int n1 = H_1.num_halos;
+  int n2 = H_2.num_halos;
+  int n_tot, n_tot2;
+
+  MPI_Allreduce(&n1, &n_tot, 1, MPI_INT, MPI_SUM,  Partition::getComm());
+  MPI_Allreduce(&n2, &n_tot2, 1, MPI_INT, MPI_SUM,  Partition::getComm());
+
 
   // compute the error characteristics for the catalogs
-  compute_mean_std_dist(H_1 ,H_2);
+  int err = compute_mean_std_dist(H_1 , H_2, lim);
+
+
+    if ((rank==0)&&(err==0)){
+      cout << " Results " << endl;
+      cout << " ______________________________ " << endl;
+      cout << endl;
+      cout << " Comparison test passed! " << endl;
+      cout << " All variables within threshold of "  << lim << endl;
+      cout << " Difference in number of halos  = "<< abs(n_tot-n_tot2) << endl;
+      cout << endl;
+      cout << " ______________________________ " << endl;
+  }
+  if ((rank==0)&&(err>0)){
+      cout << " Results " << endl;
+      cout << " ______________________________ " << endl;
+      cout << endl;
+      cout << " Comparison exceeded threshold of " << lim << " for " << err << " variables" << endl;
+      cout << " out of a total of " <<  N_HALO_FLOATS << " variables " << endl;
+      cout << " See above outputs for details  "<< endl;
+      cout << " Difference in number of halos  = "<< abs(n_tot-n_tot2) << endl;
+      cout << endl;
+      cout << " ______________________________ " << endl;
+  }
+
 
 
   MPI_Barrier(Partition::getComm());
