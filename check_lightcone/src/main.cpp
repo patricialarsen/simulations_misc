@@ -18,6 +18,7 @@
 #include "GenericIO.h"
 #include "Partition.h"
 
+#include "LC_test.h"
 
 #include "MurmurHashNeutral2.cpp" 
 
@@ -32,7 +33,10 @@ using namespace std;
 using namespace gio;
 using namespace cosmotk;
 
+LC_test L_1;
+LC_test L_2;
 
+/**
 typedef struct lc_halo {
   float posvel_a_m[7];
   float phi;
@@ -40,10 +44,18 @@ typedef struct lc_halo {
   int64_t id;
   unsigned int destination_rank;
 } lc_halo;
+*/
 
+bool comp_by_lc_dest(const lc_properties_test &a, const lc_properties_test &b){
+  return a.rank < b.rank;
+}
+
+/*
 bool comp_by_lc_dest(const lc_halo &a, const lc_halo &b) {
   return a.destination_rank < b.destination_rank;
 }
+
+
 
 bool comp_by_id(const lc_halo &a, const lc_halo &b) {
   return a.id < b.id;
@@ -53,13 +65,22 @@ bool comp_by_rep(const lc_halo &a, const lc_halo &b) {
   return a.rr < b.rr;
 }
 
-void  compute_mean_std_dist(vector<float> val1 , vector<float> val2 , float diff_tot ,string var_name){
+*/
+
+bool comp_by_id(const lc_properties_test &a, const lc_properties_test &b){
+  return a.id < b.id;
+}
+bool comp_by_rep(const lc_properties_test &a, const lc_properties_test &b){
+  return a.replication < b.replication;
+}
+
+
+int  compute_mean_std_dist(vector<float> *val1 , vector<float> *val2 , int count ,string var_name, float lim){
   // compute the mean and std of the differences and make a histogram to look more closely
   int rank, n_ranks;
   rank = Partition::getMyProc();
   n_ranks = Partition::getNumProc();
 
-  int count = val1.size();
   double diff=0; 
   double diff_frac=0;
   int n_tot;
@@ -68,42 +89,59 @@ void  compute_mean_std_dist(vector<float> val1 , vector<float> val2 , float diff
   double stddev=0;
 
   for (int i=0; i<count; i++){
-      diff += (double)(val1[i]-val2[i]);
-      if (val1[i]!=0){
-        double frac = (double)(fabs(val1[i]-val2[i])/fabs(val1[i]));
+      diff += (double)(val1->at(i)-val2->at(i));
+      if (val1->at(i)!=0){
+        double frac = (double)(fabs(val1->at(i)-val2->at(i))/fabs(val1->at(i)));
          diff_frac = (diff_frac<frac)?frac:diff_frac;
       }
    }
 
-      MPI_Allreduce(&diff, &mean, 1, MPI_DOUBLE, MPI_SUM,  Partition::getComm());
-      MPI_Reduce(&diff_frac, &frac_max, 1, MPI_DOUBLE, MPI_MAX, 0, Partition::getComm());
-      MPI_Allreduce(&count, &n_tot, 1, MPI_INT, MPI_SUM,  Partition::getComm());  
+   MPI_Allreduce(&diff, &mean, 1, MPI_DOUBLE, MPI_SUM,  Partition::getComm());
+   MPI_Reduce(&diff_frac, &frac_max, 1, MPI_DOUBLE, MPI_MAX, 0, Partition::getComm());
+   MPI_Allreduce(&count, &n_tot, 1, MPI_INT, MPI_SUM,  Partition::getComm());  
    mean = mean/n_tot;   
 
    for (int i=0; i< count; i++){
-      stddev += (double) ((val1[i]-val2[i]-(float)mean)*(val1[i]-val2[i]-(float)mean)/(n_tot-1));
+      stddev += (double) ((val1->at(i)-val2->at(i)-(float)mean)*(val1->at(i)-val2->at(i)-(float)mean)/(n_tot-1));
    }
    double stddev_tot;
    MPI_Reduce(&stddev, &stddev_tot, 1, MPI_DOUBLE, MPI_SUM, 0, Partition::getComm());
    stddev_tot = sqrt(stddev_tot);
 
    if (rank==0){
-     cout << var_name << endl;
-     cout << "______________________________________" <<endl;
+     cout << " " << var_name << endl;
+     cout << " ______________________________________" <<endl;
      cout << " mean difference = "<< mean << endl;
      cout << " maximum fractional difference = "<< frac_max<< endl;
      cout << " standard deviation of difference = " << stddev_tot << endl;
      cout << endl;
    }
+  int err = 0;
 
 
+  return err;
+}
 
-  return;
+
+int  compute_mean(LC_test L_1 , LC_test L_2, float lim ){
+  // compute the mean and std of the differences and make a histogram to look more closely
+  int rank, n_ranks;
+  rank = Partition::getMyProc();
+  n_ranks = Partition::getNumProc();
+
+  int count = L_1.num_parts;
+
+  int err=0;
+  for (int i =0; i<N_LC_FLOATS; i++){
+    string var_name = float_var_names_test[i];
+    err += compute_mean_std_dist(L_1.float_data[i],L_2.float_data[i],count,var_name,lim);
+  }
+  return err;
 }
 
 
 
-
+/*
 struct IO_Buffers { // this is the order of lc_halo struct above
 
   // LC halo data
@@ -177,93 +215,30 @@ void clear_IO_buffers() {
   IOB2.phi.clear();
 
 }
-
+*/
 inline unsigned int tag_to_rank(int64_t fof_tag, int n_ranks) {
     return MurmurHashNeutral2((void*)(&fof_tag),sizeof(int64_t),0) % n_ranks;
 }
 
 
-void read_lc_file(string file_name, string file_name2) {
-  // reads in relevant lightcone information from a particle or halo file 
-  {
+void read_lc_file(LC_test &L0, string file_name) {
+  // reads in relevant lightcone information from a LC particle file
   GenericIO GIO(Partition::getComm(),file_name,GenericIO::FileIOMPI);
   GIO.openAndReadHeader(GenericIO::MismatchRedistribute);
   size_t num_elems = GIO.readNumElems();
-  GIO.readPhysScale(IOB.box_size);
-  GIO.readPhysOrigin(IOB.origin);
-  IOB.x.resize(num_elems + GIO.requestedExtraSpace()/sizeof(float));
-  IOB.y.resize(num_elems + GIO.requestedExtraSpace()/sizeof(float));
-  IOB.z.resize(num_elems + GIO.requestedExtraSpace()/sizeof(float));
-  IOB.vx.resize(num_elems + GIO.requestedExtraSpace()/sizeof(float));
-  IOB.vy.resize(num_elems + GIO.requestedExtraSpace()/sizeof(float));
-  IOB.vz.resize(num_elems + GIO.requestedExtraSpace()/sizeof(float));
-  IOB.a.resize(num_elems + GIO.requestedExtraSpace()/sizeof(float));
-  IOB.replication.resize(num_elems + GIO.requestedExtraSpace()/sizeof(int));
-  IOB.id.resize(num_elems + GIO.requestedExtraSpace()/sizeof(int64_t));
-  IOB.phi.resize(num_elems + GIO.requestedExtraSpace()/sizeof(float));
-  GIO.addVariable("x", IOB.x, true);
-  GIO.addVariable("y", IOB.y, true);
-  GIO.addVariable("z", IOB.z, true);
-  GIO.addVariable("vx", IOB.vx, true);
-  GIO.addVariable("vy", IOB.vy, true);
-  GIO.addVariable("vz", IOB.vz, true);
-  GIO.addVariable("a", IOB.a, true);
-  GIO.addVariable("replication", IOB.replication, true);
-  GIO.addVariable("id", IOB.id, true);
-  GIO.addVariable("phi",IOB.phi,true);
-  GIO.readData();
-  IOB.x.resize(num_elems);
-  IOB.y.resize(num_elems);
-  IOB.z.resize(num_elems);
-  IOB.vx.resize(num_elems);
-  IOB.vy.resize(num_elems);
-  IOB.vz.resize(num_elems);
-  IOB.a.resize(num_elems);
-  IOB.replication.resize(num_elems);
-  IOB.id.resize(num_elems);
-  IOB.phi.resize(num_elems);
-  }
-  {
-  GenericIO GIO(Partition::getComm(),file_name2,GenericIO::FileIOMPI);
-  GIO.openAndReadHeader(GenericIO::MismatchRedistribute);
-  size_t num_elems = GIO.readNumElems();
-  GIO.readPhysScale(IOB2.box_size);
-  GIO.readPhysOrigin(IOB2.origin);
-  IOB2.x.resize(num_elems + GIO.requestedExtraSpace()/sizeof(float));
-  IOB2.y.resize(num_elems + GIO.requestedExtraSpace()/sizeof(float));
-  IOB2.z.resize(num_elems + GIO.requestedExtraSpace()/sizeof(float));
-  IOB2.vx.resize(num_elems + GIO.requestedExtraSpace()/sizeof(float));
-  IOB2.vy.resize(num_elems + GIO.requestedExtraSpace()/sizeof(float));
-  IOB2.vz.resize(num_elems + GIO.requestedExtraSpace()/sizeof(float));
-  IOB2.a.resize(num_elems + GIO.requestedExtraSpace()/sizeof(float));
-  IOB2.replication.resize(num_elems + GIO.requestedExtraSpace()/sizeof(int));
-  IOB2.id.resize(num_elems + GIO.requestedExtraSpace()/sizeof(int64_t));
-  IOB2.phi.resize(num_elems + GIO.requestedExtraSpace()/sizeof(float));
+  
+  L0.Resize(num_elems + GIO.requestedExtraSpace());
+ 
 
-  GIO.addVariable("x", IOB2.x, true);
-  GIO.addVariable("y", IOB2.y, true);
-  GIO.addVariable("z", IOB2.z, true);
-  GIO.addVariable("vx", IOB2.vx, true);
-  GIO.addVariable("vy", IOB2.vy, true);
-  GIO.addVariable("vz", IOB2.vz, true);
-  GIO.addVariable("a", IOB2.a, true);
-  GIO.addVariable("replication", IOB2.replication, true);
-  GIO.addVariable("id", IOB2.id, true);
-  GIO.addVariable("phi", IOB2.phi, true);
+  GIO.addVariable("id", *(L0.id), true);
+  GIO.addVariable("replication", *(L0.replication), true);
+  
+  for (int i=0; i<N_LC_FLOATS; ++i)
+	  GIO.addVariable((const string) float_var_names_test[i], *(L0.float_data[i]),true);
 
   GIO.readData();
-  IOB2.x.resize(num_elems);
-  IOB2.y.resize(num_elems);
-  IOB2.z.resize(num_elems);
-  IOB2.vx.resize(num_elems);
-  IOB2.vy.resize(num_elems);
-  IOB2.vz.resize(num_elems);
-  IOB2.a.resize(num_elems);
-  IOB2.phi.resize(num_elems);
 
-  IOB2.replication.resize(num_elems);
-  IOB2.id.resize(num_elems);
- }
+  L0.Resize(num_elems);
 }
 
 
@@ -278,47 +253,51 @@ int main( int argc, char** argv ) {
 
   string lc_file     = string(argv[1]);
   string lc_file2    = string(argv[2]);
+  stringstream thresh{ argv[3] };
+  float lim{};
+  if (!(thresh >> lim))
+	  lim = 0.01;
+
+
+  L_1.Allocate();
+  L_2.Allocate();
+  L_1.Set_MPIType();
+  L_2.Set_MPIType();
+
+
 
   int err = 0;
   bool skip_err = true;
 
   // LC HALOS
-  read_lc_file(lc_file, lc_file2);                  // read the file
+  read_lc_file(L_1, lc_file);                  // read the file
+  read_lc_file(L_2, lc_file2);                  // read the file
 
   if (rank == 0)
     cout << "Done reading LC" << endl;
 
-  vector<lc_halo> lc_halo_send;
+  vector<lc_properties_test> lc_halo_send;
   vector<int> lc_halo_send_cnt;
   lc_halo_send_cnt.resize(n_ranks,0);
-  for (size_t i=0;i<IOB.id.size();++i) {     // pack a vector of structures
-    int64_t tag = IOB.id[i];
-    unsigned int recv_rank = tag_to_rank(tag, n_ranks);
-
-    lc_halo h = { {IOB.x[i],IOB.y[i],IOB.z[i],IOB.vx[i],IOB.vy[i],IOB.vz[i],IOB.a[i]}, \
-                  IOB.phi[i],IOB.replication[i],\
-                  tag, recv_rank};
-    lc_halo_send.push_back(h);
-    ++lc_halo_send_cnt[recv_rank];        // count the send items
+  for (size_t i=0;i<L_1.num_parts;++i) {     // pack a vector of structures
+	lc_properties_test tmp = L_1.GetProperties(i);
+	tmp.rank = tag_to_rank(tmp.id,n_ranks);
+	lc_halo_send.push_back(tmp);
+	++lc_halo_send_cnt[tmp.rank];
   }                                       // prepare to send by contiguous destinations
-
-
-  vector<lc_halo> lc_halo_send2;
+  vector<lc_properties_test> lc_halo_send2;
   vector<int> lc_halo_send_cnt2;
   lc_halo_send_cnt2.resize(n_ranks,0);
-  for (size_t i=0;i<IOB2.id.size();++i) {     // pack a vector of structures
-    int64_t tag = IOB2.id[i];
-    unsigned int recv_rank = tag_to_rank(tag, n_ranks);
-
-    lc_halo h = { {IOB2.x[i],IOB2.y[i],IOB2.z[i],IOB2.vx[i],IOB2.vy[i],IOB2.vz[i],IOB2.a[i]}, \
-                  IOB2.phi[i],IOB2.replication[i],\
-                  tag, recv_rank};
-    lc_halo_send2.push_back(h);
-    ++lc_halo_send_cnt2[recv_rank];        // count the send items
+  for (size_t i=0;i<L_2.num_parts;++i) {     // pack a vector of structures
+        lc_properties_test tmp = L_2.GetProperties(i);
+        tmp.rank = tag_to_rank(tmp.id,n_ranks);
+        lc_halo_send2.push_back(tmp);
+        ++lc_halo_send_cnt2[tmp.rank];
   }                                       // prepare to send by contiguous destinations
 
+
   if (rank == 0)
-    cout << "Done packing LC halos" << endl;
+    cout << "Done packing LC buffers" << endl;
 
   std::sort(lc_halo_send.begin(),lc_halo_send.end(),comp_by_lc_dest);
   std::sort(lc_halo_send2.begin(),lc_halo_send2.end(),comp_by_lc_dest);
@@ -328,25 +307,9 @@ int main( int argc, char** argv ) {
   if (rank == 0)
     cout << "Done sorting LC halos" << endl;
 
-  clear_IO_buffers();
-  MPI_Barrier(Partition::getComm());
+  L_1.Resize(0);
+  L_2.Resize(0);
 
-  MPI_Barrier(Partition::getComm());
-
-  // create the MPI types
-  MPI_Datatype lc_halo_type;
-  {
-    MPI_Datatype type[6] = { MPI_FLOAT, MPI_FLOAT, MPI_INT, MPI_INT64_T, MPI_UNSIGNED, MPI_UB };
-    int blocklen[6] = {7,1,1,1,1,1};
-    MPI_Aint disp[6] = {  offsetof(lc_halo,posvel_a_m),
-                          offsetof(lc_halo,phi),
-                          offsetof(lc_halo,rr),
-                          offsetof(lc_halo,id),
-                          offsetof(lc_halo,destination_rank),
-                          sizeof(lc_halo) };
-    MPI_Type_struct(6,blocklen,disp,type,&lc_halo_type);
-    MPI_Type_commit(&lc_halo_type);
-  }
 
 
   // get the receive counts
@@ -391,9 +354,9 @@ int main( int argc, char** argv ) {
 
   }
 
-  vector<lc_halo> lc_halo_recv;
+  vector<lc_properties_test> lc_halo_recv;
   lc_halo_recv.resize(lc_halo_recv_total);
-  vector<lc_halo> lc_halo_recv2;
+  vector<lc_properties_test> lc_halo_recv2;
   lc_halo_recv2.resize(lc_halo_recv_total2);
 
   MPI_Barrier(Partition::getComm());
@@ -403,11 +366,11 @@ int main( int argc, char** argv ) {
 
 
   // send the actual data
-  MPI_Alltoallv(&lc_halo_send[0],&lc_halo_send_cnt[0],&lc_halo_send_off[0],lc_halo_type,\
-                   &lc_halo_recv[0],&lc_halo_recv_cnt[0],&lc_halo_recv_off[0],lc_halo_type,Partition::getComm());
+  MPI_Alltoallv(&lc_halo_send[0],&lc_halo_send_cnt[0],&lc_halo_send_off[0],L_1.LC_properties_MPI_Type,\
+                   &lc_halo_recv[0],&lc_halo_recv_cnt[0],&lc_halo_recv_off[0],L_1.LC_properties_MPI_Type,Partition::getComm());
 
-  MPI_Alltoallv(&lc_halo_send2[0],&lc_halo_send_cnt2[0],&lc_halo_send_off2[0],lc_halo_type,\
-                   &lc_halo_recv2[0],&lc_halo_recv_cnt2[0],&lc_halo_recv_off2[0],lc_halo_type,Partition::getComm());
+  MPI_Alltoallv(&lc_halo_send2[0],&lc_halo_send_cnt2[0],&lc_halo_send_off2[0],L_2.LC_properties_MPI_Type,\
+                   &lc_halo_recv2[0],&lc_halo_recv_cnt2[0],&lc_halo_recv_off2[0],L_2.LC_properties_MPI_Type,Partition::getComm());
 
   if (rank == 0)
     cout << "About to sort" << endl;
@@ -421,34 +384,20 @@ int main( int argc, char** argv ) {
   if (rank == 0)
     cout << "Sorted" << endl;
 
+  L_1.Resize(0);
+  L_2.Resize(0);
 
- clear_IO_buffers();
-  for (int i=0; i<lc_halo_recv_total; ++i) {
-   // halo_properties_t tmp = fof_lookup(lc_halo_recv[i].id, fof_halo_recv);
-    IOB.x.push_back(lc_halo_recv[i].posvel_a_m[0]);
-    IOB.y.push_back(lc_halo_recv[i].posvel_a_m[1]);
-    IOB.z.push_back(lc_halo_recv[i].posvel_a_m[2]);
-    IOB.vx.push_back(lc_halo_recv[i].posvel_a_m[3]);
-    IOB.vy.push_back(lc_halo_recv[i].posvel_a_m[4]);
-    IOB.vz.push_back(lc_halo_recv[i].posvel_a_m[5]);
-    IOB.a.push_back(lc_halo_recv[i].posvel_a_m[6]);
-    IOB.replication.push_back(lc_halo_recv[i].rr);
-    IOB.id.push_back(lc_halo_recv[i].id);
-    IOB.phi.push_back(lc_halo_recv[i].phi);
+  for (int i=0; i<lc_halo_recv_total; ++i){
+     lc_properties_test tmp = lc_halo_recv[i];
+     L_1.PushBack(tmp);
   }
-  for (int i=0; i<lc_halo_recv_total2; ++i) {
-   // halo_properties_t tmp = fof_lookup(lc_halo_recv[i].id, fof_halo_recv);
-    IOB2.x.push_back(lc_halo_recv2[i].posvel_a_m[0]);
-    IOB2.y.push_back(lc_halo_recv2[i].posvel_a_m[1]);
-    IOB2.z.push_back(lc_halo_recv2[i].posvel_a_m[2]);
-    IOB2.vx.push_back(lc_halo_recv2[i].posvel_a_m[3]);
-    IOB2.vy.push_back(lc_halo_recv2[i].posvel_a_m[4]);
-    IOB2.vz.push_back(lc_halo_recv2[i].posvel_a_m[5]);
-    IOB2.a.push_back(lc_halo_recv2[i].posvel_a_m[6]);
-    IOB2.replication.push_back(lc_halo_recv2[i].rr);
-    IOB2.id.push_back(lc_halo_recv2[i].id);
-    IOB2.phi.push_back(lc_halo_recv2[i].phi);
+    for (int i=0; i<lc_halo_recv_total2; ++i){
+     lc_properties_test tmp = lc_halo_recv2[i];
+     L_2.PushBack(tmp);
   }
+    lc_halo_recv.resize(0);
+    lc_halo_recv2.resize(0);
+
 
   if (rank == 0)
     cout << "Assigned to buffers" << endl;
@@ -463,46 +412,56 @@ int main( int argc, char** argv ) {
    else{
 
     for (int i=0;i<lc_halo_recv_total;i++){
-       if((IOB.id[i]!=IOB2.id[i])||(IOB.replication[i]!=IOB2.replication[i]))
+       if( (L_1.id->at(i)!=L_2.id->at(i) )|| (L_1.replication->at(i)!=L_2.replication->at(i) ) )
          err+=1;
      }
    }
 
+    int numl1 = L_1.num_parts;
+    int numl2 = L_2.num_parts;
+    int dn_1 = 0;
+    int dn_2 = 0;
 
 
     if (skip_err&&(err>0)){
        err = 0;
        cout << "Skipping over missing particles for rank "<< rank << endl;
        int i = 0;
-       while (i < IOB.id.size()){
-          if ((IOB.id[i]==IOB2.id[i])&&(IOB.replication[i]==IOB2.replication[i])){
+       while (i < numl1){
+          if ((L_1.id->at(i)==L_2.id->at(i))&&(L_1.replication->at(i)==L_2.replication->at(i))){
              i += 1;
            }
           else {
            bool not_found = true;
            for (int j=0;j<32;j++){
-               if ((IOB.id[i]==IOB2.id[i+j])&&(IOB.replication[i]==IOB2.replication[i+j])){
+               if ((L_1.id->at(i)==L_2.id->at(i+j))&&(L_1.replication->at(i)==L_2.replication->at(i+j))){
                   for (int k=0; k<j; k++)
-                      erase_element_IOB2(i+k);
+                      L_2.Erase(i+k);
                      //IOB2.id.erase(IOB2.id.begin()+i+k); // if the particle is found within the next 32 elements then delete section before that
                 not_found = false;
                 i+=1;
                 }
               }
-           if (not_found)
-             erase_element_IOB(i); 
+           if (not_found){
+             L_1.Erase(i); 
+	     -- numl1;
+	   }
       //       IOB.id.erase(IOB.id.begin()+i); // delete and just continue until we find 
          }
      }
 
-    cout<< "number of elements before was " <<  lc_halo_recv_total2 << " , and "<<lc_halo_recv_total <<endl;
-    cout<< "number of elements now is " <<  IOB.id.size() << " , and "<< IOB2.id.size() <<endl;
-    // err = 1; // for now, to supress later outputs
-    lc_halo_recv_total = IOB.id.size();
-    lc_halo_recv_total2 = IOB2.id.size();
+    //cout<< "number of elements before was " <<  lc_halo_recv_total2 << " , and "<<lc_halo_recv_total <<endl;
+    //cout<< "number of elements now is " <<  IOB.id.size() << " , and "<< IOB2.id.size() <<endl;
+  //  // err = 1; // for now, to supress later outputs
+   // lc_halo_recv_total = IOB.id.size();
+   // lc_halo_recv
+   //
+   //_total2 = IOB2.id.size();
     }
 
+    err = compute_mean(L_1,L_2,lim);
 
+/*
     float da=0;
     float dx=0;
     float dy=0;
@@ -513,9 +472,11 @@ int main( int argc, char** argv ) {
     int64_t diff_id =0;
     int diff_rep = 0;
     float dphi=0;
-
+*/
 //  if (lc_halo_recv_total == lc_halo_recv_total2){
-    if (err==0){
+  
+  
+  /*  if (err==0){
     for (int i=0;i<lc_halo_recv_total;++i){
          float xdiff = fabs(IOB.x[i]-IOB2.x[i]);
          float ydiff = fabs(IOB.y[i]-IOB2.y[i]);
@@ -584,12 +545,13 @@ int main( int argc, char** argv ) {
     cout << "Maximum dphi = "<< dphi_tot << endl;
 
   }
-
+*/
 // communicate these between ranks and find the maximum
 
   // now if the difference in values is >0 , then create histograms of the differences to check they're unbiased
   // compute the mean and standard deviation of the differences and look at the fractional errors.   
-  if (err_tot == 0){
+ 
+ /* if (err_tot == 0){
   if ((dx_tot>0)||(dy_tot>0)||(dz_tot>0)){
     compute_mean_std_dist(IOB.x,IOB2.x,dx_tot,"x position");
     compute_mean_std_dist(IOB.y,IOB2.y,dy_tot,"y position");
@@ -607,8 +569,10 @@ int main( int argc, char** argv ) {
     compute_mean_std_dist(IOB.phi,IOB2.phi,dphi_tot,"potential");
   }
   }
+  */
  
-
+ L_1.Deallocate();
+ L_2.Deallocate();
 
   MPI_Barrier(Partition::getComm());
 
