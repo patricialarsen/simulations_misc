@@ -6,22 +6,22 @@ INCLUDES := -I $(SRCDIR) -I/data/a/cpac/prlarsen/hacc/genericio -I/data/a/cpac/p
 
 #
 
-OBJECTS := $(OBJDIR)/main.o $(OBJDIR)/Halos.o
+OBJECTS := $(OBJDIR)/halo_check.o $(OBJDIR)/Halos_test.o
 
-OBJECTS2 := $(OBJDIR)/compare_dist.o $(OBJDIR)/Halos.o
+OBJECTS2 := $(OBJDIR)/compare_dist.o $(OBJDIR)/Halos_test.o
 
 #linking
-match : $(OBJECTS) $(LIBS)
+halo_check: $(OBJECTS) $(LIBS)
 	$(CPP) $(CPPFLAGS) $(OBJECTS) -L/data/a/cpac/prlarsen/hacc/roomba.cpu/mpi/lib -lCosmoTools -lGenericIOMPI -o halo_check -fopenmp
 
-dist : $(OBJECTS2) $(LIBS)
+compare_dist : $(OBJECTS2) $(LIBS)
 	$(CPP) $(CPPFLAGS) $(OBJECTS2) -L/data/a/cpac/prlarsen/hacc/roomba.cpu/mpi/lib -lCosmoTools -lGenericIOMPI -o compare_dist -fopenmp
 
 #compilation
-$(OBJDIR)/main.o: $(SRCDIR)/main.cpp 
-	$(CPP) $(CPPFLAGS) $(INCLUDES) -c $(SRCDIR)/main.cpp -o $(OBJDIR)/main.o -fopenmp
-$(OBJDIR)/Halos.o: $(SRCDIR)/Halos.cxx
-	$(CPP) $(CPPFLAGS) $(INCLUDES) -c $(SRCDIR)/Halos.cxx -o $(OBJDIR)/Halos.o -fopenmp
+$(OBJDIR)/halo_check.o: $(SRCDIR)/halo_check.cpp 
+	$(CPP) $(CPPFLAGS) $(INCLUDES) -c $(SRCDIR)/halo_check.cpp -o $(OBJDIR)/halo_check.o -fopenmp
+$(OBJDIR)/Halos_test.o: $(SRCDIR)/Halos_test.cxx
+	$(CPP) $(CPPFLAGS) $(INCLUDES) -c $(SRCDIR)/Halos_test.cxx -o $(OBJDIR)/Halos_test.o -fopenmp
 $(OBJDIR)/compare_dist.o: $(SRCDIR)/compare_dist.cpp
 	$(CPP) $(CPPFLAGS) $(INCLUDES) -c $(SRCDIR)/compare_dist.cpp -o $(OBJDIR)/compare_dist.o -fopenmp
 

@@ -21,8 +21,8 @@ This should be built with the hacc environment, and linked to trunk. You should 
 
 In order to run this, alter the Makefile, type
 ```
-make dist
-make match
+make compare_dist
+make halo_check
 ```
 and run using
 ```

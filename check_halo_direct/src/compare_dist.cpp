@@ -23,11 +23,6 @@
 #include "MurmurHashNeutral2.cpp" 
 
 
-/// Assumes ids and  are consistent but ordering may have changed
-/// Redistributes aongst ranks and sorts the values for a one-to-one check of the changes in 
-/// several halo outputs
-
-
 // Cosmotools
 using namespace std;
 using namespace gio;
@@ -120,7 +115,7 @@ int compute_mean_float(vector<float> *val1, vector<float> *val2, int num_halos ,
 }
 
 int compute_mean_std_dist(Halos_test H_1 , Halos_test H_2, float lim ){
-  // compute the mean and std of the differences and make a histogram to look more closely
+  // compute the mean and std of the differences 
   int rank, n_ranks;
   rank = Partition::getMyProc();
   n_ranks = Partition::getNumProc();
