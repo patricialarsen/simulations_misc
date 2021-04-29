@@ -193,7 +193,7 @@ int main( int argc, char** argv ) {
 
   // Reading halos
   read_halos(H_1, fof_file, 1);
-  read_halos(H_2, fof_file2, 2);
+  read_halos(H_2, fof_file2, 1);
 
   if (rank == 0)
     cout << "Done reading halos" << endl;

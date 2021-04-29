@@ -114,8 +114,8 @@ void Halos_test::Erase(size_t i) {
     this->fof_halo_count->erase(this->fof_halo_count->begin()+i);
     this->fof_halo_tag->erase(this->fof_halo_tag->begin()+i);
     this->sod_halo_count->erase(this->sod_halo_count->begin()+i);
-    for (int i=0; i<N_HALO_FLOATS; ++i)
-        this->float_data[i]->erase(this->float_data[i]->begin()+i);
+    for (int j=0; j<N_HALO_FLOATS; ++j)
+        this->float_data[j]->erase(this->float_data[j]->begin()+i);
 
 
     --this->num_halos;
