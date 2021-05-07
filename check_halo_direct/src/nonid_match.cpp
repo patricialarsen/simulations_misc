@@ -20,8 +20,8 @@
 
 #include "Halos_test.h"
 
-#include "MurmurHashNeutral2.cpp" 
-
+#include "MurmurHashNeutral2.h" 
+#include "routines.h"
 
 /// Assumes halos match up and compares halos between mass bins but ids do not have to match
 /// Redistributes amongst ranks and sorts the values for a one-to-one check of the changes in 
@@ -33,12 +33,10 @@ using namespace std;
 using namespace gio;
 using namespace cosmotk;
 
-Halos_test H_1;
-Halos_test H_2;
-
-bool comp_by_fof_dest(const halo_properties_test &a, const halo_properties_test &b) {
-  return a.rank < b.rank;
+inline unsigned int tag_to_rank(int64_t fof_tag, int n_ranks) {
+    return MurmurHashNeutral2((void*)(&fof_tag),sizeof(int64_t),0) % n_ranks;
 }
+
 
 bool comp_by_fof_mass(const halo_properties_test &a, const halo_properties_test &b) {
   return a.float_data[0] < b.float_data[0];
@@ -46,13 +44,13 @@ bool comp_by_fof_mass(const halo_properties_test &a, const halo_properties_test 
 bool comp_by_fof_x(const halo_properties_test &a, const halo_properties_test &b) {
   return a.float_data[2] < b.float_data[2];
 }
-
 bool comp_by_fof_y(const halo_properties_test &a, const halo_properties_test &b) {
   return a.float_data[3] < b.float_data[3];
 }
 bool comp_by_fof_z(const halo_properties_test &a, const halo_properties_test &b) {
   return a.float_data[4] < b.float_data[4];
 }
+
 
 bool check_comp_halo(const halo_properties_test &a, const halo_properties_test &b){
    float diff_x = a.float_data[2] - b.float_data[2];
@@ -63,101 +61,6 @@ bool check_comp_halo(const halo_properties_test &a, const halo_properties_test &
 }
 
 
-
-
-bool comp_by_fof_id(const halo_properties_test &a, const halo_properties_test &b) {
-  return a.fof_halo_tag < b.fof_halo_tag;
-}
-
-int compute_mean_float(vector<float> *val1, vector<float> *val2, int64_t num_halos , string var_name, float lim){
-  int rank, n_ranks;
-  rank = Partition::getMyProc();
-  n_ranks = Partition::getNumProc();
-
-  double diff=0;
-  double diff_frac=0;
-  int64_t n_tot;
-  double frac_max;
-  double mean;
-  double stddev=0;
-  double stddevq=0;
-  double meanq=0;
-  double meanq_tot;
-
-  for (int64_t i=0; i<num_halos; i++){
-      diff += (double)(val1->at(i)-val2->at(i));
-      meanq += (double)(val1->at(i));
-      if (val1->at(i)!=0){
-        double frac = (double)(fabs(val1->at(i)-val2->at(i))/fabs(val1->at(i)));
-	diff_frac = max(diff_frac,frac);
-      }
-   }
-
-      MPI_Barrier(Partition::getComm());
-      MPI_Allreduce(&diff, &mean, 1, MPI_DOUBLE, MPI_SUM,  Partition::getComm());
-      MPI_Allreduce(&diff_frac, &frac_max, 1, MPI_DOUBLE, MPI_MAX,  Partition::getComm());
-      MPI_Allreduce(&meanq, &meanq_tot, 1, MPI_DOUBLE, MPI_SUM, Partition::getComm());
-      MPI_Allreduce(&num_halos, &n_tot, 1, MPI_INT64_T, MPI_SUM,  Partition::getComm());
-   mean = mean/n_tot;
-   meanq_tot = meanq_tot/n_tot;
-
-
-   double diffq;
-   double diff_tmp;
-   for (int64_t i=0; i< num_halos; i++){
-      diff_tmp = (double)(val1->at(i)-val2->at(i))-mean;
-      diffq = (double)(val1->at(i))- meanq_tot;
-      stddev += diff_tmp*diff_tmp/(n_tot-1);
-      stddevq += diffq*diffq/(n_tot-1);
-   }
-   double stddev_tot;
-   double stddevq_tot;
-   MPI_Allreduce(&stddev, &stddev_tot, 1, MPI_DOUBLE, MPI_SUM,  Partition::getComm());
-   MPI_Allreduce(&stddevq, &stddevq_tot, 1, MPI_DOUBLE, MPI_SUM,  Partition::getComm());
-   stddev_tot = sqrt(stddev_tot);
-   stddevq_tot = sqrt(stddevq_tot);
-
-   bool print_out = true;
-   if (rank==0){
-
-     if ((frac_max<lim)||((fabs(stddev_tot/stddevq_tot)<lim)&&(fabs(mean/meanq_tot)<lim))) // no values change by more than a percent
-       print_out=false;
-     if (print_out){
-     cout << " " << var_name << endl;
-     cout << " ______________________________________" <<endl;
-     cout << " mean difference = " << mean << endl;
-     cout << " maximum fractional difference = " << frac_max<< endl;
-     cout << " standard deviation of difference = " << stddev_tot << endl;
-     cout << " mean of quantity = " << meanq_tot << endl;
-     cout << " standard deviation of quantity = " << stddevq_tot << endl;
-     cout << endl;
-     return 1;
-     }
-   }
-   return 0;
-
-}
-
-int  compute_mean_std_dist(Halos_test H_1 , Halos_test H_2, float lim ){
-  // compute the mean and std of the differences and make a histogram to look more closely
-  int rank, n_ranks;
-  rank = Partition::getMyProc();
-  n_ranks = Partition::getNumProc();
-
-  int64_t count = H_1.num_halos;
-
-  int err=0;
-  for (int i =0; i<N_HALO_FLOATS; i++){
-    string var_name = float_var_names_test[i];
-    err += compute_mean_float(H_1.float_data[i],H_2.float_data[i],count,var_name,lim);
-  }
-  return err;
-}
-
-
-inline unsigned int tag_to_rank(int64_t fof_tag, int n_ranks) {
-    return MurmurHashNeutral2((void*)(&fof_tag),sizeof(int64_t),0) % n_ranks;
-}
 
 int vec_to_rank(float x, float y, float z, float box_size){
   int rank, n_ranks;
@@ -187,42 +90,17 @@ int vec_to_rank(float x, float y, float z, float box_size){
   return dest_rank;
 }
 
-
-void read_halos(Halos_test &H0, string file_name, int file_opt) {
- // Read halo files into a buffer
-  GenericIO GIO(Partition::getComm(),file_name,GenericIO::FileIOMPI);
-  GIO.openAndReadHeader(GenericIO::MismatchRedistribute);
-  size_t num_elems = GIO.readNumElems();
-
-  H0.Resize(num_elems + GIO.requestedExtraSpace()); 
-
-  GIO.addVariable("fof_halo_tag",   *(H0.fof_halo_tag),true);
-  GIO.addVariable("fof_halo_count", *(H0.fof_halo_count), true);
-  if (H0.has_sod)
-    GIO.addVariable("sod_halo_count", *(H0.sod_halo_count), true);
-
- if (file_opt==1){
-  for (int i=0; i<N_HALO_FLOATS; ++i)
-    GIO.addVariable((const string)float_var_names_test[i], *(H0.float_data[i]), true);
-   }
- else{
-  for (int i=0; i<N_HALO_FLOATS; ++i)
-    GIO.addVariable((const string)float_var_names_test[i], *(H0.float_data[i]), true);
- }
-
-  GIO.readData();
-  H0.Resize(num_elems);
-}  
-
+int match_pos (string fof_file, string fof_file2, float lim, float box_size, float min_mass, float max_mass){
+/*
 int main( int argc, char** argv ) {
   MPI_Init( &argc, &argv );
   Partition::initialize();
   GenericIO::setNaturalDefaultPartition();
-
+*/
   int rank, n_ranks;
   rank = Partition::getMyProc();
   n_ranks = Partition::getNumProc();
-
+/*
   string fof_file     = string(argv[1]);
   string fof_file2    = string(argv[2]);
   stringstream thresh{ argv[3] };
@@ -245,6 +123,9 @@ int main( int argc, char** argv ) {
   float max_mass{};
   if (!(mm2 >> max_mass))
           max_mass = 1.e14;
+*/
+  Halos_test H_1;
+  Halos_test H_2;
 
   // Create halo buffers
   H_1.Allocate();
@@ -280,8 +161,8 @@ int main( int argc, char** argv ) {
   }
 
   // sort by destination rank
-  sort(fof_halo_send.begin(),fof_halo_send.end(), comp_by_fof_dest);
-  sort(fof_halo_send2.begin(),fof_halo_send2.end(), comp_by_fof_dest);
+  sort(fof_halo_send.begin(),fof_halo_send.end(), comp_by_halo_dest);
+  sort(fof_halo_send2.begin(),fof_halo_send2.end(), comp_by_halo_dest);
   MPI_Barrier(Partition::getComm());
 
 
@@ -424,7 +305,7 @@ int main( int argc, char** argv ) {
 
 
   // compute the error characteristics for the catalogs
-  err = compute_mean_std_dist(H_1 ,H_2, lim);
+  err = compute_mean_std_dist_halo(H_1 ,H_2, lim);
 
     if ((rank==0)&&(err==0)){
       cout << " Results " << endl;
@@ -457,7 +338,7 @@ int main( int argc, char** argv ) {
   H_2.Deallocate();
 
 
-  Partition::finalize();
-  MPI_Finalize();
+  //Partition::finalize();
+ // MPI_Finalize();
   return 0;
 }

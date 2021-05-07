@@ -20,26 +20,21 @@
 
 #include "Halos_test.h"
 
-#include "MurmurHashNeutral2.cpp" 
-
+#include "MurmurHashNeutral2.h" 
+#include "routines.h"
 
 // Cosmotools
 using namespace std;
 using namespace gio;
 using namespace cosmotk;
 
-Halos_test H_1;
-Halos_test H_2;
 
-bool comp_by_fof_dest(const halo_properties_test &a, const halo_properties_test &b) {
-  return a.rank < b.rank;
+inline unsigned int tag_to_rank(int64_t fof_tag, int n_ranks) {
+    return MurmurHashNeutral2((void*)(&fof_tag),sizeof(int64_t),0) % n_ranks;
 }
 
-bool comp_by_fof_id(const halo_properties_test &a, const halo_properties_test &b) {
-  return a.fof_halo_tag < b.fof_halo_tag;
-}
 
-int compute_mean_float(vector<float> *val1, vector<float> *val2, int num_halos , int num_halos2, string var_name, string var_name2, float lim){
+int compute_mean_float_dist(vector<float> *val1, vector<float> *val2, int num_halos , int num_halos2, string var_name, string var_name2, float lim){
   int rank, n_ranks;
   rank = Partition::getMyProc();
   n_ranks = Partition::getNumProc();
@@ -114,7 +109,7 @@ int compute_mean_float(vector<float> *val1, vector<float> *val2, int num_halos ,
    return err;
 }
 
-int compute_mean_std_dist(Halos_test H_1 , Halos_test H_2, float lim ){
+int compute_mean_std_dist_halos2(Halos_test H_1 , Halos_test H_2, float lim ){
   // compute the mean and std of the differences 
   int rank, n_ranks;
   rank = Partition::getMyProc();
@@ -127,60 +122,21 @@ int compute_mean_std_dist(Halos_test H_1 , Halos_test H_2, float lim ){
   for (int i =0; i<N_HALO_FLOATS; i++){
     string var_name = float_var_names_test[i];
     string var_name2 = float_var_names_test2[i];
-    err += compute_mean_float(H_1.float_data[i],H_2.float_data[i],count,count2,var_name,var_name2, lim);
+    err += compute_mean_float_dist(H_1.float_data[i],H_2.float_data[i],count,count2,var_name,var_name2, lim);
   }
 
   return err;
 }
 
 
-inline unsigned int tag_to_rank(int64_t fof_tag, int n_ranks) {
-    return MurmurHashNeutral2((void*)(&fof_tag),sizeof(int64_t),0) % n_ranks;
-}
-
-
-void read_halos(Halos_test &H0, string file_name, int file_opt) {
- // Read halo files into a buffer
-  GenericIO GIO(Partition::getComm(),file_name,GenericIO::FileIOMPI);
-  GIO.openAndReadHeader(GenericIO::MismatchRedistribute);
-  size_t num_elems = GIO.readNumElems();
-
-  H0.Resize(num_elems + GIO.requestedExtraSpace()); 
-
-  GIO.addVariable("fof_halo_tag",   *(H0.fof_halo_tag),true);
-  GIO.addVariable("fof_halo_count", *(H0.fof_halo_count), true);
-  if (H0.has_sod)
-    GIO.addVariable("sod_halo_count", *(H0.sod_halo_count), true);
-
- if (file_opt==1){
-  for (int i=0; i<N_HALO_FLOATS; ++i)
-    GIO.addVariable((const string)float_var_names_test[i], *(H0.float_data[i]), true);
-   }
- else{
-  for (int i=0; i<N_HALO_FLOATS; ++i)
-    GIO.addVariable((const string)float_var_names_test2[i], *(H0.float_data[i]), true);
- }
-
-  GIO.readData();
-  H0.Resize(num_elems);
-}  
-
-int main( int argc, char** argv ) {
-  MPI_Init( &argc, &argv );
-  Partition::initialize();
-  GenericIO::setNaturalDefaultPartition();
-
+int compare_dist(string fof_file,string fof_file2, float lim){
+	
   int rank, n_ranks;
   rank = Partition::getMyProc();
   n_ranks = Partition::getNumProc();
 
-  string fof_file     = string(argv[1]);
-  string fof_file2    = string(argv[2]);
-
-  stringstream thresh{ argv[3] };
-  float lim{};
-  if (!(thresh >> lim))
-          lim = 0.01;
+  Halos_test H_1;
+  Halos_test H_2;
 
 
   // Create halo buffers
@@ -207,7 +163,7 @@ int main( int argc, char** argv ) {
 
 
   // compute the error characteristics for the catalogs
-  int err = compute_mean_std_dist(H_1 , H_2, lim);
+  int err = compute_mean_std_dist_halos2(H_1 , H_2, lim);
 
 
     if ((rank==0)&&(err==0)){
@@ -239,7 +195,5 @@ int main( int argc, char** argv ) {
   H_2.Deallocate();
 
 
-  Partition::finalize();
-  MPI_Finalize();
   return 0;
 }

@@ -17,11 +17,9 @@
 // Generic IO
 #include "GenericIO.h"
 #include "Partition.h"
-
 #include "Halos_test.h"
-
-#include "MurmurHashNeutral2.cpp" 
-
+#include "MurmurHashNeutral2.h" 
+#include "routines.h"
 
 /// Assumes ids and  are consistent but ordering may have changed
 /// Redistributes aongst ranks and sorts the values for a one-to-one check of the changes in 
@@ -33,14 +31,12 @@ using namespace std;
 using namespace gio;
 using namespace cosmotk;
 
-Halos_test H_1;
-Halos_test H_2;
 
-bool comp_by_fof_dest(const halo_properties_test &a, const halo_properties_test &b) {
+bool comp_by_halo_dest(const halo_properties_test &a, const halo_properties_test &b) {
   return a.rank < b.rank;
 }
 
-bool comp_by_fof_id(const halo_properties_test &a, const halo_properties_test &b) {
+bool comp_by_halo_tag(const halo_properties_test &a, const halo_properties_test &b) {
   return a.fof_halo_tag < b.fof_halo_tag;
 }
 
@@ -112,7 +108,7 @@ int compute_mean_float(vector<float> *val1, vector<float> *val2, int num_halos ,
 
 }
 
-int  compute_mean_std_dist(Halos_test H_1 , Halos_test H_2, float lim ){
+int  compute_mean_std_dist_halo(Halos_test H_1 , Halos_test H_2, float lim ){
   // compute the mean and std of the differences and make a histogram to look more closely
   int rank, n_ranks;
   rank = Partition::getMyProc();
@@ -161,23 +157,17 @@ void read_halos(Halos_test &H0, string file_name, int file_opt) {
   H0.Resize(num_elems);
 }  
 
-int main( int argc, char** argv ) {
-  MPI_Init( &argc, &argv );
-  Partition::initialize();
-  GenericIO::setNaturalDefaultPartition();
-
+int perform_halo_check(string fof_file, string fof_file2, float lim){
   int rank, n_ranks;
   rank = Partition::getMyProc();
   n_ranks = Partition::getNumProc();
 
-  string fof_file     = string(argv[1]);
-  string fof_file2    = string(argv[2]);
-  stringstream thresh{ argv[3] };
-  float lim{};
-  if (!(thresh >> lim))
-	  lim = 0.01;
+  if (rank==0)
+	  cout << "Performing halo check with ID matching "<< endl;
+  // create halo buffers
+  Halos_test H_1;
+  Halos_test H_2;
 
-  // Create halo buffers
   H_1.Allocate();
   H_1.has_sod = true;
   H_2.Allocate();
@@ -185,11 +175,8 @@ int main( int argc, char** argv ) {
   H_1.Set_MPIType();
   H_2.Set_MPIType();
 
-  // Reading halos
   read_halos(H_1, fof_file, 1);
   read_halos(H_2, fof_file2, 2);
-
-
 
   // determine destination ranks
   vector<halo_properties_test> fof_halo_send;
@@ -209,10 +196,9 @@ int main( int argc, char** argv ) {
     fof_halo_send2.push_back(tmp);
     ++fof_halo_send_cnt2[tmp.rank];
   }
-
   // sort by destination rank
-  sort(fof_halo_send.begin(),fof_halo_send.end(), comp_by_fof_dest);
-  sort(fof_halo_send2.begin(),fof_halo_send2.end(), comp_by_fof_dest);
+  sort(fof_halo_send.begin(),fof_halo_send.end(), comp_by_halo_dest);
+  sort(fof_halo_send2.begin(),fof_halo_send2.end(), comp_by_halo_dest);
   MPI_Barrier(Partition::getComm());
 
 
@@ -262,22 +248,17 @@ int main( int argc, char** argv ) {
   MPI_Barrier(Partition::getComm());
 
 
-
-  //send data 
+ // send data 
+ 
   MPI_Alltoallv(&fof_halo_send[0],&fof_halo_send_cnt[0],&fof_halo_send_off[0], H_1.halo_properties_MPI_Type,\
                    &fof_halo_recv[0],&fof_halo_recv_cnt[0],&fof_halo_recv_off[0], H_1.halo_properties_MPI_Type, Partition::getComm());
 
   MPI_Alltoallv(&fof_halo_send2[0],&fof_halo_send_cnt2[0],&fof_halo_send_off2[0], H_2.halo_properties_MPI_Type,\
                    &fof_halo_recv2[0],&fof_halo_recv_cnt2[0],&fof_halo_recv_off2[0], H_2.halo_properties_MPI_Type, Partition::getComm());
 
+  std::sort(fof_halo_recv.begin(),fof_halo_recv.end(),comp_by_halo_tag);
+  std::sort(fof_halo_recv2.begin(),fof_halo_recv2.end(),comp_by_halo_tag);
 
-  // sort by fof halo tag
-  std::sort(fof_halo_recv.begin(),fof_halo_recv.end(),comp_by_fof_id);
-  std::sort(fof_halo_recv2.begin(),fof_halo_recv2.end(),comp_by_fof_id);
-
-
-
-  // write into buffers
   H_1.Resize(0);
   H_2.Resize(0);
   for (int i=0; i<fof_halo_recv_total; ++i) {
@@ -294,23 +275,53 @@ int main( int argc, char** argv ) {
 
   int err = 0;
   bool skip_err = true;
+  vector<int64_t> dup_idx;
+  vector<int64_t> dup_idx2;
 
-  if (fof_halo_recv_total != fof_halo_recv_total2){
+  int dup_1 = 0;
+  int dup_2 = 0;
+  for (int i=0; i<H_1.num_halos-1;i++){
+    if (H_1.fof_halo_tag->at(i)==H_1.fof_halo_tag->at(i+1)){
+        dup_idx.push_back(i);
+	dup_idx.push_back(i+1);
+    }
+  }
+    for (int i=0; i<H_2.num_halos-1;i++){
+    if (H_2.fof_halo_tag->at(i)==H_2.fof_halo_tag->at(i+1)){
+        dup_idx2.push_back(i);
+        dup_idx2.push_back(i+1);
+    }
+  }
+ 
+  for (int i=0; i<dup_idx.size();i++){
+      H_1.Erase(dup_idx[i]-dup_1);
+      dup_1 ++;
+  }
+    for (int i=0; i<dup_idx2.size();i++){
+      H_2.Erase(dup_idx2[i]-dup_2);
+      dup_2 ++;
+  }
+
+
+
+  // first check if all IDs match up normally
+  if (H_1.num_halos != H_2.num_halos){
       err += 1;
     }
    else{
-    for (int i=0;i<fof_halo_recv_total;i++){
+    for (int i=0;i<H_1.num_halos;i++){
        if (H_1.fof_halo_tag->at(i)!=H_2.fof_halo_tag->at(i))
          err+=1;
      }
    }
+
    int numh1 = H_1.num_halos;
    int numh2 = H_2.num_halos;
    int dn_1 = 0;
    int dn_2 = 0;
 
+   // if they don't all match up then run correction
    if (skip_err&&(err>0)){
-       // if you want to skip over missing particles: note only do this if the catalogs should mostly match up.
        err = 0;
        int i=0;
        while (i < numh1) {
@@ -329,30 +340,37 @@ int main( int argc, char** argv ) {
               }
            if (not_found){
              H_1.Erase(i);
-	     --numh1;
-	   }
+             --numh1;
+           }
          }
      }
 
+   // look at number of erased halos
    dn_1 =  fof_halo_recv_total - H_1.num_halos;
    dn_2 =  fof_halo_recv_total2 - H_2.num_halos;
 
   }
   int ndiff_tot = 0;
   int ndiff_tot2 = 0;
+
+  int ndups1=0;
+  int ndups2 =0;
   MPI_Allreduce(&dn_1, &ndiff_tot, 1, MPI_INT, MPI_SUM,  Partition::getComm());
   MPI_Allreduce(&dn_2, &ndiff_tot2, 1, MPI_INT, MPI_SUM,  Partition::getComm());
 
-  // compute the error characteristics for the catalogs
-  err = compute_mean_std_dist(H_1 ,H_2, lim);
+  MPI_Allreduce(&dup_1, &ndups1, 1, MPI_INT, MPI_SUM,  Partition::getComm());
+  MPI_Allreduce(&dup_2, &ndups2, 1, MPI_INT, MPI_SUM,  Partition::getComm());
+
+  err = compute_mean_std_dist_halo(H_1 ,H_2, lim);
 
     if ((rank==0)&&(err==0)){
       cout << " Results " << endl;
       cout << " ______________________________ " << endl;
-      cout << endl;      
+      cout << endl;
       cout << " Comparison test passed! " << endl;
       cout << " All variables within threshold of "  << lim << endl;
       cout << " Total number of non-matching halos = "<< ndiff_tot+ndiff_tot2 << endl;
+      cout << " Number of duplicate pairs removed = "<< ndups1 << " in file 1 and "  << ndups2 << " in file 2." << endl;
       cout << endl;
       cout << " ______________________________ " << endl;
   }
@@ -364,6 +382,7 @@ int main( int argc, char** argv ) {
       cout << " out of a total of " <<  N_HALO_FLOATS << " variables " << endl;
       cout << " See above outputs for details  "<< endl;
       cout << " Total number of non-matching halos = "<< ndiff_tot+ndiff_tot2 << endl;
+      cout << " Number of duplicate pairs removed = "<< ndups1 << " in file 1 and "  << ndups2 << " in file 2." << endl;
       cout << endl;
       cout << " ______________________________ " << endl;
   }
@@ -373,9 +392,7 @@ int main( int argc, char** argv ) {
   MPI_Barrier(Partition::getComm());
   H_1.Deallocate();
   H_2.Deallocate();
-
-
-  Partition::finalize();
-  MPI_Finalize();
   return 0;
+
 }
+

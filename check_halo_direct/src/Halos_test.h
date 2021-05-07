@@ -24,6 +24,20 @@ struct halo_properties_test {
   float float_data[N_HALO_FLOATS];
 };
 
+struct sod_binproperties_test {
+  int64_t fof_halo_bin_tag;
+  int32_t sod_halo_bin;
+  float float_data[N_HALO_FLOATS_SOD];
+  int int_data[N_HALO_INTS_SOD];
+  int32_t rank;
+};
+
+struct particles_test {
+  int64_t fof_halo_tag;
+  int64_t id;
+  int32_t rank;
+};
+
 class Halos_test {
 
 public:
@@ -31,7 +45,6 @@ public:
   bool has_sod;
   bool is_allocated;
   int step_number;
-  int descendant_step_number;
   size_t num_halos;
   float particle_mass;
   MPI_Datatype halo_properties_MPI_Type;
@@ -49,15 +62,8 @@ public:
   // map for the halo tag to the index in the local arrays
   map<int64_t,int>* tag2idx;
 
-  // halo particle membership
-  char*  buffer;                            // a memory buffer for the pids and tags
-  size_t buffer_size;                       // size (in bytes) of the buffer
-  allocated_vector<int64_t>* tag;           // ID for halos on this rank,
-  allocated_vector<int64_t>* pid;           // ID for particles on this rank
-
   Halos_test() : has_sod(true), num_halos(0), particle_mass(0.f), is_allocated(false),\
-      buffer(NULL), buffer_size(0), step_number(-1),\
-      descendant_step_number(-1) 
+       step_number(-1)
   {
     float_data.resize(N_HALO_FLOATS);
   };
@@ -72,5 +78,76 @@ public:
   void Erase(size_t);
   void Set_MPIType();
 };
+
+
+class SODBins_test {
+
+public:
+
+  bool is_allocated;
+  int step_number;
+  size_t num_halos;
+  float particle_mass;
+  MPI_Datatype sod_binproperties_MPI_Type;
+
+  vector<int64_t>* fof_halo_bin_tag;
+  vector<int32_t>* sod_halo_bin;
+
+  vector<vector<float>* > float_data;
+  vector<vector<int>* > int_data;
+  vector<int32_t>* rank;
+
+  map<int64_t,int>* tag2idx;
+
+  SODBins_test() : num_halos(0), particle_mass(0.f), is_allocated(false),\
+      step_number(-1)
+  {
+    float_data.resize(N_HALO_FLOATS_SOD);
+    int_data.resize(N_HALO_INTS_SOD);
+  };
+
+  ~SODBins_test() { };
+
+  void Allocate(size_t n=0);
+  void Deallocate();
+  sod_binproperties_test GetProperties(size_t idx);
+  void PushBack(sod_binproperties_test);
+  void Resize(size_t);
+  void Erase(size_t);
+  void Set_MPIType();
+};
+
+
+class Particles_test {
+
+public:
+
+  bool is_allocated;
+  int step_number;
+  size_t num_halos;
+  MPI_Datatype particles_test_MPI_Type;
+
+  vector<int64_t>* fof_halo_tag;
+  vector<int64_t>* id;
+
+  vector<int32_t>* rank;
+
+  map<int64_t,int>* tag2idx;
+
+  Particles_test() : num_halos(0), is_allocated(false),\
+      step_number(-1) {};
+
+  ~Particles_test() { };
+
+  void Allocate(size_t n=0);
+  void Deallocate();
+  particles_test GetProperties(size_t idx);
+  void PushBack(particles_test);
+  void Resize(size_t);
+  void Erase(size_t);
+  void Set_MPIType();
+};
+
+
 
 //#endif
