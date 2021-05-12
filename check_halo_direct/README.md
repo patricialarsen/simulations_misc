@@ -5,25 +5,26 @@ This testing suite directly compares two halo catalog outputs, assuming these ar
 
 ### Example params.txt script
 ```
-/data/a/cpac/prlarsen/test_direc/arborx/final2/arborx/
-/data/a/cpac/prlarsen/test_direc/arborx/final/
-1
-# 0 =ID matching, 1=position matching, 2 = distribution comparisons, -1 = none
+/data/a/cpac/prlarsen/test_direc/arborx/final_may
+/data/a/cpac/prlarsen/test_direc/arborx/finish
+2
+# 0 = ID matching, 1 = position matching, 2 = distribution comparisons, -1 = none
 0
 # 0 = SOD bin property file comparison (id matching), -1 = none
-0
-# 0 = bighaloparticle file matching (id matching), -1 = none
+1
+# 0 = bighaloparticle file matching (id matching), 1 = bhp and halopart and tags, -1 = none
 256
 # box size
-0.001
+0.0001
 # threshold fraction
 1.e13
 # minimum mass for position matching
 1.e15
 # maximum mass for position matching
 
+
 ```
-The first item here is the base analysis directory for the files to be read in. The second is the level of matching (ID-based, position-based or distribution only) for the halo catalogs. Any other number supresses the halo checks. The next option is whether or not to check the SOD bin property files, with ID based matching, and then the bighaloparticle files with ID-based matching. 
+The first item here is the base analysis directory for the files to be read in. The second is the level of matching (ID-based, position-based or distribution only) for the halo catalogs. Any other number supresses the halo checks. The next option is whether or not to check the SOD bin property files, with ID based matching, and then the bighaloparticle files with ID-based matching, with an option to check the haloparticle and haloparticle tag files as well. This is currently just defaulting to the first subfile, as the memory requirements for a full check on these will be significant. 
 
 The following inputs are 
 - the box size of the simulation 
@@ -53,44 +54,80 @@ mpirun -n nprocesses ./run_test
 a typical (truncated) output is 
 
 ```
+
 Partition 3D: [3:2:2]
-/data/a/cpac/prlarsen/test_direc/arborx/final2/arborx/
-/data/a/cpac/prlarsen/test_direc/arborx/final/
-1
-0
-0
-256
-0.001
-1e+13
-1e+15
-Read 48 variables from /data/a/cpac/prlarsen/test_direc/arborx/final2/arborx//m000p-499.haloproperties (7396250856 bytes) in 11.0733s: 636.994 MB/s [excluding header read]
-Read 48 variables from /data/a/cpac/prlarsen/test_direc/arborx/final//m000p-499.haloproperties (7396251056 bytes) in 10.4867s: 672.628 MB/s [excluding header read]
+ Parameter list
+ /data/a/cpac/prlarsen/test_direc/arborx/final_may
+ /data/a/cpac/prlarsen/test_direc/arborx/finish
+ 2
+ 0
+ 1
+ 256
+ 0.0001
+ 1e+13
+ 1e+15
+
+ Comparing mean and standard deviations of property distributions
+ ________________________________________________________________
+
+Read 43 variables from /data/a/cpac/prlarsen/test_direc/arborx/final_may/m000p-499.haloproperties (6656625156 bytes) in 0.475155s: 13360.4 MB/s [excluding header read]
+Read 43 variables from /data/a/cpac/prlarsen/test_direc/arborx/finish/m000p-499.haloproperties (6656625156 bytes) in 0.501408s: 12660.8 MB/s [excluding header read]
+
  Results 
- ______________________________ 
+ _______ 
 
  Comparison test passed! 
- All variables within threshold of 0.001
- Total number of non-matching halos = 0
- Total number of halos = 814
+ All variables within threshold of 0.0001
+ Difference in number of halos  = 0
 
- ______________________________ 
-Read 7 variables from /data/a/cpac/prlarsen/test_direc/arborx/final2/arborx//m000p-delta200.0-499.sodpropertybins (1160980224 bytes) in 2.36632s: 467.898 MB/s [excluding header read]
-Read 7 variables from /data/a/cpac/prlarsen/test_direc/arborx/final//m000p-delta200.0-499.sodpropertybins (1160980224 bytes) in 1.46321s: 756.69 MB/s [excluding header read]
+ Checking consistency of sod halo bin files 
+ ___________________________________________
+
+Read 7 variables from /data/a/cpac/prlarsen/test_direc/arborx/final_may/m000p-delta200.0-499.sodpropertybins (1160980224 bytes) in 0.094238s: 11748.9 MB/s [excluding header read]
+Read 7 variables from /data/a/cpac/prlarsen/test_direc/arborx/finish/m000p-delta200.0-499.sodpropertybins (1160980224 bytes) in 0.0930352s: 11900.8 MB/s [excluding header read]
+
  Results 
- ______________________________ 
+ _______ 
 
  Comparison test passed! 
- All variables within threshold of 0.001
+ All variables within threshold of 0.0001
  Total number of non-matching halos = 0
 
- ______________________________ 
-Read 2 variables from /data/a/cpac/prlarsen/test_direc/arborx/final2/arborx//m000p-499.bighaloparticles#0 (1419970864 bytes) in 1.06253s: 1274.5 MB/s [excluding header read]
-Read 2 variables from /data/a/cpac/prlarsen/test_direc/arborx/final/m000p-499.bighaloparticles#0 (1419970864 bytes) in 1.15792s: 1169.5 MB/s [excluding header read]
+
+ Checking constistency of halo tags and particle ids
+ ___________________________________________________
+
+Read 2 variables from /data/a/cpac/prlarsen/test_direc/arborx/final_may/m000p-499.bighaloparticles#0 (1419970864 bytes) in 1.10592s: 1224.49 MB/s [excluding header read]
+Read 2 variables from /data/a/cpac/prlarsen/test_direc/arborx/finish/m000p-499.bighaloparticles#0 (1419970864 bytes) in 1.10761s: 1222.62 MB/s [excluding header read]
+
  Results 
- ______________________________ 
+ _______ 
 
  Total number of non-matching particles = 0
 
+
+ Checking constistency of halo tags and particle ids
+ ___________________________________________________
+
+Read 2 variables from /data/a/cpac/prlarsen/test_direc/arborx/final_may/m000p-499.haloparticles#0 (2139138112 bytes) in 1.53598s: 1328.16 MB/s [excluding header read]
+Read 2 variables from /data/a/cpac/prlarsen/test_direc/arborx/finish/m000p-499.haloparticles#0 (2139138112 bytes) in 1.48592s: 1372.91 MB/s [excluding header read]
+
+ Results 
+ _______ 
+
+ Total number of non-matching particles = 0
+
+
+ Checking constistency of halo tags and particle ids
+ ___________________________________________________
+
+Read 2 variables from /data/a/cpac/prlarsen/test_direc/arborx/final_may/m000p-499.haloparticletags#0 (2139138112 bytes) in 1.51808s: 1343.83 MB/s [excluding header read]
+Read 2 variables from /data/a/cpac/prlarsen/test_direc/arborx/finish/m000p-499.haloparticletags#0 (2139138112 bytes) in 1.48677s: 1372.13 MB/s [excluding header read]
+
+ Results 
+ _______ 
+
+ Total number of non-matching particles = 0
 
 ```
 
