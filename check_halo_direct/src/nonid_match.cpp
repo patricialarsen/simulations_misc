@@ -91,39 +91,16 @@ int vec_to_rank(float x, float y, float z, float box_size){
 }
 
 int match_pos (string fof_file, string fof_file2, float lim, float box_size, float min_mass, float max_mass){
-/*
-int main( int argc, char** argv ) {
-  MPI_Init( &argc, &argv );
-  Partition::initialize();
-  GenericIO::setNaturalDefaultPartition();
-*/
   int rank, n_ranks;
   rank = Partition::getMyProc();
   n_ranks = Partition::getNumProc();
-/*
-  string fof_file     = string(argv[1]);
-  string fof_file2    = string(argv[2]);
-  stringstream thresh{ argv[3] };
-  float lim{};
-  if (!(thresh >> lim))
-	  lim = 0.01;
 
-  stringstream bs{ argv[4] };
-  stringstream mm1{ argv[5] };
-  stringstream mm2{ argv[6] };
+  if (rank==0){
+	  cout << " Comparing halo properties based on mass and position match "<< endl;
+	  cout << " ___________________________________________________________ " << endl;
+	  cout << endl;
+  }
 
-  float box_size{};
-  if (!(bs >> box_size))
-          box_size = 256.;
-
-  float min_mass{};
-  if (!(mm1 >> min_mass))
-          min_mass = 1.e13;
-
-  float max_mass{};
-  if (!(mm2 >> max_mass))
-          max_mass = 1.e14;
-*/
   Halos_test H_1;
   Halos_test H_2;
 
@@ -135,11 +112,14 @@ int main( int argc, char** argv ) {
   H_1.Set_MPIType();
   H_2.Set_MPIType();
 
+
   // Reading halos
-  read_halos(H_1, fof_file, 1);
-  read_halos(H_2, fof_file2, 1);
+  read_halos(H_1, fof_file, 2);
+  read_halos(H_2, fof_file2, 2);
 
 
+  if (rank==0)
+	  cout << endl;
 
   // determine destination ranks
   vector<halo_properties_test> fof_halo_send;
@@ -218,6 +198,7 @@ int main( int argc, char** argv ) {
                    &fof_halo_recv2[0],&fof_halo_recv_cnt2[0],&fof_halo_recv_off2[0], H_2.halo_properties_MPI_Type, Partition::getComm());
 
 
+
   // sort by fof halo tag
   //
   std::sort(fof_halo_recv.begin(),fof_halo_recv.end(),comp_by_fof_x);
@@ -228,7 +209,6 @@ int main( int argc, char** argv ) {
   std::stable_sort(fof_halo_recv2.begin(),fof_halo_recv2.end(),comp_by_fof_z);
   std::stable_sort(fof_halo_recv.begin(),fof_halo_recv.end(),comp_by_fof_mass);
   std::stable_sort(fof_halo_recv2.begin(),fof_halo_recv2.end(),comp_by_fof_mass);
-
 
 
   // write into buffers
@@ -309,18 +289,17 @@ int main( int argc, char** argv ) {
 
     if ((rank==0)&&(err==0)){
       cout << " Results " << endl;
-      cout << " ______________________________ " << endl;
+      cout << " _______ " << endl;
       cout << endl;      
       cout << " Comparison test passed! " << endl;
       cout << " All variables within threshold of "  << lim << endl;
       cout << " Total number of non-matching halos = "<< ndiff_tot+ndiff_tot2 << endl;
       cout << " Total number of halos = "<<numh1 <<endl;
       cout << endl;
-      cout << " ______________________________ " << endl;
   }
   if ((rank==0)&&(err>0)){
       cout << " Results " << endl;
-      cout << " ______________________________ " << endl;
+      cout << " _______ " << endl;
       cout << endl;
       cout << " Comparison exceeded threshold of " << lim << " for " << err << " variables" << endl;
       cout << " out of a total of " <<  N_HALO_FLOATS << " variables " << endl;
@@ -328,7 +307,6 @@ int main( int argc, char** argv ) {
       cout << " Total number of non-matching halos = "<< ndiff_tot+ndiff_tot2 << endl;
       cout << " Total number of halos = "<<nh_tot <<endl;
       cout << endl;
-      cout << " ______________________________ " << endl;
   }
 
 
@@ -338,7 +316,5 @@ int main( int argc, char** argv ) {
   H_2.Deallocate();
 
 
-  //Partition::finalize();
- // MPI_Finalize();
   return 0;
 }

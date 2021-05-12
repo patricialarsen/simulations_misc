@@ -102,19 +102,19 @@ int main( int argc, char** argv ) {
   MPI_Bcast(&mass_max, 1, MPI_FLOAT, 0,Partition::getComm());
 
   if (rank==0){
-  cout << path1 << endl;
-  cout << path2 << endl;
-  cout << halo_opt << endl;
-  cout << sod_opt << endl;
-  cout << part_opt << endl;
-  cout << box_size << endl;
-  cout << lim << endl;
-  cout << mass_min <<endl;
-  cout << mass_max << endl;
+  cout << " Parameter list"<< endl;
+  cout << " " << path1 << endl;
+  cout << " " << path2 << endl;
+  cout << " " << halo_opt << endl;
+  cout << " " << sod_opt << endl;
+  cout << " " << part_opt << endl;
+  cout << " " << box_size << endl;
+  cout << " " << lim << endl;
+  cout << " " << mass_min <<endl;
+  cout << " " << mass_max << endl;
+  cout << endl;
   }
-  // if perform halo check 
 
-  // halo checks - ID, distribution, positional 
 
   string fof_file, fof_file2;
   fof_file = path1+ "/m000p-499.haloproperties";
@@ -125,7 +125,6 @@ int main( int argc, char** argv ) {
   string part_file, part_file2;
   part_file = path1+ "/m000p-499.bighaloparticles#0";
   part_file2 = path2 + "/m000p-499.bighaloparticles#0";
-
 
 
   int err=0;
@@ -142,6 +141,15 @@ int main( int argc, char** argv ) {
     err = sodbin_check(sod_file,sod_file2,lim);
   if (part_opt==0)
     err = part_check(part_file, part_file2);
+  if (part_opt==1){
+    err = part_check(part_file, part_file2);
+    part_file = path1+ "/m000p-499.haloparticles#0";
+    part_file2 = path2 + "/m000p-499.haloparticles#0";
+    err = part_check(part_file, part_file2);
+    part_file = path1+ "/m000p-499.haloparticletags#0";
+    part_file2 = path2 + "/m000p-499.haloparticletags#0";
+    err = part_check(part_file, part_file2);
+  }
 
 
   Partition::finalize();

@@ -95,7 +95,9 @@ int compute_mean_float_dist(vector<float> *val1, vector<float> *val2, int num_ha
    if (rank==0){
 
      if ((fabs((stddev_tot-stddev_tot2)/stddev_tot)<lim)&&(fabs((mean-mean2)/mean)<lim))
-	 print_out=false;    
+	 print_out=false;   
+     if (isnan(mean)||isnan(mean2))
+	 print_out=false;
      if (print_out){
      err ++;
      cout << var_name << endl;
@@ -135,6 +137,11 @@ int compare_dist(string fof_file,string fof_file2, float lim){
   rank = Partition::getMyProc();
   n_ranks = Partition::getNumProc();
 
+  if (rank==0){
+     cout << " Comparing mean and standard deviations of property distributions" << endl;
+     cout << " ________________________________________________________________" << endl;
+  }
+
   Halos_test H_1;
   Halos_test H_2;
 
@@ -147,13 +154,15 @@ int compare_dist(string fof_file,string fof_file2, float lim){
   H_1.Set_MPIType();
   H_2.Set_MPIType();
 
+  if (rank==0)
+	  cout << endl;
   // Reading halos
-  read_halos(H_1, fof_file, 1);
-  read_halos(H_2, fof_file2, 1);
+  read_halos(H_1, fof_file, 2);
+  read_halos(H_2, fof_file2, 2);
 
-  if (rank == 0)
-    cout << "Done reading halos" << endl;
-
+  if (rank == 0){
+    cout << endl;
+  }
   int n1 = H_1.num_halos;
   int n2 = H_2.num_halos;
   int n_tot, n_tot2;
@@ -168,24 +177,22 @@ int compare_dist(string fof_file,string fof_file2, float lim){
 
     if ((rank==0)&&(err==0)){
       cout << " Results " << endl;
-      cout << " ______________________________ " << endl;
+      cout << " _______ " << endl;
       cout << endl;
       cout << " Comparison test passed! " << endl;
       cout << " All variables within threshold of "  << lim << endl;
       cout << " Difference in number of halos  = "<< abs(n_tot-n_tot2) << endl;
       cout << endl;
-      cout << " ______________________________ " << endl;
   }
   if ((rank==0)&&(err>0)){
       cout << " Results " << endl;
-      cout << " ______________________________ " << endl;
+      cout << " _______ " << endl;
       cout << endl;
       cout << " Comparison exceeded threshold of " << lim << " for " << err << " variables" << endl;
       cout << " out of a total of " <<  N_HALO_FLOATS << " variables " << endl;
       cout << " See above outputs for details  "<< endl;
       cout << " Difference in number of halos  = "<< abs(n_tot-n_tot2) << endl;
       cout << endl;
-      cout << " ______________________________ " << endl;
   }
 
 

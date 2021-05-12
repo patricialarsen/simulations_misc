@@ -23,11 +23,6 @@
 #include "MurmurHashNeutral2.h" 
 #include "routines.h"
 
-/// Assumes ids and  are consistent but ordering may have changed
-/// Redistributes aongst ranks and sorts the values for a one-to-one check of the changes in 
-/// several halo outputs
-
-
 // Cosmotools
 using namespace std;
 using namespace gio;
@@ -66,19 +61,19 @@ void read_particles(Particles_test &H0, string file_name) {
   H0.Resize(num_elems);
 }  
 
-/*int main( int argc, char** argv ) {
-  MPI_Init( &argc, &argv );
-  Partition::initialize();
-  GenericIO::setNaturalDefaultPartition();
-*/
 int part_check(string fof_file, string fof_file2){
 
   int rank, n_ranks;
   rank = Partition::getMyProc();
   n_ranks = Partition::getNumProc();
 
-  //string fof_file     = string(argv[1]);
-  //string fof_file2    = string(argv[2]);
+  if (rank==0){
+      cout << endl;
+      cout << " Checking constistency of halo tags and particle ids" << endl;
+      cout << " ___________________________________________________" << endl;
+      cout << endl; 
+  }
+
   Particles_test H_1;
   Particles_test H_2;
 
@@ -92,7 +87,8 @@ int part_check(string fof_file, string fof_file2){
   read_particles(H_1, fof_file);
   read_particles(H_2, fof_file2);
 
-
+  if (rank==0)
+	  cout << endl;
 
   // determine destination ranks
   vector<particles_test> fof_halo_send;
@@ -215,7 +211,6 @@ int part_check(string fof_file, string fof_file2){
    int numh2 = H_2.num_halos;
    int dn_1 = 0;
    int dn_2 = 0;
-// TODO: alter this part for sod bin files
    if (skip_err&&(err>0)){
        err = 0;
        int i=0;
@@ -252,19 +247,15 @@ int part_check(string fof_file, string fof_file2){
 
   if (rank==0){
   cout << " Results " << endl;
-  cout << " ______________________________ " << endl;
+  cout << " _______ " << endl;
   cout << endl;      
   cout << " Total number of non-matching particles = "<< ndiff_tot+ndiff_tot2 << endl;
   cout << endl;
-  cout << " ______________________________ " << endl;
-
   }
   MPI_Barrier(Partition::getComm());
   H_1.Deallocate();
   H_2.Deallocate();
 
 
-//  Partition::finalize();
- // MPI_Finalize();
   return 0;
 }

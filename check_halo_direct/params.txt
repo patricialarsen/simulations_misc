@@ -1,14 +1,14 @@
-/data/a/cpac/prlarsen/test_direc/arborx/final2/arborx/
-/data/a/cpac/prlarsen/test_direc/arborx/final/
-0
-# 0 = ID matching, 1=position matching, 2 = distribution comparisons, -1 = none
+/data/a/cpac/prlarsen/test_direc/arborx/final_may
+/data/a/cpac/prlarsen/test_direc/arborx/finish
+2
+# 0 = ID matching, 1 = position matching, 2 = distribution comparisons, -1 = none
 0 
 # 0 = SOD bin property file comparison (id matching), -1 = none
-0 
-# 0 = bighaloparticle file matching (id matching), -1 = none
+1
+# 0 = bighaloparticle file matching (id matching), 1 = bhp and halopart and tags, -1 = none
 256  
 # box size
-0.001 
+0.0001
 # threshold fraction
 1.e13 
 # minimum mass for position matching

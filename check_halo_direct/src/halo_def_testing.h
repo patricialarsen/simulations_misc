@@ -1,7 +1,7 @@
 #include <string>
 
 // List all the halo float fields here
-#define N_HALO_FLOATS 45
+#define N_HALO_FLOATS 40
 #define N_HALO_FLOATS_SOD 5 
 #define N_HALO_INTS_SOD 1
 
@@ -28,16 +28,12 @@ const std::string float_var_names_test[N_HALO_FLOATS] = {
 	"fof_halo_mean_vx",
 	"fof_halo_mean_vy",
 	"fof_halo_mean_vz",
-	"fof_halo_vel_disp",
 	"fof_halo_1D_vel_disp",
         "sod_halo_radius",
 	"sod_halo_mass",
 	"sod_halo_ke",
 	"sod_halo_1d_vdisp",
 	"sod_halo_max_cir_vel",
-	"sod_halo_min_pot_x",
-	"sod_halo_min_pot_y",
-	"sod_halo_min_pot_z",
 	"sod_halo_mean_x",
 	"sod_halo_mean_y",
 	"sod_halo_mean_z",
@@ -50,7 +46,6 @@ const std::string float_var_names_test[N_HALO_FLOATS] = {
 	"sod_halo_mean_vx",
 	"sod_halo_mean_vy",
 	"sod_halo_mean_vz",
-	"sod_halo_vel_disp",
 	"sod_halo_cdelta",
 	"sod_halo_cdelta_error",
 	"sod_halo_c_acc_mass",
@@ -78,16 +73,12 @@ const std::string float_var_names_test2[N_HALO_FLOATS] = {
         "fof_halo_mean_vx",
         "fof_halo_mean_vy",
         "fof_halo_mean_vz",
-        "fof_halo_vel_disp",
         "fof_halo_1D_vel_disp",
         "sod_halo_radius",
         "sod_halo_mass",
         "sod_halo_ke",
-        "sod_halo_1d_vdisp",
+        "sod_halo_1D_vel_disp",
         "sod_halo_max_cir_vel",
-        "sod_halo_min_pot_x",
-        "sod_halo_min_pot_y",
-        "sod_halo_min_pot_z",
         "sod_halo_mean_x",
         "sod_halo_mean_y",
         "sod_halo_mean_z",
@@ -100,7 +91,6 @@ const std::string float_var_names_test2[N_HALO_FLOATS] = {
         "sod_halo_mean_vx",
         "sod_halo_mean_vy",
         "sod_halo_mean_vz",
-        "sod_halo_vel_disp",
         "sod_halo_cdelta",
         "sod_halo_cdelta_error",
         "sod_halo_c_acc_mass",

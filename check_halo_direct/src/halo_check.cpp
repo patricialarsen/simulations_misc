@@ -91,6 +91,8 @@ int compute_mean_float(vector<float> *val1, vector<float> *val2, int num_halos ,
 
      if ((frac_max<lim)||((fabs(stddev_tot/stddevq_tot)<lim)&&(fabs(mean/meanq_tot)<lim))) // no values change by more than a percent
        print_out=false;
+     if (isnan(mean)) // if nan is present, then this is higher than threshold
+       print_out=true;
      if (print_out){
      cout << " " << var_name << endl;
      cout << " " << var_name2 << endl;
@@ -162,8 +164,11 @@ int perform_halo_check(string fof_file, string fof_file2, float lim){
   rank = Partition::getMyProc();
   n_ranks = Partition::getNumProc();
 
-  if (rank==0)
-	  cout << "Performing halo check with ID matching "<< endl;
+  if (rank==0){
+	  cout << " Performing halo check with ID matching "<< endl;
+          cout << " ______________________________________" <<endl;
+          cout << endl;
+  }
   // create halo buffers
   Halos_test H_1;
   Halos_test H_2;
@@ -175,9 +180,11 @@ int perform_halo_check(string fof_file, string fof_file2, float lim){
   H_1.Set_MPIType();
   H_2.Set_MPIType();
 
-  read_halos(H_1, fof_file, 1);
-  read_halos(H_2, fof_file2, 2);
 
+  read_halos(H_1, fof_file, 2);
+  read_halos(H_2, fof_file2, 2);
+  if (rank==0)
+      cout << endl;
   // determine destination ranks
   vector<halo_properties_test> fof_halo_send;
   vector<int> fof_halo_send_cnt(n_ranks,0);
@@ -255,6 +262,7 @@ int perform_halo_check(string fof_file, string fof_file2, float lim){
 
   MPI_Alltoallv(&fof_halo_send2[0],&fof_halo_send_cnt2[0],&fof_halo_send_off2[0], H_2.halo_properties_MPI_Type,\
                    &fof_halo_recv2[0],&fof_halo_recv_cnt2[0],&fof_halo_recv_off2[0], H_2.halo_properties_MPI_Type, Partition::getComm());
+
 
   std::sort(fof_halo_recv.begin(),fof_halo_recv.end(),comp_by_halo_tag);
   std::sort(fof_halo_recv2.begin(),fof_halo_recv2.end(),comp_by_halo_tag);
@@ -365,18 +373,17 @@ int perform_halo_check(string fof_file, string fof_file2, float lim){
 
     if ((rank==0)&&(err==0)){
       cout << " Results " << endl;
-      cout << " ______________________________ " << endl;
+      cout << " _______ " << endl;
       cout << endl;
       cout << " Comparison test passed! " << endl;
       cout << " All variables within threshold of "  << lim << endl;
       cout << " Total number of non-matching halos = "<< ndiff_tot+ndiff_tot2 << endl;
       cout << " Number of duplicate pairs removed = "<< ndups1 << " in file 1 and "  << ndups2 << " in file 2." << endl;
       cout << endl;
-      cout << " ______________________________ " << endl;
   }
   if ((rank==0)&&(err>0)){
       cout << " Results " << endl;
-      cout << " ______________________________ " << endl;
+      cout << " _______ " << endl;
       cout << endl;
       cout << " Comparison exceeded threshold of " << lim << " for " << err << " variables" << endl;
       cout << " out of a total of " <<  N_HALO_FLOATS << " variables " << endl;
@@ -384,7 +391,6 @@ int perform_halo_check(string fof_file, string fof_file2, float lim){
       cout << " Total number of non-matching halos = "<< ndiff_tot+ndiff_tot2 << endl;
       cout << " Number of duplicate pairs removed = "<< ndups1 << " in file 1 and "  << ndups2 << " in file 2." << endl;
       cout << endl;
-      cout << " ______________________________ " << endl;
   }
 
 
