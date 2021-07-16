@@ -221,12 +221,14 @@ int part_check(string fof_file, string fof_file2){
           else {
            bool not_found = true;
            for (int j=0;j<32;j++){
+               if((i+j)<H_2.num_halos){
                if ((H_1.fof_halo_tag->at(i)==H_2.fof_halo_tag->at(i+j))&&(H_1.id->at(i)==H_2.id->at(i+j))){
                   for (int k=0; k<j; k++)
                       H_2.Erase(i+k);
                 not_found = false;
                 i+=1; // iterate once found
                 }
+	       }
               }
            if (not_found){
              H_1.Erase(i);

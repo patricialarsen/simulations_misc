@@ -254,6 +254,7 @@ int match_pos (string fof_file, string fof_file2, float lim, float box_size, flo
           else {
            bool not_found = true;
            for (int j=0;j<10;j++){
+	       if ((i+j)<H_2.num_halos){   
 	       halo_properties_test tmp3 = H_2.GetProperties(i+j);
 	       if (check_comp_halo(tmp,tmp3)){
                   for (int k=0; k<j; k++)
@@ -262,6 +263,7 @@ int match_pos (string fof_file, string fof_file2, float lim, float box_size, flo
                 i+=1; // iterate once found
                 }
               }
+	   }
            if (not_found){
              H_1.Erase(i);
 	     --numh1;
