@@ -82,10 +82,10 @@ int main(int argc, char ** argv) {
   zz.resize(Np + GIO.requestedExtraSpace()/sizeof(POSVEL_T));
   mass.resize(Np + GIO.requestedExtraSpace()/sizeof(POSVEL_T));
 
-  GIO.addVariable("x", xx, true);
-  GIO.addVariable("y", yy, true);
-  GIO.addVariable("z", zz, true);
-  GIO.addVariable("mass",mass,true);
+  GIO.addVariable("fof_halo_center_x", xx, true);
+  GIO.addVariable("fof_halo_center_y", yy, true);
+  GIO.addVariable("fof_halo_center_z", zz, true);
+  GIO.addVariable("fof_halo_mass",mass,true);
 
   GIO.readData();
 } 
