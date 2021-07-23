@@ -201,14 +201,14 @@ int match_pos (string fof_file, string fof_file2, float lim, float box_size, flo
 
   // sort by fof halo tag
   //
+  std::stable_sort(fof_halo_recv.begin(),fof_halo_recv.end(),comp_by_fof_mass);
+  std::stable_sort(fof_halo_recv2.begin(),fof_halo_recv2.end(),comp_by_fof_mass);
   std::sort(fof_halo_recv.begin(),fof_halo_recv.end(),comp_by_fof_x);
   std::sort(fof_halo_recv2.begin(),fof_halo_recv2.end(),comp_by_fof_x);
   std::stable_sort(fof_halo_recv.begin(),fof_halo_recv.end(),comp_by_fof_y);
   std::stable_sort(fof_halo_recv2.begin(),fof_halo_recv2.end(),comp_by_fof_y);
   std::stable_sort(fof_halo_recv.begin(),fof_halo_recv.end(),comp_by_fof_z);
   std::stable_sort(fof_halo_recv2.begin(),fof_halo_recv2.end(),comp_by_fof_z);
-  std::stable_sort(fof_halo_recv.begin(),fof_halo_recv.end(),comp_by_fof_mass);
-  std::stable_sort(fof_halo_recv2.begin(),fof_halo_recv2.end(),comp_by_fof_mass);
 
 
   // write into buffers
