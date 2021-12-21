@@ -1,0 +1,3 @@
+check_halo_direct/obj/*
+check_halo_direct/params_*.txt
+check_halo_direct/run_test

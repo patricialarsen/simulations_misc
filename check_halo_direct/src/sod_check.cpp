@@ -54,7 +54,6 @@ int  compute_mean_std_dist_sod(SODBins_test H_1 , SODBins_test H_2, float lim ){
   n_ranks = Partition::getNumProc();
 
   int count = H_1.num_halos;
-
   int err=0;
   for (int i =0; i<N_HALO_FLOATS_SOD; i++){
     string var_name = float_var_names_sodbin[i];
@@ -83,7 +82,7 @@ void read_sodfiles(SODBins_test &H0, string file_name) {
   H0.Resize(num_elems);
 }  
 
-int sodbin_check(string fof_file, string fof_file2, float lim){
+int sodbin_check(string fof_file, string fof_file2, float lim, map<int64_t,int> *tag_map){
 
   int rank, n_ranks;
   rank = Partition::getMyProc();
@@ -98,12 +97,17 @@ int sodbin_check(string fof_file, string fof_file2, float lim){
   // Create halo buffers
   SODBins_test H_1;
   SODBins_test H_2;
+  SODBins_test H_3;
 
 
   H_1.Allocate();
   H_2.Allocate();
+  H_3.Allocate();
+
   H_1.Set_MPIType();
   H_2.Set_MPIType();
+  H_3.Set_MPIType();
+
 
   // Reading halos
   read_sodfiles(H_1, fof_file);
@@ -118,17 +122,26 @@ int sodbin_check(string fof_file, string fof_file2, float lim){
   vector<sod_binproperties_test> fof_halo_send2;
   vector<int> fof_halo_send_cnt2(n_ranks,0);
 
+   map<int64_t,int>::iterator it;
+
+
   for (int i=0; i<H_1.num_halos; ++i) {
     sod_binproperties_test tmp = H_1.GetProperties(i);
+    it = (*tag_map).find(tmp.fof_halo_bin_tag);
+    if (it != (*tag_map).end()){
     tmp.rank = tag_to_rank(tmp.fof_halo_bin_tag, n_ranks);
     fof_halo_send.push_back(tmp);
     ++fof_halo_send_cnt[tmp.rank];
+    }
   }
   for (int i=0; i<H_2.num_halos; ++i) {
     sod_binproperties_test tmp = H_2.GetProperties(i);
+    it = (*tag_map).find(tmp.fof_halo_bin_tag);
+    if (it != (*tag_map).end()){
     tmp.rank = tag_to_rank(tmp.fof_halo_bin_tag, n_ranks);
     fof_halo_send2.push_back(tmp);
     ++fof_halo_send_cnt2[tmp.rank];
+    }
   }
 
   // sort by destination rank
@@ -203,6 +216,7 @@ int sodbin_check(string fof_file, string fof_file2, float lim){
   // write into buffers
   H_1.Resize(0);
   H_2.Resize(0);
+  H_3.Resize(0);
   for (int i=0; i<fof_halo_recv_total; ++i) {
     sod_binproperties_test tmp =  fof_halo_recv[i];
     H_1.PushBack(tmp);
@@ -225,6 +239,8 @@ int sodbin_check(string fof_file, string fof_file2, float lim){
     for (int i=0;i<fof_halo_recv_total;i++){
        if (H_1.fof_halo_bin_tag->at(i)!=H_2.fof_halo_bin_tag->at(i))
          err+=1;
+       if (H_1.sod_halo_bin->at(i)!=H_2.sod_halo_bin->at(i))
+	       err+=1;
      }
    }
    int numh1 = H_1.num_halos;
@@ -235,19 +251,24 @@ int sodbin_check(string fof_file, string fof_file2, float lim){
    if (skip_err&&(err>0)){
        err = 0;
        int i=0;
-       while (i < numh1) {
+       while ((i < H_1.num_halos)&&(i<H_2.num_halos)){ 
           if ((H_1.fof_halo_bin_tag->at(i)==H_2.fof_halo_bin_tag->at(i))&&(H_1.sod_halo_bin->at(i)==H_2.sod_halo_bin->at(i))){
+             sod_binproperties_test tmp = H_2.GetProperties(i);
+             H_3.PushBack(tmp);
              i += 1;
            }
           else {
            bool not_found = true;
-           for (int j=0;j<40;j++){ // this needs to be large enough for a full set of bins
+           for (int j=-400;j<400;j++){ // this needs to be large enough for a full set of bins
+               if (((i+j)<H_2.num_halos)&&((i+j)>=0)){
                if ((H_1.fof_halo_bin_tag->at(i)==H_2.fof_halo_bin_tag->at(i+j))&&(H_1.sod_halo_bin->at(i)==H_2.sod_halo_bin->at(i+j))){
-                  for (int k=0; k<j; k++)
-                      H_2.Erase(i+k);
                 not_found = false;
+		sod_binproperties_test tmp = H_2.GetProperties(i+j);
+                H_3.PushBack(tmp);
+
                 i+=1; // iterate once found
                 }
+	       }
               }
            if (not_found){
              H_1.Erase(i);
@@ -255,18 +276,50 @@ int sodbin_check(string fof_file, string fof_file2, float lim){
 	   }
          }
      }
+     while (i < H_1.num_halos){ 
+           bool not_found = true;
+           for (int j=-400;j<400;j++){ // this needs to be large enough for a full set of bins
+               if (((i+j)<H_2.num_halos)&&((i+j)>=0)){
+               if ((H_1.fof_halo_bin_tag->at(i)==H_2.fof_halo_bin_tag->at(i+j))&&(H_1.sod_halo_bin->at(i)==H_2.sod_halo_bin->at(i+j))){
+                not_found = false;
+                sod_binproperties_test tmp = H_2.GetProperties(i+j);
+                H_3.PushBack(tmp);
+
+                i+=1; // iterate once found
+                }
+               }
+              }
+           if (not_found){
+             H_1.Erase(i);
+             --numh1;
+           }
+     }
 
    dn_1 =  fof_halo_recv_total - H_1.num_halos;
    dn_2 =  fof_halo_recv_total2 - H_2.num_halos;
 
   }
+  else{
+   for (int kh=0; kh<H_1.num_halos; kh++){
+          sod_binproperties_test tmp = H_2.GetProperties(kh);
+          H_3.PushBack(tmp);
+
+   }
+
+  }
+
   int ndiff_tot = 0;
   int ndiff_tot2 = 0;
   MPI_Allreduce(&dn_1, &ndiff_tot, 1, MPI_INT, MPI_SUM,  Partition::getComm());
   MPI_Allreduce(&dn_2, &ndiff_tot2, 1, MPI_INT, MPI_SUM,  Partition::getComm());
+  for (int kh = 0; kh<H_1.num_halos;kh++){
+     assert(H_1.fof_halo_bin_tag->at(kh)==H_3.fof_halo_bin_tag->at(kh));
+     assert(H_1.sod_halo_bin->at(kh)==H_3.sod_halo_bin->at(kh));
 
+  }
+  assert(H_1.num_halos==H_3.num_halos);
   // compute the error characteristics for the catalogs
-  err = compute_mean_std_dist_sod(H_1 ,H_2, lim);
+  err = compute_mean_std_dist_sod(H_1 ,H_3, lim);
 
     if ((rank==0)&&(err==0)){
       cout << " Results " << endl;
@@ -293,7 +346,7 @@ int sodbin_check(string fof_file, string fof_file2, float lim){
   MPI_Barrier(Partition::getComm());
   H_1.Deallocate();
   H_2.Deallocate();
-
+  H_3.Deallocate();
 
   return 0;
 }

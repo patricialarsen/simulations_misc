@@ -4,6 +4,7 @@
 #define N_HALO_FLOATS 40
 #define N_HALO_FLOATS_SOD 5 
 #define N_HALO_INTS_SOD 1
+#define N_HALO_FLOATS_E 18
 
 // these are referenced in tree building -- all others are carried along
 // must retain this order for these codes - do not change this line
@@ -49,7 +50,7 @@ const std::string float_var_names_test[N_HALO_FLOATS] = {
 	"sod_halo_cdelta",
 	"sod_halo_cdelta_error",
 	"sod_halo_c_acc_mass",
-	"sod_halo_c_peak_mass"
+	"sod_halo_c_peak_mass",
 };
 
 
@@ -94,8 +95,30 @@ const std::string float_var_names_test2[N_HALO_FLOATS] = {
         "sod_halo_cdelta",
         "sod_halo_cdelta_error",
         "sod_halo_c_acc_mass",
-        "sod_halo_c_peak_mass"
+        "sod_halo_c_peak_mass",
 };
+
+const std::string float_var_names_ellipticity[N_HALO_FLOATS_E] = {
+        "sod_halo_eigS1X",
+        "sod_halo_eigS1Y",
+        "sod_halo_eigS1Z",
+        "sod_halo_eigS2X",
+        "sod_halo_eigS2Y",
+        "sod_halo_eigS2Z",
+        "sod_halo_eigS3X",
+        "sod_halo_eigS3Y",
+        "sod_halo_eigS3Z",
+        "sod_halo_eigR1X",
+        "sod_halo_eigR1Y",
+        "sod_halo_eigR1Z",
+        "sod_halo_eigR2X",
+        "sod_halo_eigR2Y",
+        "sod_halo_eigR2Z",
+        "sod_halo_eigR3X",
+        "sod_halo_eigR3Y",
+        "sod_halo_eigR3Z"
+};
+
 
 const std::string float_var_names_sodbin[N_HALO_FLOATS_SOD] = {
 	"sod_halo_bin_mass",

@@ -126,19 +126,20 @@ int main( int argc, char** argv ) {
   part_file = path1+ "/m000p-499.bighaloparticles#0";
   part_file2 = path2 + "/m000p-499.bighaloparticles#0";
 
+  map<int64_t,int> tag_map_main;
+  map<int64_t,int>* tag_map = &tag_map_main; // halos passing the mass thresholds
 
   int err=0;
 
   if (halo_opt==0){
-    err = perform_halo_check (fof_file, fof_file2, lim);
+    err = perform_halo_check (fof_file, fof_file2, lim, mass_min, mass_max,tag_map);
   }
   else if (halo_opt==1)
     err = match_pos(fof_file, fof_file2, lim, box_size, mass_min, mass_max);
   else if (halo_opt==2)
     err = compare_dist(fof_file, fof_file2, lim);
-
-  if (sod_opt==0)
-    err = sodbin_check(sod_file,sod_file2,lim);
+  if ((sod_opt==0)&&(halo_opt==0))
+    err = sodbin_check(sod_file,sod_file2,lim,tag_map);
   if (part_opt==0)
     err = part_check(part_file, part_file2);
   if (part_opt==1){

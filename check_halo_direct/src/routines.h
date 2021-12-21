@@ -24,15 +24,14 @@ int compute_mean_std_dist_halos2(Halos_test H_1 , Halos_test H_2, float lim );
 int  compute_mean_std_dist_sod(SODBins_test H_1 , SODBins_test H_2, float lim );
 
 
-//inline unsigned int tag_to_rank(int64_t fof_tag, int n_ranks) ;
 void read_halos(Halos_test &H0, string file_name, int file_opt) ;
 void read_sodfiles(SODBins_test &H0, string file_name);
 void read_particles(Particles_test &H0, string file_name);
 
 
-int perform_halo_check(string fof_file, string fof_file2, float lim);
+int perform_halo_check(string fof_file, string fof_file2, float lim, float min_mass, float max_mass, map<int64_t,int> *tag_map);
 int match_pos (string fof_file, string fof_file2, float lim, float box_size, float min_mass, float max_mass);
 int compare_dist(string fof_file,string fof_file2, float lim);
-int sodbin_check(string fof_file, string fof_file2, float lim);
+int sodbin_check(string fof_file, string fof_file2, float lim, map<int64_t,int> *tag_map);
 int part_check(string fof_file, string fof_file2);
 

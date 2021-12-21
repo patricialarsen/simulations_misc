@@ -40,6 +40,9 @@ void Halos_test::Allocate(size_t n) {
     for (int i=0; i<N_HALO_FLOATS; ++i)
       this->float_data[i] = new vector<float>(this->num_halos);
 
+    for (int i=0; i<N_HALO_FLOATS_E; ++i)
+      this->ellipticity_data[i] = new vector<float>(this->num_halos);
+
     this->tag2idx = new map<int64_t,int>(); 
 
   }
@@ -100,12 +103,12 @@ void Particles_test::Set_MPIType(){
 
 
 void Halos_test::Set_MPIType(){
-    MPI_Datatype type[5] = { MPI_INT64_T, MPI_INT, MPI_INT64_T, MPI_INT, MPI_FLOAT };
-    int blocklen[5] = {1,1,1,1,N_HALO_FLOATS};
+    MPI_Datatype type[6] = { MPI_INT64_T, MPI_INT, MPI_INT64_T, MPI_INT, MPI_FLOAT ,MPI_FLOAT};
+    int blocklen[6] = {1,1,1,1,N_HALO_FLOATS, N_HALO_FLOATS_E};
     halo_properties_test hp;
 
     MPI_Aint base;
-    MPI_Aint disp[5];
+    MPI_Aint disp[6];
 
     MPI_Get_address(&hp, &base);
     MPI_Get_address(&hp.fof_halo_tag,     &disp[0]);
@@ -113,12 +116,13 @@ void Halos_test::Set_MPIType(){
     MPI_Get_address(&hp.sod_halo_count,   &disp[2]);
     MPI_Get_address(&hp.rank,             &disp[3]);
     MPI_Get_address(&hp.float_data,       &disp[4]);
+    MPI_Get_address(&hp.ellipticity_data, &disp[5]);
 
     disp[0]-=base; disp[1]-=base; disp[2]-=base; disp[3]-=base;
-    disp[4]-=base;
+    disp[4]-=base; disp[5]-=base;
 
 
-    MPI_Type_struct(5,blocklen,disp,type,&this->halo_properties_MPI_Type);
+    MPI_Type_struct(6,blocklen,disp,type,&this->halo_properties_MPI_Type);
     MPI_Type_commit(&this->halo_properties_MPI_Type);
 
 }
@@ -161,6 +165,9 @@ void Halos_test::Deallocate() {
 
     for (int i=0; i<N_HALO_FLOATS; ++i)
       delete this->float_data[i];
+    for (int i=0; i<N_HALO_FLOATS_E; ++i)
+      delete this->ellipticity_data[i];
+
 
     delete this->tag2idx;
 
@@ -235,6 +242,11 @@ halo_properties_test Halos_test::GetProperties(size_t idx) {
     for (int i=0; i<N_HALO_FLOATS; ++i)
       halo_properties.float_data[i] = this->float_data[i]->at(idx);
     
+    for (int i=0; i<N_HALO_FLOATS_E; ++i)
+      halo_properties.ellipticity_data[i] = this->ellipticity_data[i]->at(idx);
+
+
+
     return halo_properties;
   }
   else {
@@ -294,6 +306,8 @@ void Halos_test::Erase(size_t i) {
     this->sod_halo_count->erase(this->sod_halo_count->begin()+i);
     for (int j=0; j<N_HALO_FLOATS; ++j)
         this->float_data[j]->erase(this->float_data[j]->begin()+i);
+    for (int j=0; j<N_HALO_FLOATS_E; ++j)
+        this->ellipticity_data[j]->erase(this->ellipticity_data[j]->begin()+i);
 
 
     --this->num_halos;
@@ -348,6 +362,8 @@ void Halos_test::PushBack(halo_properties_test h) {
 
     for (int i=0; i<N_HALO_FLOATS; ++i)
       this->float_data[i]->push_back(h.float_data[i]);
+    for (int i=0; i<N_HALO_FLOATS_E; ++i)
+      this->ellipticity_data[i]->push_back(h.ellipticity_data[i]);
 
     ++this->num_halos;
   }
@@ -399,6 +415,9 @@ void Halos_test::Resize(size_t n) {
 
     for (int i=0; i<N_HALO_FLOATS; ++i)
       this->float_data[i]->resize(this->num_halos);
+  
+  for (int i=0; i<N_HALO_FLOATS_E;++i)
+	  this->ellipticity_data[i]->resize(this->num_halos);
   }
   else {
     cerr << "ERROR: Can't resize -- vectors are not allocated." << endl;

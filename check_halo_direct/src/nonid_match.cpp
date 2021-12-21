@@ -57,7 +57,7 @@ bool check_comp_halo(const halo_properties_test &a, const halo_properties_test &
    float diff_y  = a.float_data[3] - b.float_data[3];
    float diff_z = a.float_data[4] - b.float_data[4];
    float diff_m = (a.float_data[0] - b.float_data[0])/a.float_data[0];
-   return ((fabs(diff_x)<0.1)&&(fabs(diff_y)<0.1)&&(fabs(diff_z)<0.1)&&(diff_m<0.1));
+   return ((fabs(diff_x)<0.05)&&(fabs(diff_y)<0.05)&&(fabs(diff_z)<0.05)&&(diff_m<0.05));
 }
 
 
@@ -245,7 +245,7 @@ int match_pos (string fof_file, string fof_file2, float lim, float box_size, flo
        // if you want to skip over missing particles: note only do this if the catalogs should mostly match up.
        err = 0;
        int64_t i=0;
-       while (i < numh1) {
+       while (i < H_1.num_halos) {
 	   halo_properties_test tmp = H_1.GetProperties(i);
 	   halo_properties_test tmp2 = H_2.GetProperties(i);
           if (check_comp_halo(tmp,tmp2)){

@@ -58,11 +58,13 @@ int compute_mean_float(vector<float> *val1, vector<float> *val2, int num_halos ,
   for (int i=0; i<num_halos; i++){
       diff += (double)(val1->at(i)-val2->at(i));
       meanq += (double)(val1->at(i));
-      if (val1->at(i)!=0){
-        double frac = (double)(fabs(val1->at(i)-val2->at(i))/fabs(val1->at(i)));
+      if (fabs(val1->at(i))>1.e-6){
+	 double frac = 0;
+	 frac = (double)(fabs(val1->at(i)-val2->at(i))/fabs(val1->at(i)));
          diff_frac = (diff_frac<frac)?frac:diff_frac;
       }
    }
+
       MPI_Barrier(Partition::getComm());
       MPI_Allreduce(&diff, &mean, 1, MPI_DOUBLE, MPI_SUM,  Partition::getComm());
       MPI_Allreduce(&diff_frac, &frac_max, 1, MPI_DOUBLE, MPI_MAX,  Partition::getComm());
@@ -89,7 +91,7 @@ int compute_mean_float(vector<float> *val1, vector<float> *val2, int num_halos ,
    bool print_out = true;
    if (rank==0){
 
-     if ((frac_max<lim)||((fabs(stddev_tot/stddevq_tot)<lim)&&(fabs(mean/meanq_tot)<lim))) // no values change by more than a percent
+     if ((frac_max<lim)||((fabs(stddev_tot/stddevq_tot)<lim)&&(fabs(mean/meanq_tot)<lim))) // no values change by more than lim
        print_out=false;
      if (isnan(mean)) // if nan is present, then this is higher than threshold
        print_out=true;
@@ -102,6 +104,7 @@ int compute_mean_float(vector<float> *val1, vector<float> *val2, int num_halos ,
      cout << " standard deviation of difference = " << stddev_tot << endl;
      cout << " mean of quantity = " << meanq_tot << endl;
      cout << " standard deviation of quantity = " << stddevq_tot << endl;
+     cout << " number of matching objects = " << n_tot << endl;
      cout << endl;
      return 1;
      }
@@ -109,6 +112,25 @@ int compute_mean_float(vector<float> *val1, vector<float> *val2, int num_halos ,
    return 0;
 
 }
+
+int compute_mean_std_dist_ellipticity(Halos_test H_1 , Halos_test H_2, float lim ){
+  int rank, n_ranks;
+  rank = Partition::getMyProc();
+  n_ranks = Partition::getNumProc();
+
+  int count = H_1.num_halos;
+
+
+  int err=0;
+  string e1_name = "axis_ratio_13";
+  string e2_name = "axis_ratio_23";
+
+  err += compute_mean_float(H_1.ellipticity_data[0],H_2.ellipticity_data[0],count,e1_name,e1_name,lim);
+  err += compute_mean_float(H_1.ellipticity_data[1],H_2.ellipticity_data[1],count,e2_name,e2_name,lim);
+  return err;
+}
+
+
 
 int  compute_mean_std_dist_halo(Halos_test H_1 , Halos_test H_2, float lim ){
   // compute the mean and std of the differences and make a histogram to look more closely
@@ -132,6 +154,43 @@ inline unsigned int tag_to_rank(int64_t fof_tag, int n_ranks) {
     return MurmurHashNeutral2((void*)(&fof_tag),sizeof(int64_t),0) % n_ranks;
 }
 
+halo_properties_test alter_ellipticities(halo_properties_test tmp){
+    
+
+    float s1x = tmp.ellipticity_data[0];
+    float s1y = tmp.ellipticity_data[1];
+    float s1z = tmp.ellipticity_data[2];
+    float s2x = tmp.ellipticity_data[3];
+    float s2y = tmp.ellipticity_data[4];
+    float s2z = tmp.ellipticity_data[5];
+    float s3x = tmp.ellipticity_data[6];
+    float s3y = tmp.ellipticity_data[7];
+    float s3z = tmp.ellipticity_data[8];
+
+    float e1 = sqrt(s1x*s1x+s1y*s1y+s1z*s1z);
+    float e2 = sqrt(s2x*s2x+s2y*s2y+s2z*s2z);
+    float e3 = sqrt(s3x*s3x+s3y*s3y+s3z*s3z);
+
+    for (int i = 0; i<N_HALO_FLOATS_E; i++){
+        tmp.ellipticity_data[i]  = 0.0;
+    }
+    tmp.ellipticity_data[0] = e1/e3;
+    tmp.ellipticity_data[1] = e2/e3;
+	    
+
+    if (N_HALO_FLOATS_E==18){
+    float r1x = tmp.ellipticity_data[9];
+    float r1y = tmp.ellipticity_data[10];
+    float r1z = tmp.ellipticity_data[11];
+    float r2x = tmp.ellipticity_data[12];
+    float r2y = tmp.ellipticity_data[13];
+    float r2z = tmp.ellipticity_data[14];
+    float r3x = tmp.ellipticity_data[15];
+    float r3y = tmp.ellipticity_data[16];
+    float r3z = tmp.ellipticity_data[17];
+    }
+    return tmp;
+}
 
 void read_halos(Halos_test &H0, string file_name, int file_opt) {
  // Read halo files into a buffer
@@ -154,12 +213,15 @@ void read_halos(Halos_test &H0, string file_name, int file_opt) {
   for (int i=0; i<N_HALO_FLOATS; ++i)
     GIO.addVariable((const string)float_var_names_test2[i], *(H0.float_data[i]), true);
  }
+  for (int i=0; i<N_HALO_FLOATS_E; ++i)
+    GIO.addVariable((const string)float_var_names_ellipticity[i], *(H0.ellipticity_data[i]), true);
+   
 
   GIO.readData();
   H0.Resize(num_elems);
 }  
 
-int perform_halo_check(string fof_file, string fof_file2, float lim){
+int perform_halo_check(string fof_file, string fof_file2, float lim, float min_mass, float max_mass, map<int64_t, int> *tag_map){
   int rank, n_ranks;
   rank = Partition::getMyProc();
   n_ranks = Partition::getNumProc();
@@ -172,6 +234,7 @@ int perform_halo_check(string fof_file, string fof_file2, float lim){
   // create halo buffers
   Halos_test H_1;
   Halos_test H_2;
+  Halos_test H_3;
 
   H_1.Allocate();
   H_1.has_sod = true;
@@ -179,6 +242,10 @@ int perform_halo_check(string fof_file, string fof_file2, float lim){
   H_2.has_sod = true;
   H_1.Set_MPIType();
   H_2.Set_MPIType();
+  H_3.Allocate();
+  H_3.has_sod = true;
+  H_3.Set_MPIType();
+
 
 
   read_halos(H_1, fof_file, 2);
@@ -190,19 +257,34 @@ int perform_halo_check(string fof_file, string fof_file2, float lim){
   vector<int> fof_halo_send_cnt(n_ranks,0);
   vector<halo_properties_test> fof_halo_send2;
   vector<int> fof_halo_send_cnt2(n_ranks,0);
+  vector<int64_t> fof_halo_tags_masked;
+  vector<int64_t> fof_halo_tags_masked_full;
 
+  //fof_halo_tags_masked.resize(0);
+
+  int tag_send_count=0;
   for (int i=0; i<H_1.num_halos; ++i) {
     halo_properties_test tmp = H_1.GetProperties(i);
+    if ((tmp.float_data[0]>min_mass)&&(tmp.float_data[0]<max_mass)){
     tmp.rank = tag_to_rank(tmp.fof_halo_tag, n_ranks);
+    tmp = alter_ellipticities(tmp);
     fof_halo_send.push_back(tmp);
+    fof_halo_tags_masked.push_back(tmp.fof_halo_tag);
     ++fof_halo_send_cnt[tmp.rank];
+    ++tag_send_count;
+    }
   }
   for (int i=0; i<H_2.num_halos; ++i) {
     halo_properties_test tmp = H_2.GetProperties(i);
+    if ((tmp.float_data[0]>min_mass)&&(tmp.float_data[0]<max_mass)){
     tmp.rank = tag_to_rank(tmp.fof_halo_tag, n_ranks);
+    tmp = alter_ellipticities(tmp);
     fof_halo_send2.push_back(tmp);
     ++fof_halo_send_cnt2[tmp.rank];
+    }
   }
+
+  
   // sort by destination rank
   sort(fof_halo_send.begin(),fof_halo_send.end(), comp_by_halo_dest);
   sort(fof_halo_send2.begin(),fof_halo_send2.end(), comp_by_halo_dest);
@@ -212,12 +294,36 @@ int perform_halo_check(string fof_file, string fof_file2, float lim){
 
   H_1.Resize(0);
   H_2.Resize(0);
-
+  H_3.Resize(0);
   // create send and receive buffers and offsets
   vector<int> fof_halo_recv_cnt;
   vector<int> fof_halo_recv_cnt2;
   fof_halo_recv_cnt.resize(n_ranks,0);
   fof_halo_recv_cnt2.resize(n_ranks,0);
+  
+  int sizes[n_ranks];
+  vector<int> tag_disp(n_ranks,0);
+  MPI_Allgather(&tag_send_count,1,MPI_INT,sizes,1,MPI_INT,Partition::getComm());
+  int sum=0;
+  for(int i=0; i < n_ranks; i++){
+      sum+=sizes[i];
+      if(i==0){
+         tag_disp[i]=0;
+      }else{
+         tag_disp[i]=tag_disp[i-1]+sizes[i-1];
+      }
+  }
+
+  fof_halo_tags_masked_full.resize(sum);
+
+  int size = (int)fof_halo_tags_masked.size();
+  MPI_Allgatherv(&fof_halo_tags_masked[0], size, MPI_INT64_T, &fof_halo_tags_masked_full[0],sizes, &tag_disp[0], MPI_INT64_T,Partition::getComm());
+
+
+
+  for (int i=0;i<sum;i++){
+  (*tag_map).insert(pair<int64_t,int>(fof_halo_tags_masked_full[i],i) );
+  }
 
   MPI_Alltoall(&fof_halo_send_cnt[0],1,MPI_INT,&fof_halo_recv_cnt[0],1,MPI_INT,Partition::getComm());
   MPI_Alltoall(&fof_halo_send_cnt2[0],1,MPI_INT,&fof_halo_recv_cnt2[0],1,MPI_INT,Partition::getComm());
@@ -274,8 +380,8 @@ int perform_halo_check(string fof_file, string fof_file2, float lim){
     H_1.PushBack(tmp);
   }
   for (int i=0; i<fof_halo_recv_total2; ++i){
-       halo_properties_test tmp = fof_halo_recv2[i];
-    H_2.PushBack(tmp);
+     halo_properties_test tmp = fof_halo_recv2[i];
+     H_2.PushBack(tmp);
   }
   fof_halo_recv.resize(0);
   fof_halo_recv2.resize(0);
@@ -309,10 +415,9 @@ int perform_halo_check(string fof_file, string fof_file2, float lim){
       H_2.Erase(dup_idx2[i]-dup_2);
       dup_2 ++;
   }
+  cout << "duplicates "<< dup_1 << " and "<< dup_2<<endl;
+  // remove both sets of duplicates amongst one rank.
 
-
-
-  // first check if all IDs match up normally
   if (H_1.num_halos != H_2.num_halos){
       err += 1;
     }
@@ -322,7 +427,6 @@ int perform_halo_check(string fof_file, string fof_file2, float lim){
          err+=1;
      }
    }
-
    int numh1 = H_1.num_halos;
    int numh2 = H_2.num_halos;
    int dn_1 = 0;
@@ -332,30 +436,86 @@ int perform_halo_check(string fof_file, string fof_file2, float lim){
    if (skip_err&&(err>0)){
        err = 0;
        int i=0;
-       while (i < numh1) {
+       while ((i < H_1.num_halos)&&(i<H_2.num_halos)){
           if (H_1.fof_halo_tag->at(i)==H_2.fof_halo_tag->at(i)){
+	     halo_properties_test tmp = H_2.GetProperties(i);
+	     H_3.PushBack(tmp);
+	     assert(H_1.fof_halo_tag->at(i)==H_3.fof_halo_tag->at(i));
              i += 1;
            }
           else {
            bool not_found = true;
-           for (int j=0;j<32;j++){
+           for (int j=-200;j<200;j++){
+	       if (((i+j)<H_2.num_halos)&&(i+j)>=0){
                if (H_1.fof_halo_tag->at(i)==H_2.fof_halo_tag->at(i+j)){
-                  for (int k=0; k<j; k++)
-                      H_2.Erase(i+k);
+		  halo_properties_test tmp = H_2.GetProperties(i+j);
+                  H_3.PushBack(tmp);
+		  assert(H_1.fof_halo_tag->at(i)==H_2.fof_halo_tag->at(i+j));
+		  assert(H_1.fof_halo_tag->at(i)==H_3.fof_halo_tag->at(i));
+
                 not_found = false;
                 i+=1; // iterate once found
                 }
               }
+	   }
            if (not_found){
              H_1.Erase(i);
              --numh1;
            }
          }
      }
+     while (i<H_1.num_halos){
+           bool not_found = true;
+           for (int j=-200;j<200;j++){
+               if (((i+j)<H_2.num_halos)&&(i+j)>=0){
+               if (H_1.fof_halo_tag->at(i)==H_2.fof_halo_tag->at(i+j)){
+                  halo_properties_test tmp = H_2.GetProperties(i+j);
+                  H_3.PushBack(tmp);
+                  assert(H_1.fof_halo_tag->at(i)==H_3.fof_halo_tag->at(i));
+
+                not_found = false;
+                i+=1; // iterate once found
+                }
+              }
+           }
+           if (not_found){
+             H_1.Erase(i);
+             --numh1;
+           }
+         }
+
+   cout << "number of halos"<<endl;
+   cout << H_1.num_halos << " " << H_3.num_halos<< endl;
+
+   if (H_1.num_halos>H_3.num_halos){
+   int diff_halos = H_1.num_halos-H_3.num_halos;
+   for (int kh = 0; kh<diff_halos;kh++){
+         H_1.Erase(H_1.num_halos+kh-1);
+         --numh1;
+   }
+   }
+
+
+   for (int kh = 0 ; kh<H_1.num_halos; kh++){
+   	 assert(H_1.fof_halo_tag->at(kh)==H_3.fof_halo_tag->at(kh));
+
+   }
 
    // look at number of erased halos
    dn_1 =  fof_halo_recv_total - H_1.num_halos;
    dn_2 =  fof_halo_recv_total2 - H_2.num_halos;
+
+  }
+  else{
+	  if (rank==0){
+		  cout << "catalogs line up perfectly "<< endl;
+		  cout << "number of halos = " << H_1.num_halos << endl;
+	  }
+   for (int kh=0; kh<H_1.num_halos; kh++){
+          halo_properties_test tmp = H_2.GetProperties(kh);
+          H_3.PushBack(tmp);
+
+   }
 
   }
   int ndiff_tot = 0;
@@ -368,8 +528,9 @@ int perform_halo_check(string fof_file, string fof_file2, float lim){
 
   MPI_Allreduce(&dup_1, &ndups1, 1, MPI_INT, MPI_SUM,  Partition::getComm());
   MPI_Allreduce(&dup_2, &ndups2, 1, MPI_INT, MPI_SUM,  Partition::getComm());
-
-  err = compute_mean_std_dist_halo(H_1 ,H_2, lim);
+  assert(H_1.num_halos == H_3.num_halos);
+  err = compute_mean_std_dist_halo(H_1 ,H_3, lim);
+  err = compute_mean_std_dist_ellipticity(H_1 ,H_3, lim);
 
     if ((rank==0)&&(err==0)){
       cout << " Results " << endl;
@@ -398,6 +559,7 @@ int perform_halo_check(string fof_file, string fof_file2, float lim){
   MPI_Barrier(Partition::getComm());
   H_1.Deallocate();
   H_2.Deallocate();
+  H_3.Deallocate();
   return 0;
 
 }

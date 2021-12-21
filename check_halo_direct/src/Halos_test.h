@@ -22,6 +22,7 @@ struct halo_properties_test {
   int64_t sod_halo_count;
   int32_t rank;
   float float_data[N_HALO_FLOATS];
+  float ellipticity_data[N_HALO_FLOATS_E];
 };
 
 struct sod_binproperties_test {
@@ -54,10 +55,10 @@ public:
   vector<int64_t>* sod_halo_count;
 
   vector<vector<float>* > float_data;
+  vector<vector<float>* > ellipticity_data;
 
   // destination rank for redistribution
   vector<int32_t>* rank; 
-
 
   // map for the halo tag to the index in the local arrays
   map<int64_t,int>* tag2idx;
@@ -66,6 +67,7 @@ public:
        step_number(-1)
   {
     float_data.resize(N_HALO_FLOATS);
+    ellipticity_data.resize(N_HALO_FLOATS_E);
   };
 
   ~Halos_test() { };
