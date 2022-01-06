@@ -1,0 +1,56 @@
+#!/bin/bash -evx
+#COBALT -n 8
+#COBALT -q debug-flat-quad
+#COBALT -t 00:30:00
+#COBALT --project ExtCosmology
+#COBALT -O runme
+#COBALT -e /projects/ExtCosmology/prlarsen/runme.error
+#COBALT -o /projects/ExtCosmology/prlarsen/runme.output
+#COBALT --debuglog /projects/ExtCosmology/prlarsen/runme.cobaltlog
+
+# ----------------------------------------------------------------------------------------
+# PARAMETERS TO CHANGE
+# ----------------------------------------------------------------------------------------
+
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/emberson/patricia/theta_programs/Healpix_3.31/lib
+
+ranks_per_node=8
+threads_per_rank=8
+
+exe="/home/emberson/patricia/theta_programs/cic2gio/cic_gio"
+outfile="/projects/ExtCosmology/prlarsen/ksz_map_293.fits"
+lc_path="/lus-projects/ExtCosmology/emberson/BorgC/output_2304_0800_crki_v0_r04/LC/lc_intrp_downs."
+nsteps=1
+steps=293
+
+# ----------------------------------------------------------------------------------------
+# PARAMETERS TO NOT CHANGE 
+# ----------------------------------------------------------------------------------------
+
+nodes=$COBALT_JOBSIZE
+total_ranks=$((nodes*ranks_per_node))
+cores_per_node=64
+threads_per_core=$((ranks_per_node*threads_per_rank/cores_per_node))
+
+# ----------------------------------------------------------------------------------------
+# SET ENVIRONMENT VARIABLES
+# ----------------------------------------------------------------------------------------
+
+export KMP_AFFINITY=none
+export OMP_NUM_THREADS=$threads_per_rank
+
+# ----------------------------------------------------------------------------------------
+# RUN THE EXECUTABLE
+# ----------------------------------------------------------------------------------------
+
+if [ $threads_per_core -eq 1 -o $threads_per_core -eq 2 -o $threads_per_core -eq 4 ] ; then
+#   echo $total_ranks
+#   echo $ranks_per_node
+#   echo $threads_per_rank
+#   echo $threads_per_core
+  aprun -n $total_ranks -N $ranks_per_node -cc depth -d $threads_per_rank -j $threads_per_core $exe $lc_path $outfile $nsteps $steps
+else
+  echo "YOU DID NOT SELECT A PROPER COMBINATION OF RANKS AND THREADS"
+fi
+
+

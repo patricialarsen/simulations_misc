@@ -1,0 +1,4 @@
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/prlarsen/usr/cfitsio-4.0.0/build/lib/
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/prlarsen/usr/Healpix_3.80/lib
+export LD_LIBRARY_PATH
+
