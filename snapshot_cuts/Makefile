@@ -28,3 +28,6 @@ downsample: downsample_snapshot.cxx
 	${CXX} -O3 -o downsample /home/prlarsen/hacc_fresh/trunk/cooley.cpu/mpi/genericio/GenericIO.o -std=c++11  ${CFLAGS} ${FLAGS} downsample_snapshot.cxx ${LDFLAGS} -lcurl ${HDF5FLAGS}
 
 
+cluster: cutout_cluster.cxx
+	${CXX} -O3 -o cluster /home/prlarsen/hacc_fresh/trunk/cooley.cpu/mpi/genericio/GenericIO.o -std=c++11  ${CFLAGS} ${FLAGS} cutout_cluster.cxx ${LDFLAGS} -lcurl ${HDF5FLAGS}
+
