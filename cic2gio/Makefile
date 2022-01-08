@@ -34,5 +34,9 @@ BINDIR = bin
 
 cictogio: cic_gio2healpix.cxx
 	$(CXX) -O3 -o cic_gio /home/prlarsen/hacc_fresh/trunk/cooley.cpu/mpi/genericio/GenericIO.o ${HPXOFILES} ${CXXHPXDIRS} ${CFLAGS} ${LDFLAGS} ${FLAGS} cic_gio2healpix.cxx -lcurl 
+
+cictocart: cic_gio2cart.cxx
+	$(CXX) -O3 -o cic_cart /home/prlarsen/hacc_fresh/trunk/cooley.cpu/mpi/genericio/GenericIO.o ${HPXOFILES} ${CXXHPXDIRS} ${CFLAGS} ${LDFLAGS} ${FLAGS} cic_gio2cart.cxx -lcurl 
+
 #-dynamic
 

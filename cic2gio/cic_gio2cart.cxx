@@ -7,20 +7,7 @@
 
 #include "GenericIO.h"
 #include <sstream>
-
-#include <healpix_base.h>
-
-#include "healpix_map_fitsio.h"
-#include "healpix_map.h"
-#include "fitshandle.h"
-//#include "share_utils.h"
-#include "string_utils.h"
-#include "healpix_tables.h"
-//#include "c_utils.h"
-#include "math_utils.h"
-#include "vec3.h"
 #include "stdio.h"
-#include "fitsio.h"
 
 #include <fstream>
 #include <vector>
@@ -34,6 +21,19 @@
 
 using namespace std;
 using namespace gio;
+
+
+int pos2npix(float x, float y){
+    // periodic boundary conditions for the box
+    x = (x<0)? x+150: x; 
+    x = (x>150) ? x-150: x; 
+    y = (y<0)? y+150: y;
+    y = (y>150) ? y-150:y;
+    int npix_x = (int)((x/150.)*256.);
+    int npix_y = (int)((y/150.)*256.);
+    int npix  = npix_x*256+npix_y;
+    return npix;
+}
 
 int main(int argc, char *argv[]) {
 
@@ -84,26 +84,16 @@ int main(int argc, char *argv[]) {
   if (EnvStr && string(EnvStr) == "1")
     Method = GenericIO::FileIOMPI;
  
-  Healpix_Ordering_Scheme ring = RING;
-  int64 nside=2048;//#8192;
-
-  T_Healpix_Base<int64> map; // this certainly exists
-  map = Healpix_Base2 (nside, ring, SET_NSIDE);
-   
-  int order = Healpix_Base::nside2order(nside);
-  int64 npix = map.Npix();
-
-  // area in steradians
-  float pixsize = (4.*3.141529/npix);
-
-  arr<float> map_output_total_ksz(npix);
-  arr<float> map_output_total_tsz(npix);
+  int npix = 256*256;
+  float pixsize = (150.*150.)/(256.*256.);
+  vector<float> map_output_total_ksz(npix);
+  vector<float> map_output_total_tsz(npix);
   vector<float> map_output_ksz;
   vector<float> map_output_tsz;
-
   map_output_ksz.resize(npix);
   map_output_tsz.resize(npix);
-  for (int64 i=0;i<npix;i++){
+
+  for (int i=0;i<npix;i++){
       map_output_ksz[i] = 0.0;
       map_output_tsz[i] = 0.0;
   }
@@ -116,6 +106,8 @@ int main(int argc, char *argv[]) {
     char mpiioName[150];
     strcpy(mpiioName,mpiioName_base);
     strcat(mpiioName,step);
+
+
 
     { // scope GIO
 
@@ -175,6 +167,7 @@ int main(int argc, char *argv[]) {
 #endif
     a.resize(Np);
 
+
     vector<float> total_weights;
     total_weights.resize(Np);
 
@@ -214,7 +207,7 @@ int main(int argc, char *argv[]) {
      //  v/a = dr/dt + r H 
      //  dr/dt = v/a - r H 
 
-      vec3 vec_val = vec3(xd,yd,zd);
+      //vec3 vec_val = vec3(xd,yd,zd);
 
 #ifdef BORG_CUBE
       double mi = mass0;
@@ -232,12 +225,16 @@ int main(int argc, char *argv[]) {
       umin = std::min(umin, ui) ; umax = std::max(umax, ui);
       dcmin = std::min(dcmin, dist_comov2) ; dcmax = std::max(dcmax, dist_comov2);
         
-      int pix_num = map.vec2pix(vec_val);
+      //PL:todo: add mask here 
+      int pix_num = pos2npix(xd,yd);
+      //int pix_num = something;
+      //int pix_num = map.vec2pix(vec_val);
       map_output_ksz[pix_num] += mi*v_los/dist_comov2/aa; // one factor of a cancels from v_los and dist_comov2
       map_output_tsz[pix_num] += mi*mui*ui/dist_comov2;   // a^2 factors cancel out in ui and dist_comov2  
     }    
 
     printf("Finished accumulating particles for rank %d\n", commRank);
+
 
     double amin_g, amax_g;
     double mumin_g, mumax_g;
@@ -282,7 +279,7 @@ int main(int argc, char *argv[]) {
     std::cout << " CHIE: " << CHIE << " SAMPLERATE: " << samplerate << std::endl;
     std::cout << " KSZ_CONV: " << KSZ_CONV << " TSZ_CONV: " << TSZ_CONV << std::endl;
   }
-  for (int64 j=0; j<npix; j++) {
+  for (int j=0; j<npix; j++) {
     map_output_ksz[j] *= KSZ_CONV;
     map_output_tsz[j] *= TSZ_CONV;
   }
@@ -291,7 +288,7 @@ int main(int argc, char *argv[]) {
   int ncell = 16;
   int npix2 = npix/ncell;
 
-  for (int64 j=0; j<npix; j++) {
+  for (int j=0; j<npix; j++) {
     map_output_total_ksz[j] = 0.0;
     map_output_total_tsz[j] = 0.0;
   }
@@ -315,7 +312,7 @@ int main(int argc, char *argv[]) {
 
   double sum_count_ksz = 0.0;
   double sum_count_tsz = 0.0;
-  for (int64 j=0; j<npix; j++) {
+  for (int j=0; j<npix; j++) {
     sum_count_ksz += (double)(map_output_total_ksz[j]*map_output_total_ksz[j]); 
     sum_count_tsz += (double)(map_output_total_tsz[j]*map_output_total_tsz[j]); 
   }
@@ -324,11 +321,31 @@ int main(int argc, char *argv[]) {
   if(commRank == root_process) std::cout << " mean squared y: " << sum_count_tsz << " b: " << sum_count_ksz << std::endl; 
 
   if(commRank == root_process){
-    Healpix_Map<float> map_new_ksz(map_output_total_ksz,ring);
-    Healpix_Map<float> map_new_tsz(map_output_total_tsz,ring);
+ 
+   ofstream outdata_ksz, outdata_tsz; 
+   int i; 
+   outdata_ksz.open(outfile_ksz);
+   outdata_tsz.open(outfile_tsz);
+   if (!outdata_ksz){
+      cerr << "Error: file could not be opened" << endl;
+      exit(1);
+    }
+   if (!outdata_tsz){
+      cerr << "Error: file could not be opened" << endl;
+      exit(1);
+    }
+
+   for (i=0;i<npix;++i){
+        outdata_ksz << map_output_total_ksz[i] << endl;
+        outdata_tsz << map_output_total_tsz[i] << endl;
+   }
+   outdata_ksz.close();
+   outdata_tsz.close();
+  // Healpix_Map<float> map_new_ksz(map_output_total_ksz,ring);
+    //Healpix_Map<float> map_new_tsz(map_output_total_tsz,ring);
     if(commRank == root_process) printf("about to write ksz and tsz files\n");
-    write_Healpix_map_to_fits(outfile_ksz,map_new_ksz,planckType<float>());
-    write_Healpix_map_to_fits(outfile_tsz,map_new_tsz,planckType<float>());
+    //write_Healpix_map_to_fits(outfile_ksz,map_new_ksz,planckType<float>());
+    //write_Healpix_map_to_fits(outfile_tsz,map_new_tsz,planckType<float>());
   }
 
   t2 = MPI_Wtime();
