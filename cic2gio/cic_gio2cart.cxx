@@ -13,11 +13,13 @@
 #include <vector>
 #include <algorithm>
 
+#define MASK_SPECIES 2
 #define POSVEL_T float
 #define ID_T int64_t
 #define MASK_T uint16_t
 
-#define BORG_CUBE
+// uncomment for adiabatic simulations
+//#define ADIABATIC
 
 using namespace std;
 using namespace gio;
@@ -67,14 +69,15 @@ int main(int argc, char *argv[]) {
   vector<POSVEL_T> xx, yy, zz;
   vector<POSVEL_T> vx, vy, vz;
   vector<POSVEL_T> a; 
-#ifdef BORG_CUBE
-  vector<POSVEL_T> uu;
-  const double mass0 = 5.20414147e8; // 0.169161*2.77536627e11*(0.22+0.02258/0.71/0.71)*(800.0/2304)*(800.0/2304)*(800.0/2304);
+  vector<POSVEL_T> uu, mass;
+  vector<MASK_T> mask;
+
+#ifdef ADIABATIC
   const double mu0 = 0.5882352941;
 #else
-  vector<POSVEL_T> mass; 
-  vector<POSVEL_T> mu, uu;
+  vector<POSVEL_T> mu;
 #endif
+
   assert(sizeof(ID_T) == 8);
   vector<ID_T> id;
 
@@ -127,9 +130,11 @@ int main(int argc, char *argv[]) {
       vy.resize(Np + GIO.requestedExtraSpace()/sizeof(POSVEL_T));
       vz.resize(Np + GIO.requestedExtraSpace()/sizeof(POSVEL_T));
       uu.resize(Np + GIO.requestedExtraSpace()/sizeof(POSVEL_T));
-#ifndef BORG_CUBE
-      mu.resize(Np + GIO.requestedExtraSpace()/sizeof(POSVEL_T));
       mass.resize(Np + GIO.requestedExtraSpace()/sizeof(POSVEL_T));
+      mask.resize(Np + GIO.requestedExtraSpace()/sizeof(MASK_T));
+
+#ifndef ADIABATIC
+      mu.resize(Np + GIO.requestedExtraSpace()/sizeof(POSVEL_T));
 #endif
 
       //  READ IN VARIABLES
@@ -140,15 +145,14 @@ int main(int argc, char *argv[]) {
       GIO.addVariable("vx", vx, true);
       GIO.addVariable("vy", vy, true);
       GIO.addVariable("vz", vz, true);
-#ifndef BORG_CUBE
       GIO.addVariable("mass", mass, true);
-#endif
       GIO.addVariable("a", a, true);
       GIO.addVariable("uu", uu, true);
-#ifndef BORG_CUBE
+#ifndef ADIABATIC
       GIO.addVariable("mu", mu, true);
 #endif
       GIO.addVariable("id", id, true);
+      GIO.addVariable("mask",mask,true);
 
       GIO.readData();
     } // destroy GIO prior to calling MPI_Finalize
@@ -161,9 +165,10 @@ int main(int argc, char *argv[]) {
     vy.resize(Np);
     vz.resize(Np);
     uu.resize(Np);
-#ifndef BORG_CUBE
-    mu.resize(Np);
     mass.resize(Np);
+    mask.resize(Np);
+#ifndef ADIABATIC
+    mu.resize(Np);
 #endif
     a.resize(Np);
 
@@ -183,10 +188,8 @@ int main(int argc, char *argv[]) {
     double dcmax = -1.e20;
 
     for (int i=0; i<Np; i++) {
-
-#ifdef BORG_CUBE
- 	  if(id[i]%2 == 0) continue; // skip dark matter particles
-#endif
+   
+       if (!(mask[i] & (1<<MASK_SPECIES))) continue; // skip dark matter particles
 
       double xd = xx[i];
       double yd = yy[i];
@@ -209,13 +212,12 @@ int main(int argc, char *argv[]) {
 
       //vec3 vec_val = vec3(xd,yd,zd);
 
-#ifdef BORG_CUBE
-      double mi = mass0;
+#ifdef ADIABATIC
       double mui = mu0;
 #else
-      double mi = mass[i];
       double mui = mu[i];
 #endif
+      double mi = mass[i];
       double ui = uu[i];
       double aa = a[i];
 
@@ -341,11 +343,7 @@ int main(int argc, char *argv[]) {
    }
    outdata_ksz.close();
    outdata_tsz.close();
-  // Healpix_Map<float> map_new_ksz(map_output_total_ksz,ring);
-    //Healpix_Map<float> map_new_tsz(map_output_total_tsz,ring);
-    if(commRank == root_process) printf("about to write ksz and tsz files\n");
-    //write_Healpix_map_to_fits(outfile_ksz,map_new_ksz,planckType<float>());
-    //write_Healpix_map_to_fits(outfile_tsz,map_new_tsz,planckType<float>());
+    if(commRank == root_process) printf("Output ksz and tsz files\n");
   }
 
   t2 = MPI_Wtime();
