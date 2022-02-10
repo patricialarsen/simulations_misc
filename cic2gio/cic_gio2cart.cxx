@@ -28,9 +28,9 @@ using namespace gio;
 int pos2npix(float x, float y){
     // periodic boundary conditions for the box
     x = (x<0)? x+150: x; 
-    x = (x>150) ? x-150: x; 
+    x = (x>=150) ? x-150: x; 
     y = (y<0)? y+150: y;
-    y = (y>150) ? y-150:y;
+    y = (y>=150) ? y-150:y;
     int npix_x = (int)((x/150.)*256.);
     int npix_y = (int)((y/150.)*256.);
     int npix  = npix_x*256+npix_y;
@@ -65,7 +65,10 @@ int main(int argc, char *argv[]) {
   float samplerate;
   samplerate = atof(argv[4]);
   nsteps = atoi(argv[5]);
-  
+  int start_step;
+  start_step = atoi(argv[6]);
+
+
   vector<POSVEL_T> xx, yy, zz;
   vector<POSVEL_T> vx, vy, vz;
   vector<POSVEL_T> a; 
@@ -104,12 +107,14 @@ int main(int argc, char *argv[]) {
   for (int ii=0;ii<nsteps;ii++) { 
 
     char *mpiioName_base = argv[1];
-    char *step = argv[6+ii];
+
+    char step[10*sizeof(char)];
+    sprintf(step,"%d",start_step+ii);
+
 
     char mpiioName[150];
     strcpy(mpiioName,mpiioName_base);
     strcat(mpiioName,step);
-
 
 
     { // scope GIO
@@ -201,16 +206,6 @@ int main(int argc, char *argv[]) {
       double vzd_los = vz[i] *(zd/sqrt(dist_comov2));  
 
       double v_los = vxd_los+vyd_los+vzd_los;
-      //double vxd = vx[i];
-      //double vyd = vy[i];
-      //double vzd = vz[i];
-     // double H = H0 * (om * a[i]*a[i]*a[i] + ol + o) ...
-     //TODO: velocities might not have a factor of h! Check this! 
-     // also v = d(ra)/dt = dr/dt a + r da/dt 
-     //  v/a = dr/dt + r H 
-     //  dr/dt = v/a - r H 
-
-      //vec3 vec_val = vec3(xd,yd,zd);
 
 #ifdef ADIABATIC
       double mui = mu0;
@@ -227,13 +222,11 @@ int main(int argc, char *argv[]) {
       umin = std::min(umin, ui) ; umax = std::max(umax, ui);
       dcmin = std::min(dcmin, dist_comov2) ; dcmax = std::max(dcmax, dist_comov2);
         
-      //PL:todo: add mask here 
       int pix_num = pos2npix(xd,yd);
-      //int pix_num = something;
-      //int pix_num = map.vec2pix(vec_val);
       map_output_ksz[pix_num] += mi*v_los/dist_comov2/aa; // one factor of a cancels from v_los and dist_comov2
       map_output_tsz[pix_num] += mi*mui*ui/dist_comov2;   // a^2 factors cancel out in ui and dist_comov2  
-    }    
+    } 
+     
 
     printf("Finished accumulating particles for rank %d\n", commRank);
 
@@ -251,7 +244,7 @@ int main(int argc, char *argv[]) {
     MPI_Reduce(&umin, &umin_g, 1, MPI_DOUBLE, MPI_MIN, root_process, MPI_COMM_WORLD); MPI_Reduce(&umax, &umax_g, 1, MPI_DOUBLE, MPI_MAX, root_process, MPI_COMM_WORLD);
     MPI_Reduce(&dcmin, &dcmin_g, 1, MPI_DOUBLE, MPI_MIN, root_process, MPI_COMM_WORLD); MPI_Reduce(&dcmax, &dcmax_g, 1, MPI_DOUBLE, MPI_MAX, root_process, MPI_COMM_WORLD);
 
-    int istep = atoi(argv[6+ii]);
+    int istep = start_step+ii;
     if(commRank == root_process) std::cout << " step: " << istep << " amin: " << amin << " amax: " << amax << std::endl; 
     if(commRank == root_process) std::cout << " step: " << istep << " mumin: " << mumin << " mumax: " << mumax << std::endl; 
     if(commRank == root_process) std::cout << " step: " << istep << " mmin: " << mmin << " mmax: " << mmax << std::endl; 
@@ -259,7 +252,7 @@ int main(int argc, char *argv[]) {
     if(commRank == root_process) std::cout << " step: " << istep << " dcmin: " << dcmin << " dcmax: " << dcmax << std::endl; 
 
   } // nsteps for loop
-
+   cout << "after for loop" << endl;
   // Physical constants (CGS units)
   const double SIGMAT = 6.652e-25;
   const double MP     = 1.6737236e-24;
