@@ -21,7 +21,8 @@ This testing suite directly compares two halo catalog outputs, assuming these ar
 # minimum mass for position matching
 1.e15
 # maximum mass for position matching
-
+0
+# 0 = trunk, 1 = hydro
 
 ```
 The first item here is the base analysis directory for the files to be read in. The second is the level of matching (ID-based, position-based or distribution only) for the halo catalogs. Any other number supresses the halo checks. The next option is whether or not to check the SOD bin property files, with ID based matching, and then the bighaloparticle files with ID-based matching, with an option to check the haloparticle and haloparticle tag files as well. This is currently just defaulting to the first subfile, as the memory requirements for a full check on these will be significant. 

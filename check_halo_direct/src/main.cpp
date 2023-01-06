@@ -44,7 +44,7 @@ int main( int argc, char** argv ) {
   n_ranks = Partition::getNumProc();
 
   string path1, path2;
-  int halo_opt, sod_opt, part_opt;
+  int halo_opt, sod_opt, part_opt, hydro_opt;
   float lim, mass_min, mass_max, box_size;
   // read params file to give options for what to run 
   if (rank==0){
@@ -78,7 +78,11 @@ int main( int argc, char** argv ) {
 	getline(params,tmp);
 	getline(params,tmp);
 	mass_max = stof(tmp,&sz);
+        getline(params,tmp);
+        getline(params,tmp);
+        hydro_opt = stoi(tmp,&sz);
 	params.close();
+
   }
   }
   int path1_size = path1.size();

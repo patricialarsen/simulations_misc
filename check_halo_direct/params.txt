@@ -2,7 +2,7 @@
 /data/a/cpac/nfrontiere/ArborX_SOD_Data/run_arborx_sod/analysis_no_arborx
 0
 # 0 = ID matching, 1 = position matching, 2 = distribution comparisons, -1 = none
-0
+-1
 # 0 = SOD bin property file comparison (id matching), -1 = none
 -1
 # 0 = bighaloparticle file matching (id matching), 1 = bhp and halopart and tags, -1 = none
@@ -14,3 +14,5 @@
 # minimum mass for position matching
 1.e15 
 # maximum mass for position matching
+1
+# 0 = trunk, 1 = hydro
