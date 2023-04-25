@@ -15,6 +15,8 @@ FITSLIBDIR = /home/prlarsen/usr/cfitsio-4.0.0/build/lib
 GIOINCDIR = -I/home/prlarsen/hacc_fresh/trunk/genericio
 BLOSCDIR = -I/home/prlarsen/hacc_fresh/trunk/genericio/thirdparty/blosc
 
+HACCINCDIR = -I/home/prlarsen/hacc_fresh/trunk/cosmotools/algorithms/halofinder
+
 GIOLIBDIR=/home/prlarsen/hacc_fresh/trunk/cooley.cpu/mpi/lib
 GIOINCDIR2= -I/home/prlarsen/hacc_fresh/trunk/cooley.cpu/mpi/genericio
 
@@ -23,7 +25,7 @@ CXXHPXLIBS = -L/home/prlarsen/usr/Healpix_3.80/lib -lhealpix_cxx
 #-lcxxsupport -lsharp -lfftpack -lc_utils -lcfitsio
 
 
-CFLAGS =  $(FITSINCDIR) $(HPXINCDIR) $(HPXINCDIR2) $(CXXHPXDIRS) $(GIOINCDIR)  $(GIOINCDIR2) $(BLOSCDIR) -fopenmp
+CFLAGS =  $(FITSINCDIR) $(HPXINCDIR) $(HPXINCDIR2) $(CXXHPXDIRS) $(GIOINCDIR)  $(GIOINCDIR2) $(BLOSCDIR) $(HACCINCDIR) -fopenmp
 LDFLAGS =  -lm $(CXXHPXLIBS)  -L$(HPXLIBDIR)  -L$(FITSLIBDIR)  -lGenericIOMPI  -L$(GIOLIBDIR) -lGenericIOMPI 
 #-L/usr/lib/
 
@@ -40,3 +42,7 @@ cictocart: cic_gio2cart.cxx
 
 #-dynamic
 
+
+
+# Add basic definitions 
+#

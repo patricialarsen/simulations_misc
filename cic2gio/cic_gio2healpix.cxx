@@ -6,7 +6,14 @@
 #include <cassert>
 
 #include "GenericIO.h"
+
+#include "BasicDefinition.h"
+
 #include <sstream>
+
+//TODO add link to basic definitions
+// cosmotools/algorithms/halofinder/BasicDefinition.h
+
 
 #include <healpix_base.h>
 
@@ -26,11 +33,15 @@
 #include <vector>
 #include <algorithm>
 
+#define MASK_SPECIES 2
 #define POSVEL_T float
 #define ID_T int64_t
 #define MASK_T uint16_t
 
-#define BORG_CUBE
+// uncomment for adiabatic simulations
+#define HYBRID_SG
+
+
 
 using namespace std;
 using namespace gio;
@@ -48,8 +59,8 @@ int main(int argc, char *argv[]) {
   double t1, t2, t3; 
   t1 = MPI_Wtime(); 
 
-  if(argc < 6) {
-    fprintf(stderr,"USAGE: %s <mpiioName> <outfile_ksz> <outfile_tsz> <sample_rate> <nsteps> ... \n", argv[0]);
+  if(argc < 8) {
+    fprintf(stderr,"USAGE: %s <mpiioName> <outfile_ksz> <outfile_tsz> <sample_rate> <nsteps> <start_step> <nside> \n", argv[0]);
     exit(-1);
   }
   
@@ -61,20 +72,30 @@ int main(int argc, char *argv[]) {
  
   int nsteps;
   float samplerate;
+  int start_step;
+  int nside_in; 
+
   samplerate = atof(argv[4]);
   nsteps = atoi(argv[5]);
-  
+  start_step = atoi(argv[6]);
+  nside_in = atoi(argv[7]);
+  assert(nside_in>1);
+  assert(nside_in<32768);
+
+
   vector<POSVEL_T> xx, yy, zz;
   vector<POSVEL_T> vx, vy, vz;
   vector<POSVEL_T> a; 
-#ifdef BORG_CUBE
-  vector<POSVEL_T> uu;
-  const double mass0 = 5.20414147e8; // 0.169161*2.77536627e11*(0.22+0.02258/0.71/0.71)*(800.0/2304)*(800.0/2304)*(800.0/2304);
-  const double mu0 = 0.5882352941;
+
+
+#ifdef HYBRID_SG
+  const double mu0 = MU_ION;
 #else
-  vector<POSVEL_T> mass; 
-  vector<POSVEL_T> mu, uu;
+  vector<POSVEL_T> mu;
 #endif
+  vector<POSVEL_T> mass; 
+  vector<POSVEL_T> uu;
+
   assert(sizeof(ID_T) == 8);
   vector<ID_T> id;
 
@@ -85,7 +106,7 @@ int main(int argc, char *argv[]) {
     Method = GenericIO::FileIOMPI;
  
   Healpix_Ordering_Scheme ring = RING;
-  int64 nside=2048;//#8192;
+  int64 nside= (int64) nside_in;
 
   T_Healpix_Base<int64> map; // this certainly exists
   map = Healpix_Base2 (nside, ring, SET_NSIDE);
@@ -96,10 +117,10 @@ int main(int argc, char *argv[]) {
   // area in steradians
   float pixsize = (4.*3.141529/npix);
 
-  arr<float> map_output_total_ksz(npix);
-  arr<float> map_output_total_tsz(npix);
-  vector<float> map_output_ksz;
-  vector<float> map_output_tsz;
+  arr<double> map_output_total_ksz(npix);
+  arr<double> map_output_total_tsz(npix);
+  vector<double> map_output_ksz;
+  vector<double> map_output_tsz;
 
   map_output_ksz.resize(npix);
   map_output_tsz.resize(npix);
@@ -110,12 +131,13 @@ int main(int argc, char *argv[]) {
 
   for (int ii=0;ii<nsteps;ii++) { 
 
-    char *mpiioName_base = argv[1];
-    char *step = argv[6+ii];
+    char step[10*sizeof(char)];
+    sprintf(step,"%d",start_step+ii);
 
     char mpiioName[150];
     strcpy(mpiioName,mpiioName_base);
     strcat(mpiioName,step);
+
 
     { // scope GIO
 
@@ -135,9 +157,9 @@ int main(int argc, char *argv[]) {
       vy.resize(Np + GIO.requestedExtraSpace()/sizeof(POSVEL_T));
       vz.resize(Np + GIO.requestedExtraSpace()/sizeof(POSVEL_T));
       uu.resize(Np + GIO.requestedExtraSpace()/sizeof(POSVEL_T));
-#ifndef BORG_CUBE
-      mu.resize(Np + GIO.requestedExtraSpace()/sizeof(POSVEL_T));
       mass.resize(Np + GIO.requestedExtraSpace()/sizeof(POSVEL_T));
+#ifndef HYBRID_SG
+      mu.resize(Np + GIO.requestedExtraSpace()/sizeof(POSVEL_T));
 #endif
 
       //  READ IN VARIABLES
@@ -148,12 +170,10 @@ int main(int argc, char *argv[]) {
       GIO.addVariable("vx", vx, true);
       GIO.addVariable("vy", vy, true);
       GIO.addVariable("vz", vz, true);
-#ifndef BORG_CUBE
       GIO.addVariable("mass", mass, true);
-#endif
       GIO.addVariable("a", a, true);
       GIO.addVariable("uu", uu, true);
-#ifndef BORG_CUBE
+#ifndef HYBRID_SG
       GIO.addVariable("mu", mu, true);
 #endif
       GIO.addVariable("id", id, true);
@@ -169,9 +189,9 @@ int main(int argc, char *argv[]) {
     vy.resize(Np);
     vz.resize(Np);
     uu.resize(Np);
-#ifndef BORG_CUBE
-    mu.resize(Np);
     mass.resize(Np);
+#ifndef HYBRID_SG
+    mu.resize(Np);
 #endif
     a.resize(Np);
 
@@ -191,9 +211,9 @@ int main(int argc, char *argv[]) {
 
     for (int i=0; i<Np; i++) {
 
-#ifdef BORG_CUBE
- 	  if(id[i]%2 == 0) continue; // skip dark matter particles
-#endif
+      //TODO: check if wind should be included  
+      //if (!isGas(mask[i])) continue; // only use gas particles
+      if (!isInterGas(mask[i])) continue;
 
       double xd = xx[i];
       double yd = yy[i];
@@ -216,13 +236,12 @@ int main(int argc, char *argv[]) {
 
       vec3 vec_val = vec3(xd,yd,zd);
 
-#ifdef BORG_CUBE
-      double mi = mass0;
+#ifdef HYBRID_SG
       double mui = mu0;
 #else
-      double mi = mass[i];
       double mui = mu[i];
 #endif
+      double mi = mass[i];
       double ui = uu[i];
       double aa = a[i];
 
@@ -231,8 +250,10 @@ int main(int argc, char *argv[]) {
       mmin = std::min(mmin, mi) ; mmax = std::max(mmax, mi);
       umin = std::min(umin, ui) ; umax = std::max(umax, ui);
       dcmin = std::min(dcmin, dist_comov2) ; dcmax = std::max(dcmax, dist_comov2);
-        
-      int pix_num = map.vec2pix(vec_val);
+       
+      //TODO make sure this is right 
+      // int64 -  
+      int64 pix_num = map.vec2pix(vec_val);
       map_output_ksz[pix_num] += mi*v_los/dist_comov2/aa; // one factor of a cancels from v_los and dist_comov2
       map_output_tsz[pix_num] += mi*mui*ui/dist_comov2;   // a^2 factors cancel out in ui and dist_comov2  
     }    
@@ -252,7 +273,8 @@ int main(int argc, char *argv[]) {
     MPI_Reduce(&umin, &umin_g, 1, MPI_DOUBLE, MPI_MIN, root_process, MPI_COMM_WORLD); MPI_Reduce(&umax, &umax_g, 1, MPI_DOUBLE, MPI_MAX, root_process, MPI_COMM_WORLD);
     MPI_Reduce(&dcmin, &dcmin_g, 1, MPI_DOUBLE, MPI_MIN, root_process, MPI_COMM_WORLD); MPI_Reduce(&dcmax, &dcmax_g, 1, MPI_DOUBLE, MPI_MAX, root_process, MPI_COMM_WORLD);
 
-    int istep = atoi(argv[6+ii]);
+
+    int istep = start_step+ii;
     if(commRank == root_process) std::cout << " step: " << istep << " amin: " << amin << " amax: " << amax << std::endl; 
     if(commRank == root_process) std::cout << " step: " << istep << " mumin: " << mumin << " mumax: " << mumax << std::endl; 
     if(commRank == root_process) std::cout << " step: " << istep << " mmin: " << mmin << " mmax: " << mmax << std::endl; 
@@ -301,13 +323,13 @@ int main(int argc, char *argv[]) {
   if(commRank == root_process) std::cout << " STARTING REDUCE WITH npix: " << npix << " npix2: " << npix2 << std::endl; 
 
   for (int i=0; i<ncell; i++) {
-    MPI_Reduce(&map_output_ksz[npix2*i], &map_output_total_ksz[npix2*i], npix2, MPI_FLOAT, MPI_SUM, root_process, MPI_COMM_WORLD);
-    MPI_Reduce(&map_output_tsz[npix2*i], &map_output_total_tsz[npix2*i], npix2, MPI_FLOAT, MPI_SUM, root_process, MPI_COMM_WORLD);
+    MPI_Reduce(&map_output_ksz[npix2*i], &map_output_total_ksz[npix2*i], npix2, MPI_DOUBLE, MPI_SUM, root_process, MPI_COMM_WORLD);
+    MPI_Reduce(&map_output_tsz[npix2*i], &map_output_total_tsz[npix2*i], npix2, MPI_DOUBLE, MPI_SUM, root_process, MPI_COMM_WORLD);
     double sum_count_ksz = 0.0;
     double sum_count_tsz = 0.0;
     for (int k=0;k<npix2;k++) {
-      sum_count_ksz += (double)map_output_total_ksz[i*npix2+k];
-      sum_count_tsz += (double)map_output_total_tsz[i*npix2+k];
+      sum_count_ksz += map_output_total_ksz[i*npix2+k];
+      sum_count_tsz += map_output_total_tsz[i*npix2+k];
     }
     if(commRank == root_process) std::cout << " ncell: " << i << " sum_count_ksz: " << sum_count_ksz << " sum_count_tsz: " << sum_count_tsz << std::endl;
   }
@@ -316,16 +338,23 @@ int main(int argc, char *argv[]) {
   double sum_count_ksz = 0.0;
   double sum_count_tsz = 0.0;
   for (int64 j=0; j<npix; j++) {
-    sum_count_ksz += (double)(map_output_total_ksz[j]*map_output_total_ksz[j]); 
-    sum_count_tsz += (double)(map_output_total_tsz[j]*map_output_total_tsz[j]); 
+    sum_count_ksz += (map_output_total_ksz[j]*map_output_total_ksz[j]); 
+    sum_count_tsz += (map_output_total_tsz[j]*map_output_total_tsz[j]); 
   }
   sum_count_ksz = sqrt(sum_count_ksz)/npix;
   sum_count_tsz = sqrt(sum_count_tsz)/npix;
   if(commRank == root_process) std::cout << " mean squared y: " << sum_count_tsz << " b: " << sum_count_ksz << std::endl; 
 
+  arr<float> map_output_total_ksz_float(npix);
+  arr<float> map_output_total_tsz_float(npix);
+  for (int64 j=0; j<npix; j++) {
+    map_output_total_ksz_float[j] = (float)map_output_total_ksz[j]; 
+    map_output_total_tsz_float[j] = (float)map_output_total_tsz[j];
+  }
+
   if(commRank == root_process){
-    Healpix_Map<float> map_new_ksz(map_output_total_ksz,ring);
-    Healpix_Map<float> map_new_tsz(map_output_total_tsz,ring);
+    Healpix_Map<float> map_new_ksz(map_output_total_ksz_float,ring);
+    Healpix_Map<float> map_new_tsz(map_output_total_tsz_float,ring);
     if(commRank == root_process) printf("about to write ksz and tsz files\n");
     write_Healpix_map_to_fits(outfile_ksz,map_new_ksz,planckType<float>());
     write_Healpix_map_to_fits(outfile_tsz,map_new_tsz,planckType<float>());
