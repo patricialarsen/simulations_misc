@@ -1,0 +1,45 @@
+CC = mpicc
+CXX = mpicxx
+
+HPXDIR = /home/prlarsen/codes/healpix/Healpix_3.82
+CFITSDIR = /home/prlarsen/usr/cfitsio-4.0.0/build
+GIODIR = /home/prlarsen/hacc_fresh/HACC/cooley.cpu/mpi
+HACCDIR = /home/prlarsen/hacc_fresh/HACC
+
+#HPXDIR = /lustre/orion/hep114/scratch/prlarsen/Healpix_3.82
+#CFITSDIR = /lustre/orion/hep114/scratch/prlarsen/cfitsio-4.2.0/build
+#GIODIR = /lustre/orion/hep114/scratch/prlarsen/HACC/frontier.cpu/mpi
+#HACCDIR = /lustre/orion/hep114/scratch/prlarsen/HACC
+
+HPXCINCDIR = -I${HPXDIR}/include
+HPXINCDIR = -I${HPXDIR}/include/healpix_cxx
+HPXLIBDIR = ${HPXDIR}/lib
+CFTLIBDIR = ${CFITSDIR}/lib 
+
+GIOINCDIR = -I${HACCDIR}/genericio
+GIOLIBDIR = ${GIODIR}/lib
+HACCINCDIR = -I${HACCDIR}/cosmotools/algorithms/halofinder
+HACCINCDIR2 = -I${HACCDIR}/cosmotools/common
+
+
+BLOSCDIR = -I${GIODIR}/genericio/thirdparty/blosc
+
+
+INCDIRS = ${GIOINCDIR} ${HPXINCDIR}  ${HPXCINCDIR}  ${BLOSCDIR} ${HACCINCDIR} ${HACCINCDIR2}
+LIBDIRS = -L${HPXLIBDIR}  -L${GIOLIBDIR} -L${CFTLIBDIR}
+
+
+
+main_compile: main.cxx 
+	${CXX} -c -fopenmp ${INCDIRS} main.cxx utils.cxx pix_funcs.cxx Particles.cxx -std=c++11
+
+main_link: main.cxx
+	${CXX} -O3 -fopenmp -o dens main.o utils.o pix_funcs.o Particles.o ${INCDIRS} -L${GIOLIBDIR}  -lGenericIOMPI  -L${CFTLIBDIR} -lcfitsio  -L${HPXLIBDIR} -lchealpix -lhealpix_cxx  -std=c++11
+	
+
+hydro_compile: hydro.cxx
+	${CXX} -c -fopenmp ${INCDIRS} hydro.cxx utils.cxx pix_funcs.cxx Particles.cxx -std=c++11
+
+hydro_link: hydro.cxx
+	${CXX} -O3 -fopenmp -o hydro hydro.o utils.o pix_funcs.o Particles.o ${INCDIRS} -L${GIOLIBDIR}  -lGenericIOMPI  -L${CFTLIBDIR} -lcfitsio  -L${HPXLIBDIR} -lchealpix -lhealpix_cxx  -std=c++11
+

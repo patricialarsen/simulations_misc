@@ -1,0 +1,26 @@
+Jobid: 2174248
+qsub -I -n 1 -q default -t 01:00:00 -A LastJourney
+Wed Jun 14 17:22:52 2023 +0000 (UTC) submitted with cwd set to: /home/prlarsen/codes/simulations_misc_new/simulations_misc/pixelize_halo_lightcones/LJ
+jobid 2174248 submitted from terminal /dev/pts/30
+Wed Jun 14 17:23:11 2023 +0000 (UTC) 
+Wed Jun 14 17:23:11 2023 +0000 (UTC) Command: '/usr/bin/ssh' 'cc054.cooley' '/usr/bin/cobalt-launcher.py' '--nf' '/var/tmp/cobalt.2174248' '--jobid' '2174248' '--cwd' '/home/prlarsen/codes/simulations_misc_new/simulations_misc/pixelize_halo_lightcones/LJ' '--env' 'COBALT_JOBID=2174248' '/bin/sleep' '3600'
+Wed Jun 14 17:23:11 2023 +0000 (UTC) 
+Wed Jun 14 17:23:11 2023 +0000 (UTC) Environment:
+Wed Jun 14 17:23:11 2023 +0000 (UTC) SHELL=/bin/bash
+Wed Jun 14 17:23:11 2023 +0000 (UTC) COBALT_NODEFILE=/tmp/tmpZq5s66
+Wed Jun 14 17:23:11 2023 +0000 (UTC) COBALT_PARTNAME=cc054.cooley
+Wed Jun 14 17:23:11 2023 +0000 (UTC) COBALT_JOBID=2174248
+Wed Jun 14 17:23:11 2023 +0000 (UTC) COBALT_STARTTIME=1686763380
+Wed Jun 14 17:23:11 2023 +0000 (UTC) LOGNAME=prlarsen
+Wed Jun 14 17:23:11 2023 +0000 (UTC) USER=prlarsen
+Wed Jun 14 17:23:11 2023 +0000 (UTC) COBALT_ENDTIME=1686766980
+Wed Jun 14 17:23:11 2023 +0000 (UTC) COBALT_PARTSIZE=1
+Wed Jun 14 17:23:11 2023 +0000 (UTC) HOME=/home/prlarsen
+Wed Jun 14 17:23:11 2023 +0000 (UTC) COBALT_JOBSIZE=1
+Wed Jun 14 17:23:11 2023 +0000 (UTC) 
+Wed Jun 14 17:23:11 2023 +0000 (UTC) Info: stdin received from /dev/null
+Wed Jun 14 17:23:11 2023 +0000 (UTC) Info: stdout sent to /home/prlarsen/codes/simulations_misc_new/simulations_misc/pixelize_halo_lightcones/LJ/2174248.output
+Wed Jun 14 17:23:11 2023 +0000 (UTC) Info: stderr sent to /home/prlarsen/codes/simulations_misc_new/simulations_misc/pixelize_halo_lightcones/LJ/2174248.error
+Wed Jun 14 17:23:11 2023 +0000 (UTC) 
+Wed Jun 14 18:23:15 2023 +0000 (UTC) Info: maximum execution time exceeded; initiating job termination
+Wed Jun 14 18:23:26 2023 +0000 (UTC) Info: job is in the process of exiting; user delete request ignored

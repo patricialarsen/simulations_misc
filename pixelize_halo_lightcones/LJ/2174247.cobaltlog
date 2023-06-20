@@ -1,0 +1,25 @@
+Jobid: 2174247
+qsub -I -n 1 -q default -t 01:00:00 -A LastJourney
+Wed Jun 14 17:19:12 2023 +0000 (UTC) submitted with cwd set to: /home/prlarsen/codes/simulations_misc_new/simulations_misc/pixelize_halo_lightcones/LJ
+jobid 2174247 submitted from terminal /dev/pts/30
+Wed Jun 14 17:19:31 2023 +0000 (UTC) 
+Wed Jun 14 17:19:31 2023 +0000 (UTC) Command: '/usr/bin/ssh' 'cc054.cooley' '/usr/bin/cobalt-launcher.py' '--nf' '/var/tmp/cobalt.2174247' '--jobid' '2174247' '--cwd' '/home/prlarsen/codes/simulations_misc_new/simulations_misc/pixelize_halo_lightcones/LJ' '--env' 'COBALT_JOBID=2174247' '/bin/sleep' '3600'
+Wed Jun 14 17:19:31 2023 +0000 (UTC) 
+Wed Jun 14 17:19:31 2023 +0000 (UTC) Environment:
+Wed Jun 14 17:19:31 2023 +0000 (UTC) SHELL=/bin/bash
+Wed Jun 14 17:19:31 2023 +0000 (UTC) COBALT_NODEFILE=/tmp/tmpkZt4u7
+Wed Jun 14 17:19:31 2023 +0000 (UTC) COBALT_PARTNAME=cc054.cooley
+Wed Jun 14 17:19:31 2023 +0000 (UTC) COBALT_JOBID=2174247
+Wed Jun 14 17:19:31 2023 +0000 (UTC) COBALT_STARTTIME=1686763159
+Wed Jun 14 17:19:31 2023 +0000 (UTC) LOGNAME=prlarsen
+Wed Jun 14 17:19:31 2023 +0000 (UTC) USER=prlarsen
+Wed Jun 14 17:19:31 2023 +0000 (UTC) COBALT_ENDTIME=1686766759
+Wed Jun 14 17:19:31 2023 +0000 (UTC) COBALT_PARTSIZE=1
+Wed Jun 14 17:19:31 2023 +0000 (UTC) HOME=/home/prlarsen
+Wed Jun 14 17:19:31 2023 +0000 (UTC) COBALT_JOBSIZE=1
+Wed Jun 14 17:19:31 2023 +0000 (UTC) 
+Wed Jun 14 17:19:31 2023 +0000 (UTC) Info: stdin received from /dev/null
+Wed Jun 14 17:19:31 2023 +0000 (UTC) Info: stdout sent to /home/prlarsen/codes/simulations_misc_new/simulations_misc/pixelize_halo_lightcones/LJ/2174247.output
+Wed Jun 14 17:19:31 2023 +0000 (UTC) Info: stderr sent to /home/prlarsen/codes/simulations_misc_new/simulations_misc/pixelize_halo_lightcones/LJ/2174247.error
+Wed Jun 14 17:19:31 2023 +0000 (UTC) 
+Wed Jun 14 17:20:56 2023 +0000 (UTC) Info: user delete requested with signal SIGTERM by user prlarsen
