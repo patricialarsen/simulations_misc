@@ -87,6 +87,9 @@ static void distributeProperty(std::vector<T>& vA, T* sendbuf,
                               const int *recvcounts, const int *rdispls, MPI_Datatype recvtype,
                               MPI_Comm comm)
 {
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
     for(size_t i = 0; i < totalToSend; ++i)
         sendbuf[i] = vA[ vOrder[i] ];
 
@@ -228,7 +231,7 @@ void write_files_hydro(string outfile, string stepnumber,vector<int64_t> start_i
 
 
 
-void write_files(string outfile, string stepnumber,vector<int64_t> start_idx, vector<int64_t> end_idx, vector<int64_t> pix_nums_start, vector<float> rho, vector<float> phi, vector<float> vel){ 
+void write_files(string outfile, string stepnumber,vector<int64_t> start_idx, vector<int64_t> end_idx, vector<int64_t> pix_nums_start, vector<float> rho, vector<float> phi, vector<float> vel, int64_t npix_hires){ 
 
   int commRank, commRanks;
   MPI_Comm_rank(MPI_COMM_WORLD, &commRank);
@@ -249,6 +252,12 @@ void write_files(string outfile, string stepnumber,vector<int64_t> start_idx, ve
   MPI_File_open(MPI_COMM_WORLD, name_out, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &fh);
   MPI_File_open(MPI_COMM_WORLD, name_out_phi, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &fh_phi);
   MPI_File_open(MPI_COMM_WORLD, name_out_vel, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &fh_vel);
+
+  // PL NOTE: make sure this is in the right place
+  MPI_Offset filesize = npix_hires*sizeof(float);
+  MPI_File_set_size(fh, filesize);
+  MPI_File_set_size(fh_phi, filesize);
+  MPI_File_set_size(fh_vel, filesize); 
 
 
   int status;

@@ -108,7 +108,7 @@ int compute_ranks_count( Particles* P, T_Healpix_Base<int> map_lores, T_Healpix_
        fix_arr<int64_t,4> neighbs;
        fix_arr<double,4> weights;
        map_hires.get_interpol(point,  neighbs, weights); 
-       map<int,int> rank_list;
+       unordered_map<int,int> rank_list;
        for (int j=0;j<4;j++){
            int ind = get_lores_pix(neighbs[j],rank_diff,map_hires);
 	   // change this to be based on a list 
@@ -155,7 +155,7 @@ void compute_ranks_index( Particles* P, T_Healpix_Base<int> map_lores, T_Healpix
        fix_arr<double,4> weights;
        map_hires.get_interpol(point,  neighbs, weights);
        //vector<int> rank_list;
-       map<int, int> rank_list;
+       unordered_map<int, int> rank_list;
 
        for (int j=0;j<4;j++){
            int ind = get_lores_pix(neighbs[j],rank_diff, map_hires);
@@ -223,7 +223,7 @@ void get_pix_list_rank(int octant, int rank, int numranks, int64_t npix_lores, v
     return;
 }
 
-int assign_dm_cic(vector<float> &rho, vector<float> &phi, vector<float> &vel, Particles* P, T_Healpix_Base<int64_t> map_hires, vector<int64_t> pixnum_start, vector<int64_t> pixnum_end, vector<int64_t> start_idx,  map<int64_t, int64_t> ring_to_idx){
+int assign_dm_cic(vector<float> &rho, vector<float> &phi, vector<float> &vel, Particles* P, T_Healpix_Base<int64_t> map_hires, vector<int64_t> pixnum_start, vector<int64_t> pixnum_end, vector<int64_t> start_idx,  unordered_map<int64_t, int64_t> ring_to_idx){
 
     int64_t npix = map_hires.Npix();
     float pixsize = (4.*3.141529/npix);
@@ -262,7 +262,7 @@ int assign_dm_cic(vector<float> &rho, vector<float> &phi, vector<float> &vel, Pa
 
 
 
-int assign_dm_ngp(vector<float> &rho, vector<float> &phi, vector<float> &vel, Particles* P, T_Healpix_Base<int64_t> map_hires, vector<int64_t> pixnum_start, vector<int64_t> pixnum_end, vector<int64_t> start_idx,  map<int64_t, int64_t> ring_to_idx){
+int assign_dm_ngp(vector<float> &rho, vector<float> &phi, vector<float> &vel, Particles* P, T_Healpix_Base<int64_t> map_hires, vector<int64_t> pixnum_start, vector<int64_t> pixnum_end, vector<int64_t> start_idx,  unordered_map<int64_t, int64_t> ring_to_idx){
 
     int64_t npix = map_hires.Npix();
     float pixsize = (4.*3.141529/npix);
@@ -291,37 +291,28 @@ int assign_dm_ngp(vector<float> &rho, vector<float> &phi, vector<float> &vel, Pa
      return 0;
 }
 
-int assign_sz_cic(vector<float> &rho, vector<float> &phi, vector<float> &vel,vector<float> &ksz, vector<float> &tsz, Particles* P, T_Healpix_Base<int64_t> map_hires, vector<int64_t> pixnum_start, vector<int64_t> pixnum_end, vector<int64_t> start_idx,  map<int64_t, int64_t> ring_to_idx){
+int assign_sz_cic(vector<float> &rho, vector<float> &phi, vector<float> &vel,vector<float> &ksz, vector<float> &tsz, Particles* P, T_Healpix_Base<int64_t> map_hires, vector<int64_t> pixnum_start, vector<int64_t> pixnum_end, vector<int64_t> start_idx,  unordered_map<int64_t, int64_t> ring_to_idx){
 
   const double SIGMAT = 6.65245e-25; 
 
-    int64_t npix = map_hires.Npix();
-    float pixsize = (4.*3.141529/npix);
+  int64_t npix = map_hires.Npix();
+  float pixsize = (4.*3.141529/npix);
 
-   //  const double CLIGHT = 2.99792458e10;
 
-  //const double MP     = 1.6737236e-24; // MH
-  //const double ME     = 9.1093836e-28; //MELECTRON
-  const double MUE    = 1.14; //TODO  - check this 
-  //const double YP     = 0.24;//PRIMORDIAL_Y - check this too 
+  const double MP = 1.672621e-24; // MP in g
+  const double MUE = 2.0/(2.0-PRIMORDIAL_Y); // only for adiabatic, mu should be overwritten otherwise 
   const double NHE    = 0.0; // assume helium is neutral 
   const double CHIE   = (1.0-PRIMORDIAL_Y*(1.0-NHE/4.0))/(1.0-PRIMORDIAL_Y/2.0);
-  //const double MSUN_TO_G = 1.9885e33; //G_IN_MSUN
-  //const double KM_TO_CM  = 1.0e5; // CM_IN_KM
-  const double MPC_TO_CM = KM_IN_MPC*CM_IN_KM;//3.0856776e24; //KM_IN_MP * CM_IN_KM
+  const double MPC_TO_CM = KM_IN_MPC*CM_IN_KM;
   // TODO input the sample rate 
   float samplerate = 1.0; 
 
 
-  // remember these need to be multiplied by a factor of h 
+  // remember these need to be multiplied by a factor of h later currently 
   const float KSZ_CONV = (float)(-SIGMAT*CHIE/MUE/MP/CLIGHT)*(G_IN_MSUN/MPC_TO_CM/MPC_TO_CM)*(1.0/samplerate)*(1.0/pixsize);
   const float TSZ_CONV = (float)((GAMMA-1.0)*SIGMAT*CHIE/MUE/MELECTRON/CLIGHT/CLIGHT)*(MH/MP)*(G_IN_MSUN/MPC_TO_CM/MPC_TO_CM)*(1.0/samplerate)*(1.0/pixsize);
 
-    //float KSZ_CONV = (float)(-SIGMAT
-//
-    //int64_t npix = map_hires.Npix();
-    //float pixsize = (4.*3.141529/npix);
-    for (int64_t ii=0; ii<(*P).nparticles; ++ii){
+  for (int64_t ii=0; ii<(*P).nparticles; ++ii){
 
       float xd = (float) (*P).float_data[0]->at(ii);
       float yd = (float) (*P).float_data[1]->at(ii);
@@ -364,7 +355,7 @@ int assign_sz_cic(vector<float> &rho, vector<float> &phi, vector<float> &vel,vec
 
 
 
-int assign_sz_ngp(vector<float> &rho, vector<float> &phi, vector<float> &vel,vector<float> &ksz, vector<float> &tsz, Particles* P, T_Healpix_Base<int64_t> map_hires, vector<int64_t> pixnum_start, vector<int64_t> pixnum_end, vector<int64_t> start_idx,  map<int64_t, int64_t> ring_to_idx){
+int assign_sz_ngp(vector<float> &rho, vector<float> &phi, vector<float> &vel,vector<float> &ksz, vector<float> &tsz, Particles* P, T_Healpix_Base<int64_t> map_hires, vector<int64_t> pixnum_start, vector<int64_t> pixnum_end, vector<int64_t> start_idx,  unordered_map<int64_t, int64_t> ring_to_idx){
 
     int64_t npix = map_hires.Npix();
     float pixsize = (4.*3.141529/npix);
@@ -407,7 +398,7 @@ int assign_sz_ngp(vector<float> &rho, vector<float> &phi, vector<float> &vel,vec
      return 0;
 }
 
-void initialize_pixel_hydro(int pix_val,  T_Healpix_Base<int> map_lores, T_Healpix_Base<int64_t> map_hires, vector<float> &rho , vector<float> &phi, vector<float> &vel, vector<float> &ksz, vector<float> &tsz, int64_t &count, vector<int64_t> &start_idx, vector<int64_t> &end_idx, vector<int64_t> &pixnum_start, vector<int64_t> &pixnum_end, int rank_diff,  map<int64_t, int64_t>* ring_to_idx){
+void initialize_pixel_hydro(int pix_val,  T_Healpix_Base<int> map_lores, T_Healpix_Base<int64_t> map_hires, vector<float> &rho , vector<float> &phi, vector<float> &vel, vector<float> &ksz, vector<float> &tsz, int64_t &count, vector<int64_t> &start_idx, vector<int64_t> &end_idx, vector<int64_t> &pixnum_start, vector<int64_t> &pixnum_end, int rank_diff,  unordered_map<int64_t, int64_t>* ring_to_idx){
     int64_t npix = map_hires.Npix();
     
     start_idx.push_back(count);
@@ -437,7 +428,7 @@ void initialize_pixel_hydro(int pix_val,  T_Healpix_Base<int> map_lores, T_Healp
 
 
 
-void initialize_pixel(int pix_val,  T_Healpix_Base<int> map_lores, T_Healpix_Base<int64_t> map_hires, vector<float> &rho , vector<float> &phi, vector<float> &vel, int64_t &count, vector<int64_t> &start_idx, vector<int64_t> &end_idx, vector<int64_t> &pixnum_start, vector<int64_t> &pixnum_end, int rank_diff,  map<int64_t, int64_t>* ring_to_idx){
+void initialize_pixel(int pix_val,  T_Healpix_Base<int> map_lores, T_Healpix_Base<int64_t> map_hires, vector<float> &rho , vector<float> &phi, vector<float> &vel, int64_t &count, vector<int64_t> &start_idx, vector<int64_t> &end_idx, vector<int64_t> &pixnum_start, vector<int64_t> &pixnum_end, int rank_diff,  unordered_map<int64_t, int64_t>* ring_to_idx){
     // initialize large-scale pixel to zero values
     int64_t npix = map_hires.Npix();
 

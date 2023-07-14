@@ -14,7 +14,7 @@
 #include <algorithm>
 
 #include <vector>
-#include <map>
+#include <unordered_map>
 
 // healpix includes
 #include <healpix_base.h>
@@ -90,8 +90,9 @@ int main(int argc, char *argv[]) {
   map_hires = Healpix_Base2 (nside, ring, SET_NSIDE); // we set to ring so interpolation is faster
   map_lores = Healpix_Base (nside_low, nest, SET_NSIDE);
   int64_t npix_lores = map_lores.Npix();
-  map<int64_t, int64_t> ring_to_idx;
-
+  int64_t npix_hires = map_hires.Npix();
+  unordered_map<int64_t, int64_t> ring_to_idx;
+  //raing_to_idx.reserve();
 
 
 #ifdef _OPENMP
@@ -114,6 +115,9 @@ int main(int argc, char *argv[]) {
   vector<int64_t> start_idx;
   vector<int64_t> end_idx;
   vector<int64_t> pix_nums_start, pix_nums_end;
+
+  int64_t map_size = lores_pix.size()*pow(4,rank_diff);
+  ring_to_idx.reserve(map_size);
 
 
   int64_t count = 0; 
@@ -155,7 +159,7 @@ int main(int argc, char *argv[]) {
   printf("Starting file output \n");
   }
 
-  write_files(outfile, stepnumber,start_idx, end_idx, pix_nums_start, rho, phi, vel);
+  write_files(outfile, stepnumber,start_idx, end_idx, pix_nums_start, rho, phi, vel, npix_hires);
 
   t2 = MPI_Wtime();
   if (commRank==0){
