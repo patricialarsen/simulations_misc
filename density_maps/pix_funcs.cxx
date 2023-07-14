@@ -298,7 +298,7 @@ int assign_sz_cic(vector<float> &rho, vector<float> &phi, vector<float> &vel,vec
     int64_t npix = map_hires.Npix();
     float pixsize = (4.*3.141529/npix);
 
-//  const double CLIGHT = 2.99792458e10;
+   //  const double CLIGHT = 2.99792458e10;
 
   //const double MP     = 1.6737236e-24; // MH
   //const double ME     = 9.1093836e-28; //MELECTRON
@@ -311,8 +311,11 @@ int assign_sz_cic(vector<float> &rho, vector<float> &phi, vector<float> &vel,vec
   const double MPC_TO_CM = KM_IN_MPC*CM_IN_KM;//3.0856776e24; //KM_IN_MP * CM_IN_KM
   // TODO input the sample rate 
   float samplerate = 1.0; 
-  const float KSZ_CONV = (float)(-SIGMAT*CHIE/MUE/MH/CLIGHT)*(G_IN_MSUN*CM_IN_KM/MPC_TO_CM/MPC_TO_CM)*(1.0/samplerate)*(1.0/pixsize);
-  const float TSZ_CONV = (float)((GAMMA-1.0)*SIGMAT*CHIE/MUE/MELECTRON/CLIGHT/CLIGHT)*(G_IN_MSUN/KM_IN_MPC/KM_IN_MPC)*(1.0/samplerate)*(1.0/pixsize);
+
+
+  // remember these need to be multiplied by a factor of h 
+  const float KSZ_CONV = (float)(-SIGMAT*CHIE/MUE/MP/CLIGHT)*(G_IN_MSUN/MPC_TO_CM/MPC_TO_CM)*(1.0/samplerate)*(1.0/pixsize);
+  const float TSZ_CONV = (float)((GAMMA-1.0)*SIGMAT*CHIE/MUE/MELECTRON/CLIGHT/CLIGHT)*(MH/MP)*(G_IN_MSUN/MPC_TO_CM/MPC_TO_CM)*(1.0/samplerate)*(1.0/pixsize);
 
     //float KSZ_CONV = (float)(-SIGMAT
 //
