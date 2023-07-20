@@ -15,7 +15,7 @@
 #include <algorithm>
 
 #include <vector>
-#include <map>
+#include <unordered_map>
 
 // healpix includes
 #include <healpix_base.h>
@@ -30,9 +30,8 @@
 #include "BasicDefinition.h"
 
 
-//#define HYDRO
 // local includes
-#include "Particles.h"
+#include "PLParticles.h"
 #include "utils.h"
 #include "pix_funcs.h"
 
@@ -56,9 +55,30 @@ int main(int argc, char *argv[]) {
   double t1, t2, t3;
   t1 = MPI_Wtime();
 
-  if(argc != 6) {
+  // arguments that need to be added 
+  bool borgcube = false;
+  bool adiabatic = false;
+  string cloudypath = "/lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_SEED_1.25e6_NPERH_AGN_2_NEWCOSMO/output/";
+
+  #ifndef HYBRID_SG
+     cout<< "hybrid_sg not defined";
+     if not adiabatic {
+       if (commRank==0)
+         fprintf(stderr,"SUBGRID requested but subgrid definitions not enabled\n", argv[0]);
+       exit(-1);
+     }
+  #else
+     cout<< "hybrid_sg defined";
+     if (adiabatic){
+       if (commRank==0)
+         cout << "adiabatic option enabled, overwriting subgrid def";
+     }
+  #endif
+
+
+  if(argc != 8) {
      if (commRank==0){
-     fprintf(stderr,"USAGE: %s <inputfile> <outputfile> <nside> <nside_low> <step> \n", argv[0]);
+     fprintf(stderr,"USAGE: %s <inputfile> <outputfile> <nside> <nside_low> <step> <hval> <samplerate> \n", argv[0]);
      }
      exit(-1);
   }
@@ -71,13 +91,15 @@ int main(int argc, char *argv[]) {
   int64_t nside_low = atoi(argv[4]);
   string stepnumber = argv[5];
   string outfile = argv[2];
+  float hval = atof(argv[6]);
+  float samplerate = atof(argv[7]);
 
   double rank1 = log2(nside);
   double rank2 = log2(nside_low);
   int rank_diff = (int) (rank1-rank2);
   printf("rank diff = %d \n", rank_diff);
  
-  Particles P; 
+  PLParticles P; 
   P.Allocate(); 
 
   if (commRank==0){ 
@@ -94,7 +116,7 @@ int main(int argc, char *argv[]) {
   map_hires = Healpix_Base2 (nside, ring, SET_NSIDE); // we set to ring so interpolation is faster
   map_lores = Healpix_Base (nside_low, nest, SET_NSIDE);
   int64_t npix_lores = map_lores.Npix();
-  map<int64_t, int64_t> ring_to_idx;
+  unordered_map<int64_t, int64_t> ring_to_idx;
 
 
 
@@ -110,6 +132,9 @@ int main(int argc, char *argv[]) {
   vector<int> pix_list_oct; // not needed for octant=0
   // need to create lists for octant=1,2 routines, currently works for full sky 
   get_pix_list_rank(0, commRank, commRanks,  npix_lores,  pix_list_oct, pix_list_oct, lores_pix);
+  int64_t map_size = lores_pix.size()*pow(4,rank_diff);
+  ring_to_idx.reserve(map_size);
+
 
   if (commRank==0){
   printf("Created get_pix_list_rank  \n");
@@ -121,15 +146,15 @@ int main(int argc, char *argv[]) {
 
 
   int64_t count = 0; 
-  vector<float> rho, phi, vel, ksz, tsz; // should generalize this so we're initializing it for an array of maps or a single map 
+  vector<float> rho, phi, vel, ksz; // should generalize this so we're initializing it for an array of maps or a single map 
+  vector<double> tsz;
   for (int ii=0;ii< lores_pix.size() ;++ii){
   int pix_val = lores_pix[ii];
+  // initialize all pixels on rank
   initialize_pixel_hydro(pix_val, map_lores, map_hires, rho, phi, vel,ksz,tsz, count, start_idx,end_idx,pix_nums_start, pix_nums_end, rank_diff, &ring_to_idx);
-  
+  // make sure this is retaining this correctly
+  }  
 
-  }
-
-  
   MPI_Barrier(MPI_COMM_WORLD);
   t3 = MPI_Wtime();
   if (commRank==0){
@@ -139,7 +164,7 @@ int main(int argc, char *argv[]) {
   read_and_redistribute(filename, commRanks, &P, map_lores, map_hires, rank_diff);
 
 
-  int status = assign_sz_cic(rho, phi, vel,ksz,tsz, &P, map_hires, pix_nums_start, pix_nums_end,start_idx, ring_to_idx);
+  int status = assign_sz_cic(rho, phi, vel,ksz,tsz, &P, map_hires, pix_nums_start, pix_nums_end,start_idx, ring_to_idx, hval, borgcube, adiabatic,  samplerate, cloudypath);
 
   
   P.Deallocate();
@@ -150,7 +175,7 @@ int main(int argc, char *argv[]) {
   printf("Starting file output \n");
   }
 
-  write_files_hydro(outfile, stepnumber,start_idx, end_idx, pix_nums_start, rho, phi, vel,ksz,tsz);
+  //write_files_hydro(outfile, stepnumber,start_idx, end_idx, pix_nums_start, rho, phi, vel,ksz,tsz);
 
   t2 = MPI_Wtime();
   if (commRank==0){

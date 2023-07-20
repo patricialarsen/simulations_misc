@@ -1,5 +1,7 @@
 #include <string>
 #include <vector>
+#include "BasicDefinition.h"
+
 
 #ifndef HYBRID
 #include "particle_def.h"
@@ -10,7 +12,7 @@
 using namespace std;
 
 
-class Particles {
+class PLParticles {
 
 public:
 
@@ -26,7 +28,7 @@ public:
   vector<vector<uint16_t>* > mask_data;
 
   vector<int>* rank;
-  Particles():  nparticles(0), is_allocated(false),\
+  PLParticles():  nparticles(0), is_allocated(false),\
        step_number(-1)
   {
 
@@ -37,7 +39,7 @@ public:
     mask_data.resize(N_MASKS);
   };
 
-  ~Particles() { };
+  ~PLParticles() { };
 
   void Allocate(size_t n=0);
   void Deallocate();

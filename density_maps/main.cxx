@@ -28,7 +28,7 @@
 #include "GenericIO.h"
 
 // local includes
-#include "Particles.h"
+#include "PLParticles.h"
 #include "utils.h"
 #include "pix_funcs.h"
 
@@ -73,7 +73,7 @@ int main(int argc, char *argv[]) {
   int rank_diff = (int) (rank1-rank2);
   printf("rank diff = %d \n", rank_diff);
  
-  Particles P; 
+  PLParticles P; 
   P.Allocate(); 
 
   if (commRank==0){ 

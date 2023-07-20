@@ -38,7 +38,7 @@
 #include "vec3.h"
 
 //#include "particle_def.h"
-#include "Particles.h"
+#include "PLParticles.h"
 #include "utils.h"
 #include "pix_funcs.h"
 
@@ -53,7 +53,7 @@ using namespace std;
 
 
 
-void read_particles(Particles* P, string file_name) {
+void read_particles(PLParticles* P, string file_name) {
 
   GenericIO GIO(MPI_COMM_WORLD,file_name,GenericIO::FileIOMPI);
   GIO.openAndReadHeader(GenericIO::MismatchRedistribute);
@@ -103,7 +103,7 @@ static void distributeProperty(std::vector<T>& vA, T* sendbuf,
 
 
 // update send_counts and others to pass by reference to avoid memory copy
-void redistribute_particles(Particles* P, vector<int> send_counts, int numranks,T_Healpix_Base<int> map_lores, T_Healpix_Base<int64_t> map_hires, int rank_diff){
+void redistribute_particles(PLParticles* P, vector<int> send_counts, int numranks,T_Healpix_Base<int> map_lores, T_Healpix_Base<int64_t> map_hires, int rank_diff){
     vector<int> recv_counts(numranks,0);
     vector<int> recv_offset(numranks,0);
     vector<int> send_offset(numranks,0);
@@ -153,7 +153,7 @@ void redistribute_particles(Particles* P, vector<int> send_counts, int numranks,
 
 
 
-void read_and_redistribute(string file_name, int numranks, Particles* P,  T_Healpix_Base<int> map_lores, T_Healpix_Base<int64_t> map_hires, int rank_diff){
+void read_and_redistribute(string file_name, int numranks, PLParticles* P,  T_Healpix_Base<int> map_lores, T_Healpix_Base<int64_t> map_hires, int rank_diff){
 
     int status;
     vector<int> send_count(numranks,0);

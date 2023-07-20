@@ -36,10 +36,11 @@
 #include "pointing.h"
 #include "vec3.h"
 
-#include "Particles.h"
+#include "PLParticles.h"
 //#include "utils_ngp.h"
 #include "pix_funcs.h"
 
+#include "RadiativeCooling.h"
 
 using namespace gio;
 using namespace std;
@@ -48,7 +49,7 @@ using namespace std;
 #define POSVEL_T float
 #define ID_T int64_t
 #define MASK_T uint16_t
-
+//#define RAD_T float
 
 
 // compute_rank_fullsky - round robin assignation from full sky assumption 
@@ -91,7 +92,7 @@ int get_lores_pix(int64_t pix_val, int rank_diff, T_Healpix_Base<int64_t> map_hi
 }
 
 
-int compute_ranks_count( Particles* P, T_Healpix_Base<int> map_lores, T_Healpix_Base<int64_t> map_hires, int numranks, vector<int> &send_count, int rank_diff){
+int compute_ranks_count( PLParticles* P, T_Healpix_Base<int> map_lores, T_Healpix_Base<int64_t> map_hires, int numranks, vector<int> &send_count, int rank_diff){
 #ifdef _OPENMP
  std::vector<omp_lock_t> m_lck;
  m_lck.resize(numranks);
@@ -135,7 +136,7 @@ int compute_ranks_count( Particles* P, T_Healpix_Base<int> map_lores, T_Healpix_
  return 0;
 }
 
-void compute_ranks_index( Particles* P, T_Healpix_Base<int> map_lores, T_Healpix_Base<int64_t> map_hires, int numranks, vector<int> send_off, vector<int64_t> &id_particles, int rank_diff){
+void compute_ranks_index( PLParticles* P, T_Healpix_Base<int> map_lores, T_Healpix_Base<int64_t> map_hires, int numranks, vector<int> send_off, vector<int64_t> &id_particles, int rank_diff){
 
    vector<int64_t> count_rank(numranks,0);
 #ifdef _OPENMP
@@ -147,20 +148,18 @@ void compute_ranks_index( Particles* P, T_Healpix_Base<int> map_lores, T_Healpix
    for (int64_t k=0;k<(*P).nparticles;k++){
        float xx =  (*P).float_data[0]->at(k);
        float yy =  (*P).float_data[1]->at(k);
-       float zz =  (*P).float_data[2]->at(k); // assign to x,y,z listed naems 
+       float zz =  (*P).float_data[2]->at(k); // assign to x,y,z listed names 
 
        vec3 vec_val = vec3(xx,yy,zz);
        pointing point = pointing(vec_val);
        fix_arr<int64_t,4> neighbs;
        fix_arr<double,4> weights;
        map_hires.get_interpol(point,  neighbs, weights);
-       //vector<int> rank_list;
        unordered_map<int, int> rank_list;
 
        for (int j=0;j<4;j++){
            int ind = get_lores_pix(neighbs[j],rank_diff, map_hires);
-           int rankn = compute_rank_fullsky(ind,numranks);//,pix_list);
-	   // if rank in list do nothing else 
+           int rankn = compute_rank_fullsky(ind,numranks);
 	   if (rank_list.count(rankn)){
 	   }
 	   else{
@@ -223,7 +222,7 @@ void get_pix_list_rank(int octant, int rank, int numranks, int64_t npix_lores, v
     return;
 }
 
-int assign_dm_cic(vector<float> &rho, vector<float> &phi, vector<float> &vel, Particles* P, T_Healpix_Base<int64_t> map_hires, vector<int64_t> pixnum_start, vector<int64_t> pixnum_end, vector<int64_t> start_idx,  unordered_map<int64_t, int64_t> ring_to_idx){
+int assign_dm_cic(vector<float> &rho, vector<float> &phi, vector<float> &vel, PLParticles* P, T_Healpix_Base<int64_t> map_hires, vector<int64_t> pixnum_start, vector<int64_t> pixnum_end, vector<int64_t> start_idx,  unordered_map<int64_t, int64_t> ring_to_idx){
 
     int64_t npix = map_hires.Npix();
     float pixsize = (4.*3.141529/npix);
@@ -262,7 +261,7 @@ int assign_dm_cic(vector<float> &rho, vector<float> &phi, vector<float> &vel, Pa
 
 
 
-int assign_dm_ngp(vector<float> &rho, vector<float> &phi, vector<float> &vel, Particles* P, T_Healpix_Base<int64_t> map_hires, vector<int64_t> pixnum_start, vector<int64_t> pixnum_end, vector<int64_t> start_idx,  unordered_map<int64_t, int64_t> ring_to_idx){
+int assign_dm_ngp(vector<float> &rho, vector<float> &phi, vector<float> &vel, PLParticles* P, T_Healpix_Base<int64_t> map_hires, vector<int64_t> pixnum_start, vector<int64_t> pixnum_end, vector<int64_t> start_idx,  unordered_map<int64_t, int64_t> ring_to_idx){
 
     int64_t npix = map_hires.Npix();
     float pixsize = (4.*3.141529/npix);
@@ -291,29 +290,136 @@ int assign_dm_ngp(vector<float> &rho, vector<float> &phi, vector<float> &vel, Pa
      return 0;
 }
 
-int assign_sz_cic(vector<float> &rho, vector<float> &phi, vector<float> &vel,vector<float> &ksz, vector<float> &tsz, Particles* P, T_Healpix_Base<int64_t> map_hires, vector<int64_t> pixnum_start, vector<int64_t> pixnum_end, vector<int64_t> start_idx,  unordered_map<int64_t, int64_t> ring_to_idx){
+int assign_sz_cic(vector<float> &rho, vector<float> &phi, vector<float> &vel,vector<float> &ksz, vector<double> &tsz, PLParticles* P, T_Healpix_Base<int64_t> map_hires, vector<int64_t> pixnum_start, vector<int64_t> pixnum_end, vector<int64_t> start_idx,  unordered_map<int64_t, int64_t> ring_to_idx, float hval, bool borgcube, bool adiabatic, float samplerate, string cloudypath){
 
-  const double SIGMAT = 6.65245e-25; 
+  int commRank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &commRank);
 
   int64_t npix = map_hires.Npix();
   float pixsize = (4.*3.141529/npix);
 
-
+  // extra constants 
+  const double SIGMAT = 6.65245e-25; // cm^2
   const double MP = 1.672621e-24; // MP in g
-  const double MUE = 2.0/(2.0-PRIMORDIAL_Y); // only for adiabatic, mu should be overwritten otherwise 
-  const double NHE    = 0.0; // assume helium is neutral 
-  const double CHIE   = (1.0-PRIMORDIAL_Y*(1.0-NHE/4.0))/(1.0-PRIMORDIAL_Y/2.0);
   const double MPC_TO_CM = KM_IN_MPC*CM_IN_KM;
-  // TODO input the sample rate 
-  float samplerate = 1.0; 
+
+  // only used for adiabatic hydro 
+  const double MUE = 2.0/(2.0-PRIMORDIAL_Y);
+  double NHE = 2.0; // assume helium is fully ionized
+  double CHIE = (1.0-PRIMORDIAL_Y*(1.0-NHE/4.0))/(1.0-PRIMORDIAL_Y/2.0);
+  const double mu0 = MU_ION;
+  
+  // In BorgCube we assumed helium was neutral
+  if (borgcube) {
+  NHE = 0.0; 
+  CHIE = (1.0-PRIMORDIAL_Y*(1.0-NHE/4.0))/(1.0-PRIMORDIAL_Y/2.0);
+  }
+
+  const double NE_SCALING = (double)CHIE/MUE/MP;
+  const double KSZ_CONV = (double)(-SIGMAT*CHIE/MUE/MP/CLIGHT)*(G_IN_MSUN/MPC_TO_CM/MPC_TO_CM)*(1.0/samplerate)*(1.0/pixsize)*hval;
+  const double TSZ_CONV = (double)((GAMMA-1.0)*SIGMAT*CHIE/MUE/MELECTRON/CLIGHT/CLIGHT)*(MH/MP)*(G_IN_MSUN/MPC_TO_CM/MPC_TO_CM)*(1.0/samplerate)*(1.0/pixsize)*hval;
+
+  // compute average a value for Radiative Cooling
+  double sum_a = 0;
+  double sum_a_global;
+  int64_t count_a = 0;
+  int64_t count_a_global;
+  double sum_T =0;
+  double sum_mu = 0;
+  double sum_mu_global;
+  double sum_T_global;
+  double min_T = 1.e10; 
+  double min_mu = 1.e10;
+  double min_a = 1.e10;
+  double max_T = -1.e10;
+  double max_mu = -1.e10;
+  double max_a = -1.e10;
+  double max_mu_global;
+  double max_T_global;
+  double max_a_global;
+  double min_mu_global;
+  double min_T_global;
+  double min_a_global;
 
 
-  // remember these need to be multiplied by a factor of h later currently 
-  const float KSZ_CONV = (float)(-SIGMAT*CHIE/MUE/MP/CLIGHT)*(G_IN_MSUN/MPC_TO_CM/MPC_TO_CM)*(1.0/samplerate)*(1.0/pixsize);
-  const float TSZ_CONV = (float)((GAMMA-1.0)*SIGMAT*CHIE/MUE/MELECTRON/CLIGHT/CLIGHT)*(MH/MP)*(G_IN_MSUN/MPC_TO_CM/MPC_TO_CM)*(1.0/samplerate)*(1.0/pixsize);
-
+  // technically this is double work, we need to do this for aa here anyway but could move the rest into the main loop 
+  #ifdef _OPENMP
+  #pragma omp parallel for reduction(+:sum_a,count_a,sum_mu,sum_T) reduction(max:max_T,max_mu,max_a) reduction(min:min_T,min_mu,min_a)
+  #endif
   for (int64_t ii=0; ii<(*P).nparticles; ++ii){
+      double aa = (double) (*P).float_data[7]->at(ii);
+      double uu = (double) (*P).float_data[10]->at(ii);
+      #ifdef HYBRID_SG
+      double mu = (double) (*P).float_data[11]->at(ii);
+      #else
+      double mu = (double) mu0;
+      #endif
+      uint16_t mask = (*P).mask_data[0]->at(ii);
+      double Ti = CONV_U_TO_T*UU_CGS*mu*uu*aa*aa; // UU_CGS is just the km to cm scaling. scale_uu should come from 
 
+      if (isNormGas(mask)){
+      sum_T += Ti;
+      sum_mu += mu;
+      sum_a += aa;
+      min_a = (aa<min_a)?aa:min_a;
+      min_T = (Ti<min_T)?Ti:min_T;
+      min_mu = (mu<min_mu)?mu:min_mu;
+      max_a = (aa>max_a)?aa:max_a;
+      max_T = (Ti>max_T)?Ti:max_T;
+      max_mu = (mu>max_mu)?mu:max_mu;
+      count_a += 1; 
+      }
+  }
+
+  MPI_Reduce(&sum_a,&sum_a_global,1,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+  MPI_Reduce(&sum_T,&sum_T_global,1,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+  MPI_Reduce(&sum_mu,&sum_mu_global,1,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+  MPI_Reduce(&count_a,&count_a_global,1,MPI_INT64_T,MPI_SUM,0,MPI_COMM_WORLD);
+
+  MPI_Reduce(&min_a,&min_a_global,1,MPI_DOUBLE,MPI_MIN,0,MPI_COMM_WORLD);
+  MPI_Reduce(&min_T,&min_T_global,1,MPI_DOUBLE,MPI_MIN,0,MPI_COMM_WORLD);
+  MPI_Reduce(&min_mu,&min_mu_global,1,MPI_DOUBLE,MPI_MIN,0,MPI_COMM_WORLD);
+
+  MPI_Reduce(&max_a,&max_a_global,1,MPI_DOUBLE,MPI_MAX,0,MPI_COMM_WORLD);
+  MPI_Reduce(&max_T,&max_T_global,1,MPI_DOUBLE,MPI_MAX,0,MPI_COMM_WORLD);
+  MPI_Reduce(&max_mu,&max_mu_global,1,MPI_DOUBLE,MPI_MAX,0,MPI_COMM_WORLD);
+
+  MPI_Bcast(&sum_a_global,1,MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  MPI_Bcast(&sum_T_global,1,MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  MPI_Bcast(&sum_mu_global,1,MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+  MPI_Bcast(&count_a_global,1,MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+  double aa_av = sum_a_global/(double)count_a_global;
+  double T_av = sum_T_global/(double)count_a_global;
+  double mu_av = sum_mu_global/(double)count_a_global;
+
+  if (commRank==0){
+     cout << "a values: average = "<< aa_av << ", minimum value = "<< min_a << ", maximum value = " << max_a<< endl;
+     cout << "T values (CGS units): average = "<< T_av << ", minimum value = "<< min_T << ", maximum value = " << max_T<< endl;
+     cout << "mu values: average = "<< mu_av << ", minimum value = "<< min_mu << ", maximum value = " << max_mu<< endl;
+
+  }
+
+  // initialize the cloudy tables
+
+  #ifdef HYBRID_SG
+  RadiativeCooling* m_radcool = new RadiativeCooling(cloudypath);
+  if (!adiabatic) {
+    double Tcmb = 2.725f;
+    m_radcool->setTCMB(Tcmb);
+    m_radcool->readCloudyScaleFactor((RAD_T)aa_av);
+  }
+  #endif
+  double tsz_tot2 = 0;
+  double tsz_tot3 = 0;
+  double ne_frac = 0;
+  double ne_av = 0;
+
+  int64_t count_part = 0;
+  int64_t count_mask = 0;
+  for (int64_t ii=0; ii<(*P).nparticles; ++ii){
+      count_part ++;
       float xd = (float) (*P).float_data[0]->at(ii);
       float yd = (float) (*P).float_data[1]->at(ii);
       float zd = (float) (*P).float_data[2]->at(ii);
@@ -322,10 +428,49 @@ int assign_sz_cic(vector<float> &rho, vector<float> &phi, vector<float> &vel,vec
       float vz = (float) (*P).float_data[5]->at(ii);
       float phid = (float) (*P).float_data[6]->at(ii);
       float aa = (float) (*P).float_data[7]->at(ii);
+      double mass = (double) (*P).float_data[9]->at(ii);
+      double uu = (double) (*P).float_data[10]->at(ii);
+         
+      double mu;
+      #ifdef HYBRID_SG
+      if (!adiabatic)
+        mu = (double) (*P).float_data[11]->at(ii);
+      else 
+        mu = (double) mu0;
+      #else
+        mu = (double) mu0; 
+      #endif 
 
-      float mass = (float) (*P).float_data[9]->at(ii);
-      float uu = (float) (*P).float_data[10]->at(ii);
-      float mu = (float) (*P).float_data[11]->at(ii);
+      uint16_t mask = (*P).mask_data[0]->at(ii);
+      if (isNormGas(mask))
+        count_mask++;
+
+      double rhoi = (double) (*P).float_data[12]->at(ii);
+      double Vi = mass/rhoi/MPC_IN_CM/MPC_IN_CM/MPC_IN_CM *aa*aa*aa/hval/hval/hval ; //  Vi in physical CGS units
+      double Zi = (double) (*P).float_data[13]->at(ii); 
+      double Yi = (double) (*P).float_data[14]->at(ii);
+
+      int iter = 0;
+
+      rhoi *= G_IN_MSUN*MPC_IN_CM*MPC_IN_CM*MPC_IN_CM/aa/aa/aa*hval*hval; 
+      RAD_T Xi = (1.0-Yi-Zi);
+      RAD_T Ti   = CONV_U_TO_T*UU_CGS*mu*uu*aa*aa; // UU_CGS is just the km to cm scaling 
+      assert(Ti>0);
+      RAD_T nHi  = rhoi*Xi*INV_MH; // density / mass in g
+      RAD_T nHIi = 0.0;
+      RAD_T nei = 0.0;
+      RAD_T mui = (RAD_T)mu;
+
+      if (!adiabatic) {
+        #ifdef HYBRID_SG
+        RAD_T lambda = (*m_radcool)(Ti, (RAD_T)rhoi, (RAD_T)Zi, (RAD_T)Yi, (RAD_T)aa_av, mui, &iter, false, &nHIi, &nei);
+        nei *= nHi;
+        #endif
+      } 
+
+      const double NE_SCALING = (double)CHIE/MUE/MP*G_IN_MSUN/hval; 
+      double ne_scaled = nei*Vi/(double)NE_SCALING; // this is the SPH volume multiplied by the electron density per unit volume 
+
       float dist_com2 = xd*xd + yd*yd + zd*zd;
       float vel_los = (vx*xd +vy*yd + vz*zd)/sqrt(dist_com2);
 
@@ -339,9 +484,18 @@ int assign_sz_cic(vector<float> &rho, vector<float> &phi, vector<float> &vel,vec
         int64_t new_idx = -99;
         if (ring_to_idx.count(pix_num)){
           new_idx = ring_to_idx[pix_num];
-          if (isInterGas(mask)){//TODO: check this
-          ksz[new_idx] += mass*vel_los/dist_com2/aa; // one factor of a cancels from v_los and dist_comov2
-          tsz[new_idx] += mass*mu*uu/dist_com2;   // a^2 factors cancel out in ui and dist_comov2  
+          assert(new_idx<npix);
+          assert(new_idx>=0);
+          if (isNormGas(mask)){//TODO: see below 
+          // ideally we should add a flag for SFGas and wind to revert to the adiabatic electron density value
+          ksz[new_idx] += mass*vel_los/dist_com2/aa*weights[j]; // one factor of a cancels from v_los and dist_comov2
+          if (adiabatic)
+            tsz[new_idx] += mass*mu*uu/dist_com2*weights[j];   // a^2 factors cancel out in ui and dist_comov2  
+          else
+            tsz[new_idx] += ne_scaled*mu*uu/dist_com2*weights[j];
+
+          tsz_tot2 += ne_scaled*mui*uu/dist_com2*weights[j];
+          tsz_tot3 += mass*mu*uu/dist_com2*weights[j];
           }
           rho[new_idx] += mass/pixsize*weights[j];
           phi[new_idx] += mass*phid*weights[j];
@@ -349,16 +503,48 @@ int assign_sz_cic(vector<float> &rho, vector<float> &phi, vector<float> &vel,vec
         }
       }
    }
-     return 0;
+  cout << "particle count is = "<< count_part << endl;
+  cout << "masked particle count is = "<< count_mask << endl;
+
+  delete m_radcool;
+   // for each pixel apply this scaling 
+   double tsz_tot = 0;
+   for (int64_t j=0; j<ksz.size(); j++){
+     tsz[j] = tsz[j]*TSZ_CONV;
+     tsz_tot += tsz[j];
+     ksz[j] = ksz[j]*KSZ_CONV;
+    }
+   cout << "map tsz sum = "<< tsz_tot << endl;
+   cout << "particle tsz sum = "<< tsz_tot2*TSZ_CONV << endl;
+   cout << "particle tsz sum (adiabatic) = "<< tsz_tot3*TSZ_CONV << endl;
+
+   return 0;
 }
 
 
 
 
-int assign_sz_ngp(vector<float> &rho, vector<float> &phi, vector<float> &vel,vector<float> &ksz, vector<float> &tsz, Particles* P, T_Healpix_Base<int64_t> map_hires, vector<int64_t> pixnum_start, vector<int64_t> pixnum_end, vector<int64_t> start_idx,  unordered_map<int64_t, int64_t> ring_to_idx){
+int assign_sz_ngp(vector<float> &rho, vector<float> &phi, vector<float> &vel,vector<float> &ksz, vector<float> &tsz, PLParticles* P, T_Healpix_Base<int64_t> map_hires, vector<int64_t> pixnum_start, vector<int64_t> pixnum_end, vector<int64_t> start_idx,  unordered_map<int64_t, int64_t> ring_to_idx){
 
     int64_t npix = map_hires.Npix();
     float pixsize = (4.*3.141529/npix);
+
+  const double SIGMAT = 6.65245e-25;
+  const double MP = 1.672621e-24; // MP in g
+  const double MUE = 2.0/(2.0-PRIMORDIAL_Y); // only for adiabatic, mu should be overwritten otherwise 
+  const double NHE    = 0.0; // assume helium is neutral 
+  const double CHIE   = (1.0-PRIMORDIAL_Y*(1.0-NHE/4.0))/(1.0-PRIMORDIAL_Y/2.0);
+  const double MPC_TO_CM = KM_IN_MPC*CM_IN_KM;
+  const double mu0 = MU_ION;
+
+  // TODO input the sample rate 
+     float samplerate = 1.0;
+  //
+  const float KSZ_CONV = (float)(-SIGMAT*CHIE/MUE/MP/CLIGHT)*(G_IN_MSUN/MPC_TO_CM/MPC_TO_CM)*(1.0/samplerate)*(1.0/pixsize);
+  const float TSZ_CONV = (float)((GAMMA-1.0)*SIGMAT*CHIE/MUE/MELECTRON/CLIGHT/CLIGHT)*(MH/MP)*(G_IN_MSUN/MPC_TO_CM/MPC_TO_CM)*(1.0/samplerate)*(1.0/pixsize);
+
+
+
     for (int64_t ii=0; ii<(*P).nparticles; ++ii){
       float xd = (float) (*P).float_data[0]->at(ii);
       float yd = (float) (*P).float_data[1]->at(ii);
@@ -372,7 +558,13 @@ int assign_sz_ngp(vector<float> &rho, vector<float> &phi, vector<float> &vel,vec
 
       float mass = (float) (*P).float_data[9]->at(ii);
       float uu = (float) (*P).float_data[10]->at(ii);
+      #ifndef HYBRID_SG
       float mu = (float) (*P).float_data[11]->at(ii);
+      #else
+      float mu = (float) mu0; 
+      #endif
+
+
       // hydro parameters - we are missing some here - rho, yhe, zmet
       // we might want to use rho for another density measurement 
 
@@ -384,21 +576,24 @@ int assign_sz_ngp(vector<float> &rho, vector<float> &phi, vector<float> &vel,vec
       int64_t new_idx = -99;
       if (ring_to_idx.count(pix_num)){
         new_idx = ring_to_idx[pix_num];
-        if (isInterGas(mask)){
+        if (isNormGas(mask)){ // double check this 
         ksz[new_idx] += mass*vel_los/dist_com2/aa; // one factor of a cancels from v_los and dist_comov2
         tsz[new_idx] += mass*mu*uu/dist_com2;   // a^2 factors cancel out in ui and dist_comov2  
         }
         rho[new_idx] += 1./pixsize;
         phi[new_idx] += phid;
         vel[new_idx] += vel_los;
-
-
       }
      }
+     for (int64_t j=0; j<(npix*pixnum_start.size()); j++){
+       tsz[j] = tsz[j]*TSZ_CONV;
+       ksz[j] = ksz[j]*KSZ_CONV;
+     }
+ 
      return 0;
 }
 
-void initialize_pixel_hydro(int pix_val,  T_Healpix_Base<int> map_lores, T_Healpix_Base<int64_t> map_hires, vector<float> &rho , vector<float> &phi, vector<float> &vel, vector<float> &ksz, vector<float> &tsz, int64_t &count, vector<int64_t> &start_idx, vector<int64_t> &end_idx, vector<int64_t> &pixnum_start, vector<int64_t> &pixnum_end, int rank_diff,  unordered_map<int64_t, int64_t>* ring_to_idx){
+void initialize_pixel_hydro(int pix_val,  T_Healpix_Base<int> map_lores, T_Healpix_Base<int64_t> map_hires, vector<float> &rho , vector<float> &phi, vector<float> &vel, vector<float> &ksz, vector<double> &tsz, int64_t &count, vector<int64_t> &start_idx, vector<int64_t> &end_idx, vector<int64_t> &pixnum_start, vector<int64_t> &pixnum_end, int rank_diff,  unordered_map<int64_t, int64_t>* ring_to_idx){
     int64_t npix = map_hires.Npix();
     
     start_idx.push_back(count);
