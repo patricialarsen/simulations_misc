@@ -1,0 +1,1 @@
+mpirun -f $COBALT_NODEFILE -n 64 ./match /projects/LastJourney/prlarsen/halo_lightcone_LJ/output/lcHalos76/lc_intrp_halos.76 /projects/LastJourney/heitmann/L5025/HACC000/analysis/Halos/b0168/Props/STEP77/m000p-77.haloproperties /projects/LastJourney/prlarsen/halo_lightcone_LJ/matched_output/test.gio
