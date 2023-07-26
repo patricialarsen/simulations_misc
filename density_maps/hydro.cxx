@@ -52,7 +52,7 @@ int main(int argc, char *argv[]) {
   MPI_Comm_rank(MPI_COMM_WORLD, &commRank);
   MPI_Comm_size(MPI_COMM_WORLD, &commRanks);
 
-  double t1, t2, t3;
+  double t1, t2, t3, t4, t5, t6;
   t1 = MPI_Wtime();
 
   // arguments that need to be added 
@@ -61,14 +61,16 @@ int main(int argc, char *argv[]) {
   string cloudypath = "/lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_SEED_1.25e6_NPERH_AGN_2_NEWCOSMO/output/";
 
   #ifndef HYBRID_SG
-     cout<< "hybrid_sg not defined";
+     if (commRank==0)
+       cout<< "hybrid_sg not defined" << endl;
      if not adiabatic {
        if (commRank==0)
          fprintf(stderr,"SUBGRID requested but subgrid definitions not enabled\n", argv[0]);
        exit(-1);
      }
   #else
-     cout<< "hybrid_sg defined";
+     if (commRank==0)
+       cout<< "hybrid_sg defined"<<endl;
      if (adiabatic){
        if (commRank==0)
          cout << "adiabatic option enabled, overwriting subgrid def";
@@ -76,16 +78,16 @@ int main(int argc, char *argv[]) {
   #endif
 
 
-  if(argc != 8) {
+  if(argc != 10) {
      if (commRank==0){
-     fprintf(stderr,"USAGE: %s <inputfile> <outputfile> <nside> <nside_low> <step> <hval> <samplerate> \n", argv[0]);
+     fprintf(stderr,"USAGE: %s <inputfile> <outputfile> <nside> <nside_low> <step> <hval> <samplerate> <start_step> <nsteps> \n", argv[0]);
      }
      exit(-1);
   }
 
   char filename[512];
   strcpy(filename,argv[1]);
-  const char *mpiioName = filename;
+  const char *mpiioName_base = filename;
 
   int64_t nside = atoi(argv[3]);
   int64_t nside_low = atoi(argv[4]);
@@ -93,11 +95,15 @@ int main(int argc, char *argv[]) {
   string outfile = argv[2];
   float hval = atof(argv[6]);
   float samplerate = atof(argv[7]);
+  int start_step = atoi(argv[8]);
+  int nsteps = atoi(argv[9]);
+
 
   double rank1 = log2(nside);
   double rank2 = log2(nside_low);
   int rank_diff = (int) (rank1-rank2);
-  printf("rank diff = %d \n", rank_diff);
+  if (commRank==0) 
+    printf("rank diff = %d \n", rank_diff);
  
   PLParticles P; 
   P.Allocate(); 
@@ -116,6 +122,8 @@ int main(int argc, char *argv[]) {
   map_hires = Healpix_Base2 (nside, ring, SET_NSIDE); // we set to ring so interpolation is faster
   map_lores = Healpix_Base (nside_low, nest, SET_NSIDE);
   int64_t npix_lores = map_lores.Npix();
+  int64_t npix_hires = map_hires.Npix();
+
   unordered_map<int64_t, int64_t> ring_to_idx;
 
 
@@ -161,21 +169,56 @@ int main(int argc, char *argv[]) {
     printf( "Elapsed time for initialization is %f\n", t3 - t1 );
   }
 
-  read_and_redistribute(filename, commRanks, &P, map_lores, map_hires, rank_diff);
+  for (int jj=0;jj<nsteps;jj++){
+
+  MPI_Barrier(MPI_COMM_WORLD);
+  t3 = MPI_Wtime();
+	  
+  char step[10*sizeof(char)];
+  char mpiioName[512];
+
+  sprintf(step,"%d",start_step+jj);
+  strcpy(mpiioName,mpiioName_base);
+  strcat(mpiioName,step);
+
+
+  read_and_redistribute(mpiioName, commRanks, &P, map_lores, map_hires, rank_diff);
+
+  MPI_Barrier(MPI_COMM_WORLD);
+  t4 = MPI_Wtime();
+  if (commRank==0){
+    printf( "Redistribute time is %f\n", t4 - t3 );
+  }
 
 
   int status = assign_sz_cic(rho, phi, vel,ksz,tsz, &P, map_hires, pix_nums_start, pix_nums_end,start_idx, ring_to_idx, hval, borgcube, adiabatic,  samplerate, cloudypath);
 
   
-  P.Deallocate();
 
   MPI_Barrier(MPI_COMM_WORLD);
-
+  t5 = MPI_Wtime();
   if (commRank==0){
-  printf("Starting file output \n");
+    printf("CIC time is %f\n", t5 - t4 );
   }
 
-  //write_files_hydro(outfile, stepnumber,start_idx, end_idx, pix_nums_start, rho, phi, vel,ksz,tsz);
+  write_files_hydro(outfile, step,start_idx, end_idx, pix_nums_start, rho, phi, vel,ksz,tsz,npix_hires);
+
+  MPI_Barrier(MPI_COMM_WORLD);
+  t6 = MPI_Wtime();
+  if (commRank==0){
+    printf( "Write time is %f\n", t6 - t5 );
+  }
+
+  t2 = MPI_Wtime();
+  if (commRank==0){
+  printf( "Elapsed time for this step is %f\n", t2 - t3 );
+  }
+
+
+  }
+
+  P.Deallocate();
+
 
   t2 = MPI_Wtime();
   if (commRank==0){

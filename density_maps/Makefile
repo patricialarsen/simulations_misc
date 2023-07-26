@@ -1,9 +1,9 @@
-CC = mpicc
-CXX = mpicxx
+CC = ${HACC_MPI_CC}
+CXX = ${HACC_MPI_CXX}
 
-HPXDIR = /home/prlarsen/codes/healpix/Healpix_3.82
+HPXDIR = /home/prlarsen/codes/healpix/Healpix_3.82_polaris
 CFITSDIR = /home/prlarsen/usr/cfitsio-4.0.0/build
-GIODIR = /home/prlarsen/hacc_fresh/HACC/cooley.cpu/mpi
+GIODIR = /home/prlarsen/hacc_fresh/HACC/polaris.kokkos_cuda/mpi
 HACCDIR = /home/prlarsen/hacc_fresh/HACC
 
 
@@ -21,7 +21,7 @@ GIOINCDIR = -I${HACCDIR}/genericio
 GIOLIBDIR = ${GIODIR}/lib
 HACCINCDIR = -I${HACCDIR}/cosmotools/algorithms/halofinder
 HACCINCDIR2 = -I${HACCDIR}/cosmotools/common
-HYDROINC = ${HACCDIR}/cooley.kokkos_cuda/mpi/nbody/common
+HYDROINC = ${HACCDIR}/polaris.kokkos_cuda/mpi/nbody/common
 HYDROINC2 = -I${HACCDIR}/nbody/common
 
 BLOSCDIR = -I${GIODIR}/genericio/thirdparty/blosc
@@ -43,5 +43,5 @@ hydro_compile: hydro.cxx
 	${CXX} -c -fopenmp ${INCDIRS} hydro.cxx utils.cxx pix_funcs.cxx PLParticles.cxx -std=c++11
 
 hydro_link: hydro.cxx
-	${CXX} -O3 -fopenmp -o hydro hydro.o utils.o pix_funcs.o PLParticles.o ${HYDROINC}/RadiativeCooling.o ${HYDROINC}/Domain.o /home/prlarsen/hacc_fresh/HACC/cooley.kokkos_cuda/mpi/cosmotools/algorithms/halofinder/Partition.o /home/prlarsen/hacc_fresh/HACC/cooley.kokkos_cuda/mpi/cosmotools/algorithms/halofinder/dims.o ${INCDIRS} -L${GIOLIBDIR}  -lGenericIOMPI  -L${CFTLIBDIR} -lcfitsio  -L${HPXLIBDIR} -lchealpix -lhealpix_cxx  -std=c++11
+	${CXX} -O3 -fopenmp -o hydro_p hydro.o utils.o pix_funcs.o PLParticles.o ${HYDROINC}/RadiativeCooling.o ${HYDROINC}/Domain.o /home/prlarsen/hacc_fresh/HACC/polaris.kokkos_cuda/mpi/cosmotools/algorithms/halofinder/Partition.o /home/prlarsen/hacc_fresh/HACC/polaris.kokkos_cuda/mpi/cosmotools/algorithms/halofinder/dims.o ${INCDIRS} -L${GIOLIBDIR}  -lGenericIOMPI  -L${CFTLIBDIR} -lcfitsio  -L${HPXLIBDIR} -lchealpix -lhealpix_cxx  -std=c++11
 

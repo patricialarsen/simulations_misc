@@ -12,7 +12,8 @@ void PLParticles::Allocate(size_t n) {
     this->pix_index = new vector<int>(this->nparticles);
     this-> rank = new vector<int>(this->nparticles);
 
-    cout << "N_FLOATS "<< N_FLOATS;
+    
+    //cout << "N_FLOATS "<< N_FLOATS;
     for (int i=0; i<N_FLOATS; ++i)
       this->float_data[i] = new vector<float>(this->nparticles);
 

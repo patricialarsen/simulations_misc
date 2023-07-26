@@ -387,6 +387,13 @@ int assign_sz_cic(vector<float> &rho, vector<float> &phi, vector<float> &vel,vec
   MPI_Bcast(&sum_a_global,1,MPI_DOUBLE, 0, MPI_COMM_WORLD);
   MPI_Bcast(&sum_T_global,1,MPI_DOUBLE, 0, MPI_COMM_WORLD);
   MPI_Bcast(&sum_mu_global,1,MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  MPI_Bcast(&min_a_global,1,MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  MPI_Bcast(&min_T_global,1,MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  MPI_Bcast(&min_mu_global,1,MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  MPI_Bcast(&max_a_global,1,MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  MPI_Bcast(&max_T_global,1,MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  MPI_Bcast(&max_mu_global,1,MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
 
   MPI_Bcast(&count_a_global,1,MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
@@ -395,9 +402,9 @@ int assign_sz_cic(vector<float> &rho, vector<float> &phi, vector<float> &vel,vec
   double mu_av = sum_mu_global/(double)count_a_global;
 
   if (commRank==0){
-     cout << "a values: average = "<< aa_av << ", minimum value = "<< min_a << ", maximum value = " << max_a<< endl;
-     cout << "T values (CGS units): average = "<< T_av << ", minimum value = "<< min_T << ", maximum value = " << max_T<< endl;
-     cout << "mu values: average = "<< mu_av << ", minimum value = "<< min_mu << ", maximum value = " << max_mu<< endl;
+     cout << "a values: average = "<< aa_av << ", minimum value = "<< min_a_global << ", maximum value = " << max_a_global<< endl;
+     cout << "T values (CGS units): average = "<< T_av << ", minimum value = "<< min_T_global << ", maximum value = " << max_T_global<< endl;
+     cout << "mu values: average = "<< mu_av << ", minimum value = "<< min_mu_global << ", maximum value = " << max_mu_global<< endl;
 
   }
 
@@ -413,13 +420,20 @@ int assign_sz_cic(vector<float> &rho, vector<float> &phi, vector<float> &vel,vec
   #endif
   double tsz_tot2 = 0;
   double tsz_tot3 = 0;
+  double tsz_tot4 = 0;
   double ne_frac = 0;
   double ne_av = 0;
 
   int64_t count_part = 0;
   int64_t count_mask = 0;
+  #ifdef _OPENMP
+  #pragma omp parallel for 
+  #endif
   for (int64_t ii=0; ii<(*P).nparticles; ++ii){
+      #pragma omp critical
+      {
       count_part ++;
+      }
       float xd = (float) (*P).float_data[0]->at(ii);
       float yd = (float) (*P).float_data[1]->at(ii);
       float zd = (float) (*P).float_data[2]->at(ii);
@@ -442,8 +456,13 @@ int assign_sz_cic(vector<float> &rho, vector<float> &phi, vector<float> &vel,vec
       #endif 
 
       uint16_t mask = (*P).mask_data[0]->at(ii);
-      if (isNormGas(mask))
+      
+      if (isNormGas(mask)){
+        #pragma omp critical
+        {
         count_mask++;
+        }
+      }
 
       double rhoi = (double) (*P).float_data[12]->at(ii);
       double Vi = mass/rhoi/MPC_IN_CM/MPC_IN_CM/MPC_IN_CM *aa*aa*aa/hval/hval/hval ; //  Vi in physical CGS units
@@ -455,7 +474,14 @@ int assign_sz_cic(vector<float> &rho, vector<float> &phi, vector<float> &vel,vec
       rhoi *= G_IN_MSUN*MPC_IN_CM*MPC_IN_CM*MPC_IN_CM/aa/aa/aa*hval*hval; 
       RAD_T Xi = (1.0-Yi-Zi);
       RAD_T Ti   = CONV_U_TO_T*UU_CGS*mu*uu*aa*aa; // UU_CGS is just the km to cm scaling 
-      assert(Ti>0);
+
+      //assert(Ti>0);
+      /*if ((Ti<=0)&&(isNormGas(mask))){
+         cout << "temperature value less than 0 , Ti = "<< Ti << endl;
+         cout << "temperature value less than 0 , mu = "<< mu << endl;
+         cout << "temperature value less than 0 , uu= "<< uu << endl;
+
+      }*/
       RAD_T nHi  = rhoi*Xi*INV_MH; // density / mass in g
       RAD_T nHIi = 0.0;
       RAD_T nei = 0.0;
@@ -463,8 +489,10 @@ int assign_sz_cic(vector<float> &rho, vector<float> &phi, vector<float> &vel,vec
 
       if (!adiabatic) {
         #ifdef HYBRID_SG
+        if ((Ti>0)&&(isNormGas(mask))){
         RAD_T lambda = (*m_radcool)(Ti, (RAD_T)rhoi, (RAD_T)Zi, (RAD_T)Yi, (RAD_T)aa_av, mui, &iter, false, &nHIi, &nei);
         nei *= nHi;
+        } 
         #endif
       } 
 
@@ -486,26 +514,35 @@ int assign_sz_cic(vector<float> &rho, vector<float> &phi, vector<float> &vel,vec
           new_idx = ring_to_idx[pix_num];
           assert(new_idx<npix);
           assert(new_idx>=0);
+          #pragma omp critical
+          {
           if (isNormGas(mask)){//TODO: see below 
           // ideally we should add a flag for SFGas and wind to revert to the adiabatic electron density value
-          ksz[new_idx] += mass*vel_los/dist_com2/aa*weights[j]; // one factor of a cancels from v_los and dist_comov2
-          if (adiabatic)
+          if (adiabatic){
             tsz[new_idx] += mass*mu*uu/dist_com2*weights[j];   // a^2 factors cancel out in ui and dist_comov2  
-          else
+            ksz[new_idx] += mass*vel_los/dist_com2/aa*weights[j]; // one factor of a cancels from v_los and dist_comov2	  	
+          }	    
+  	  else{
             tsz[new_idx] += ne_scaled*mu*uu/dist_com2*weights[j];
+            ksz[new_idx] += ne_scaled*vel_los/dist_com2/aa*weights[j]; // one factor of a cancels from v_los and dist_comov2
+          }
 
           tsz_tot2 += ne_scaled*mui*uu/dist_com2*weights[j];
           tsz_tot3 += mass*mu*uu/dist_com2*weights[j];
+          tsz_tot4 += mass*mu0*uu/dist_com2*weights[j];
           }
           rho[new_idx] += mass/pixsize*weights[j];
           phi[new_idx] += mass*phid*weights[j];
           vel[new_idx] += mass*vel_los*weights[j]; // mass weighting 
         }
+       }
       }
    }
+  /*if (commRank==0){
+
   cout << "particle count is = "<< count_part << endl;
   cout << "masked particle count is = "<< count_mask << endl;
-
+  }*/
   delete m_radcool;
    // for each pixel apply this scaling 
    double tsz_tot = 0;
@@ -514,10 +551,14 @@ int assign_sz_cic(vector<float> &rho, vector<float> &phi, vector<float> &vel,vec
      tsz_tot += tsz[j];
      ksz[j] = ksz[j]*KSZ_CONV;
     }
+  if (commRank==0){
+
    cout << "map tsz sum = "<< tsz_tot << endl;
    cout << "particle tsz sum = "<< tsz_tot2*TSZ_CONV << endl;
-   cout << "particle tsz sum (adiabatic) = "<< tsz_tot3*TSZ_CONV << endl;
+   cout << "particle tsz sum (adiabatic with read mu ) = "<< tsz_tot3*TSZ_CONV << endl;
+   cout << "particle tsz sum (adiabatic with mu0) = "<< tsz_tot4*TSZ_CONV << endl;
 
+}
    return 0;
 }
 

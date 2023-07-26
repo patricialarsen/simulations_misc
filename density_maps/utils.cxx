@@ -180,8 +180,20 @@ int output_file(int rank, MPI_File &fh, MPI_Request &req , vector<float> &rho, v
     return 0;
 }
 
+int output_file_double(int rank, MPI_File &fh, MPI_Request &req , vector<double> &rho, vector<int64_t> start_idx, vector<int64_t> end_idx, vector<int64_t> pixnum_start){
+    for (int i=0;i<start_idx.size();i++){
+    int start_tmp = start_idx[i];
+    int off_tmp = end_idx[i] - start_idx[i];
+    MPI_Offset offset = pixnum_start[i]*sizeof(double);
+    MPI_File_seek(fh,offset,MPI_SEEK_SET);
+    MPI_File_iwrite(fh,&rho[start_tmp],off_tmp,MPI_DOUBLE, &req);
+    MPI_Wait(&req, MPI_STATUS_IGNORE);
+    }
+    return 0;
+}
 
-void write_files_hydro(string outfile, string stepnumber,vector<int64_t> start_idx, vector<int64_t> end_idx, vector<int64_t> pix_nums_start, vector<float> rho, vector<float> phi, vector<float> vel, vector<float> ksz, vector<float> tsz){
+
+void write_files_hydro(string outfile, string stepnumber,vector<int64_t> start_idx, vector<int64_t> end_idx, vector<int64_t> pix_nums_start, vector<float> rho, vector<float> phi, vector<float> vel, vector<float> ksz, vector<double> tsz, int64_t npix_hires){
 
   int commRank, commRanks;
   MPI_Comm_rank(MPI_COMM_WORLD, &commRank);
@@ -210,13 +222,22 @@ void write_files_hydro(string outfile, string stepnumber,vector<int64_t> start_i
   MPI_File_open(MPI_COMM_WORLD, name_out_ksz, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &fh_ksz);
   MPI_File_open(MPI_COMM_WORLD, name_out_tsz, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &fh_tsz);
 
+  MPI_Offset filesize = npix_hires*sizeof(float);
+  MPI_Offset filesize_double = npix_hires*sizeof(double);
+
+  MPI_File_set_size(fh, filesize);
+  MPI_File_set_size(fh_phi, filesize);
+  MPI_File_set_size(fh_vel, filesize);
+  MPI_File_set_size(fh_ksz, filesize);
+  MPI_File_set_size(fh_tsz, filesize_double);
+
 
   int status;
   status = output_file(commRank, fh, req, rho, start_idx, end_idx,  pix_nums_start);
   status = output_file(commRank, fh_phi, req_phi, phi, start_idx, end_idx, pix_nums_start);
   status = output_file(commRank, fh_vel, req_vel, vel, start_idx, end_idx, pix_nums_start);
   status = output_file(commRank, fh_ksz, req_ksz, ksz, start_idx, end_idx, pix_nums_start);
-  status = output_file(commRank, fh_tsz, req_tsz, tsz, start_idx, end_idx, pix_nums_start);
+  status = output_file_double(commRank, fh_tsz, req_tsz, tsz, start_idx, end_idx, pix_nums_start);
 
 
   MPI_File_close(&fh);
