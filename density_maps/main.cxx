@@ -49,12 +49,12 @@ int main(int argc, char *argv[]) {
   MPI_Comm_rank(MPI_COMM_WORLD, &commRank);
   MPI_Comm_size(MPI_COMM_WORLD, &commRanks);
 
-  double t1, t2, t3;
+  double t1, t2, t3, t4, t5;
   t1 = MPI_Wtime();
 
-  if(argc != 6) {
+  if(argc != 10) {
      if (commRank==0){
-     fprintf(stderr,"USAGE: %s <inputfile> <outputfile> <nside> <nside_low> <step> \n", argv[0]);
+     fprintf(stderr,"USAGE: %s <inputfile> <outputfile> <nside> <nside_low> <step> <hval> <samplerate> <start_step> <nsteps>  \n", argv[0]);
      }
      exit(-1);
   }
@@ -67,6 +67,12 @@ int main(int argc, char *argv[]) {
   int64_t nside_low = atoi(argv[4]);
   string stepnumber = argv[5];
   string outfile = argv[2];
+
+  float hval = atof(argv[6]);
+  float samplerate = atof(argv[7]);
+  int start_step = atoi(argv[8]);
+  int nsteps = atoi(argv[9]);
+
 
   double rank1 = log2(nside);
   double rank2 = log2(nside_low);
@@ -138,7 +144,21 @@ int main(int argc, char *argv[]) {
     printf( "Elapsed time for initialization is %f\n", t3 - t1 );
   }
 
-  read_and_redistribute(filename, commRanks, &P, map_lores, map_hires, rank_diff);
+  for (int jj=0;jj<nsteps;jj++){
+
+  MPI_Barrier(MPI_COMM_WORLD);
+  t3 = MPI_Wtime();
+
+  char step[10*sizeof(char)];
+  char mpiioName[512];
+
+  sprintf(step,"%d",start_step+jj);
+  strcpy(mpiioName,mpiioName_base);
+  strcat(mpiioName,step);
+
+
+
+  read_and_redistribute(mpiioName, commRanks, &P, map_lores, map_hires, rank_diff);
 
   t2 = MPI_Wtime();
   if (commRank==0){
@@ -147,19 +167,29 @@ int main(int argc, char *argv[]) {
 
 
 
-  int status = assign_dm_cic(rho, phi, vel, &P, map_hires, pix_nums_start, pix_nums_end,start_idx, ring_to_idx);
+  int status = assign_dm_cic(rho, phi, vel, &P, map_hires, pix_nums_start, pix_nums_end,start_idx, ring_to_idx, hval, samplerate);
   //int status = assign_sz_ngp(ksz,tsz, &P, map_hires, pix_nums_start, pix_nums_end,start_idx, ring_to_idx);
 
-  
-  P.Deallocate();
 
   MPI_Barrier(MPI_COMM_WORLD);
-
+  t4 = MPI_Wtime();
   if (commRank==0){
-  printf("Starting file output \n");
+    printf( "Elapsed time for CIC is %f\n", t4 - t2 );
   }
 
+
   write_files(outfile, stepnumber,start_idx, end_idx, pix_nums_start, rho, phi, vel, npix_hires);
+  MPI_Barrier(MPI_COMM_WORLD);
+  t5 = MPI_Wtime();
+  if (commRank==0){
+    printf( "Elapsed time for write is %f\n", t5 - t4 );
+    printf( "Elapsed time for step is %f\n", t5 - t3 );
+
+  }
+  }
+
+  P.Deallocate();
+
 
   t2 = MPI_Wtime();
   if (commRank==0){

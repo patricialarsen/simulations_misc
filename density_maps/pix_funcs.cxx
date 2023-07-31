@@ -222,10 +222,16 @@ void get_pix_list_rank(int octant, int rank, int numranks, int64_t npix_lores, v
     return;
 }
 
-int assign_dm_cic(vector<float> &rho, vector<float> &phi, vector<float> &vel, PLParticles* P, T_Healpix_Base<int64_t> map_hires, vector<int64_t> pixnum_start, vector<int64_t> pixnum_end, vector<int64_t> start_idx,  unordered_map<int64_t, int64_t> ring_to_idx){
+
+
+
+int assign_dm_cic(vector<float> &rho, vector<float> &phi, vector<float> &vel, PLParticles* P, T_Healpix_Base<int64_t> map_hires, vector<int64_t> pixnum_start, vector<int64_t> pixnum_end, vector<int64_t> start_idx,  unordered_map<int64_t, int64_t> ring_to_idx, float hval, float samplerate){
 
     int64_t npix = map_hires.Npix();
     float pixsize = (4.*3.141529/npix);
+    #ifdef _OPENMP
+    #pragma omp parallel for
+    #endif
     for (int64_t ii=0; ii<(*P).nparticles; ++ii){
       float xd = (float) (*P).float_data[0]->at(ii);
       float yd = (float) (*P).float_data[1]->at(ii);
@@ -249,10 +255,13 @@ int assign_dm_cic(vector<float> &rho, vector<float> &phi, vector<float> &vel, PL
         int64_t pix_num = neighbs[j];
         int64_t new_idx = -99;
         if (ring_to_idx.count(pix_num)){
-	  new_idx = ring_to_idx[pix_num];
+	  new_idx = ring_to_idx[pix_num]; 
+	  #pragma omp critical
+	  {
           rho[new_idx] += 1./pixsize*weights[j];
           phi[new_idx] += phid*weights[j];
           vel[new_idx] += vel_los*weights[j];
+	  }
 	}
       }
    }
