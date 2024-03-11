@@ -1,0 +1,2 @@
+[cc060:mpi_rank_2][error_sighandler] Caught error: Segmentation fault (signal 11)
+[cc060:mpi_rank_3][error_sighandler] Caught error: Segmentation fault (signal 11)

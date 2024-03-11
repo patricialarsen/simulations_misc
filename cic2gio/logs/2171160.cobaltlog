@@ -1,0 +1,25 @@
+Jobid: 2171160
+qsub -q debug -n 8 -t 60 -A LastJourney -M prlarsen@anl.gov ./Cobalt_cooley.sh
+Thu Apr 27 15:23:42 2023 +0000 (UTC) submitted with cwd set to: /home/prlarsen/codes/simulations_misc_new/simulations_misc/cic2gio
+jobid 2171160 submitted from terminal /dev/pts/35
+Thu Apr 27 15:24:00 2023 +0000 (UTC) 
+Thu Apr 27 15:24:00 2023 +0000 (UTC) Command: '/usr/bin/ssh' 'cc005.cooley' '/usr/bin/cobalt-launcher.py' '--nf' '/var/tmp/cobalt.2171160' '--jobid' '2171160' '--cwd' '/home/prlarsen/codes/simulations_misc_new/simulations_misc/cic2gio' '--env' 'COBALT_JOBID=2171160' '/home/prlarsen/codes/simulations_misc_new/simulations_misc/cic2gio/./Cobalt_cooley.sh'
+Thu Apr 27 15:24:00 2023 +0000 (UTC) 
+Thu Apr 27 15:24:00 2023 +0000 (UTC) Environment:
+Thu Apr 27 15:24:00 2023 +0000 (UTC) SHELL=/bin/bash
+Thu Apr 27 15:24:00 2023 +0000 (UTC) COBALT_NODEFILE=/tmp/tmp9IFFTi
+Thu Apr 27 15:24:00 2023 +0000 (UTC) COBALT_PARTNAME=cc005.cooley
+Thu Apr 27 15:24:00 2023 +0000 (UTC) COBALT_JOBID=2171160
+Thu Apr 27 15:24:00 2023 +0000 (UTC) COBALT_STARTTIME=1682609025
+Thu Apr 27 15:24:00 2023 +0000 (UTC) LOGNAME=prlarsen
+Thu Apr 27 15:24:00 2023 +0000 (UTC) USER=prlarsen
+Thu Apr 27 15:24:00 2023 +0000 (UTC) COBALT_ENDTIME=1682612625
+Thu Apr 27 15:24:00 2023 +0000 (UTC) COBALT_PARTSIZE=8
+Thu Apr 27 15:24:00 2023 +0000 (UTC) HOME=/home/prlarsen
+Thu Apr 27 15:24:00 2023 +0000 (UTC) COBALT_JOBSIZE=8
+Thu Apr 27 15:24:00 2023 +0000 (UTC) 
+Thu Apr 27 15:24:00 2023 +0000 (UTC) Info: stdin received from /dev/null
+Thu Apr 27 15:24:00 2023 +0000 (UTC) Info: stdout sent to /home/prlarsen/codes/simulations_misc_new/simulations_misc/cic2gio/2171160.output
+Thu Apr 27 15:24:00 2023 +0000 (UTC) Info: stderr sent to /home/prlarsen/codes/simulations_misc_new/simulations_misc/cic2gio/2171160.error
+Thu Apr 27 15:24:00 2023 +0000 (UTC) 
+Thu Apr 27 16:24:07 2023 +0000 (UTC) Info: maximum execution time exceeded; initiating job termination

@@ -1,0 +1,844 @@
+commRanks and commrank are 16 0 
+rank = 15 Np = 1974149369 
+rank = 7 Np = 2294292686 
+rank = 11 Np = 1951695102 
+rank = 3 Np = 1940472304 
+rank = 9 Np = 2296105026 
+rank = 1 Np = 1859281097 
+rank = 10 Np = 2079637090 
+rank = 2 Np = 1920559688 
+rank = 8 Np = 2265837849 
+rank = 0 Np = 1937503312 
+rank = 12 Np = 1943920940 
+rank = 4 Np = 1982938853 
+rank = 5 Np = 2119372139 
+rank = 13 Np = 1953266182 
+rank = 6 Np = 2234253727 
+rank = 14 Np = 1963267922 
+rank = 15 Np_final = 1974149369 
+Read 11 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_ADIABATIC/output/m000p.lc.mpicosmo.390 (811994366361 bytes) in 124.616s: 6214.12 MB/s [excluding header read]
+rank = 0 Np_final = 1937503312 
+rank = 2 Np_final = 1920559688 
+rank = 9 Np_final = 2296105026 
+rank = 13 Np_final = 1953266182 
+rank = 3 Np_final = 1940472304 
+rank = 7 Np_final = 2294292686 
+rank = 8 Np_final = 2265837849 
+rank = 10 Np_final = 2079637090 
+rank = 5 Np_final = 2119372139 
+rank = 11 Np_final = 1951695102 
+rank = 1 Np_final = 1859281097 
+rank = 6 Np_final = 2234253727 
+rank = 14 Np_final = 1963267922 
+rank = 4 Np_final = 1982938853 
+rank = 12 Np_final = 1943920940 
+Finished accumulating particles for rank 1
+Finished accumulating particles for rank 12
+Finished accumulating particles for rank 0
+Finished accumulating particles for rank 13
+Finished accumulating particles for rank 3
+Finished accumulating particles for rank 14
+Finished accumulating particles for rank 2
+Finished accumulating particles for rank 11
+Finished accumulating particles for rank 15
+Finished accumulating particles for rank 4
+Finished accumulating particles for rank 5
+Finished accumulating particles for rank 10
+Finished accumulating particles for rank 6
+Finished accumulating particles for rank 8
+Finished accumulating particles for rank 9
+Finished accumulating particles for rank 7
+ step: 390 amin: 0.625871 amax: 0.627463
+ step: 390 mumin: 0.592593 mumax: 0.592593
+ step: 390 mmin: 2.12379e+08 mmax: 2.12379e+08
+ step: 390 umin: 0.000628557 umax: 8.58464e+06
+ step: 390 dcmin: 2.32565e+06 dcmax: 2.35228e+06
+rank = 15 Np = 1955351259 
+rank = 7 Np = 2253908171 
+rank = 8 Np = 2231119541 
+rank = 0 Np = 1926131709 
+rank = 13 Np = 1921736879 
+rank = 5 Np = 1983023688 
+rank = 4 Np = 1972925723 
+rank = 12 Np = 1915849103 
+rank = 3 Np = 1920935216 
+rank = 11 Np = 1960916911 
+rank = 10 Np = 1974900242 
+rank = 2 Np = 1915380749 
+rank = 6 Np = 2194719121 
+rank = 14 Np = 1945029797 
+rank = 1 Np = 1813706917 
+rank = 9 Np = 2273887214 
+Read 11 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_ADIABATIC/output/m000p.lc.mpicosmo.391 (826128575201 bytes) in 143.541s: 5488.73 MB/s [excluding header read]
+rank = 0 Np_final = 1926131709 
+rank = 8 Np_final = 2231119541 
+rank = 1 Np_final = 1813706917 
+rank = 6 Np_final = 2194719121 
+rank = 13 Np_final = 1921736879 
+rank = 9 Np_final = 2273887214 
+rank = 14 Np_final = 1945029797 
+rank = 5 Np_final = 1983023688 
+rank = 2 Np_final = 1915380749 
+rank = 7 Np_final = 2253908171 
+rank = 11 Np_final = 1960916911 
+rank = 15 Np_final = 1955351259 
+rank = 10 Np_final = 1974900242 
+rank = 3 Np_final = 1920935216 
+rank = 4 Np_final = 1972925723 
+rank = 12 Np_final = 1915849103 
+Finished accumulating particles for rank 1
+Finished accumulating particles for rank 12
+Finished accumulating particles for rank 0
+Finished accumulating particles for rank 15
+Finished accumulating particles for rank 13
+Finished accumulating particles for rank 2
+Finished accumulating particles for rank 3
+Finished accumulating particles for rank 14
+Finished accumulating particles for rank 5
+Finished accumulating particles for rank 4
+Finished accumulating particles for rank 10
+Finished accumulating particles for rank 11
+Finished accumulating particles for rank 6
+Finished accumulating particles for rank 8
+Finished accumulating particles for rank 7
+Finished accumulating particles for rank 9
+ step: 391 amin: 0.627463 amax: 0.629055
+ step: 391 mumin: 0.592593 mumax: 0.592593
+ step: 391 mmin: 2.12379e+08 mmax: 2.12379e+08
+ step: 391 umin: 0.00062538 umax: 8.9572e+06
+ step: 391 dcmin: 2.29924e+06 dcmax: 2.32565e+06
+rank = 5 Np = 1914796702 
+rank = 13 Np = 1908062930 
+rank = 1 Np = 1829792455 
+rank = 9 Np = 2239105097 
+rank = 10 Np = 1881134585 
+rank = 2 Np = 1920997785 
+rank = 3 Np = 1895981772 
+rank = 11 Np = 1935098342 
+rank = 0 Np = 1944117360 
+rank = 4 Np = 1941705657 
+rank = 12 Np = 1919473290 
+rank = 8 Np = 2184455735 
+rank = 15 Np = 1967816752 
+rank = 7 Np = 2258335425 
+rank = 6 Np = 2184234145 
+rank = 14 Np = 1943547317 
+Read 11 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_ADIABATIC/output/m000p.lc.mpicosmo.392 (791308224639 bytes) in 144.319s: 5229.03 MB/s [excluding header read]
+rank = 0 Np_final = 1944117360 
+rank = 8 Np_final = 2184455735 
+rank = 2 Np_final = 1920997785 
+rank = 9 Np_final = 2239105097 
+rank = 6 Np_final = 2184234145 
+rank = 5 Np_final = 1914796702 
+rank = 4 Np_final = 1941705657 
+rank = 7 Np_final = 2258335425 
+rank = 10 Np_final = 1881134585 
+rank = 1 Np_final = 1829792455 
+rank = 14 Np_final = 1943547317 
+rank = 13 Np_final = 1908062930 
+rank = 12 Np_final = 1919473290 
+rank = 15 Np_final = 1967816752 
+rank = 11 Np_final = 1935098342 
+rank = 3 Np_final = 1895981772 
+Finished accumulating particles for rank 1
+Finished accumulating particles for rank 10
+Finished accumulating particles for rank 12
+Finished accumulating particles for rank 3
+Finished accumulating particles for rank 13
+Finished accumulating particles for rank 15
+Finished accumulating particles for rank 14
+Finished accumulating particles for rank 5
+Finished accumulating particles for rank 4
+Finished accumulating particles for rank 11
+Finished accumulating particles for rank 2
+Finished accumulating particles for rank 0
+Finished accumulating particles for rank 6
+Finished accumulating particles for rank 8
+Finished accumulating particles for rank 9
+Finished accumulating particles for rank 7
+ step: 392 amin: 0.629055 amax: 0.630647
+ step: 392 mumin: 0.592593 mumax: 0.592593
+ step: 392 mmin: 2.12379e+08 mmax: 2.12379e+08
+ step: 392 umin: 0.000622226 umax: 9.38506e+06
+ step: 392 dcmin: 2.27305e+06 dcmax: 2.29924e+06
+rank = 13 Np = 1873831036 
+rank = 5 Np = 1906184618 
+rank = 9 Np = 2144622862 
+rank = 1 Np = 1824082142 
+rank = 4 Np = 1903319360 
+rank = 12 Np = 1903638227 
+rank = 6 Np = 2114455624 
+rank = 14 Np = 1919177509 
+rank = 8 Np = 2173329957 
+rank = 0 Np = 1944703084 
+rank = 2 Np = 1908451229 
+rank = 10 Np = 1851306073 
+rank = 3 Np = 1885531784 
+rank = 11 Np = 1895582350 
+rank = 7 Np = 2253967549 
+rank = 15 Np = 1933817729 
+Read 11 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_ADIABATIC/output/m000p.lc.mpicosmo.393 (780749720904 bytes) in 120.624s: 6172.73 MB/s [excluding header read]
+rank = 0 Np_final = 1944703084 
+rank = 8 Np_final = 2173329957 
+rank = 2 Np_final = 1908451229 
+rank = 9 Np_final = 2144622862 
+rank = 6 Np_final = 2114455624 
+rank = 5 Np_final = 1906184618 
+rank = 4 Np_final = 1903319360 
+rank = 15 Np_final = 1933817729 
+rank = 10 Np_final = 1851306073 
+rank = 1 Np_final = 1824082142 
+rank = 14 Np_final = 1919177509 
+rank = 13 Np_final = 1873831036 
+rank = 12 Np_final = 1903638227 
+rank = 7 Np_final = 2253967549 
+rank = 11 Np_final = 1895582350 
+rank = 3 Np_final = 1885531784 
+Finished accumulating particles for rank 1
+Finished accumulating particles for rank 12
+Finished accumulating particles for rank 10
+Finished accumulating particles for rank 13
+Finished accumulating particles for rank 3
+Finished accumulating particles for rank 5
+Finished accumulating particles for rank 15
+Finished accumulating particles for rank 14
+Finished accumulating particles for rank 4
+Finished accumulating particles for rank 11
+Finished accumulating particles for rank 2
+Finished accumulating particles for rank 0
+Finished accumulating particles for rank 9
+Finished accumulating particles for rank 6
+Finished accumulating particles for rank 8
+Finished accumulating particles for rank 7
+ step: 393 amin: 0.630647 amax: 0.632239
+ step: 393 mumin: 0.592593 mumax: 0.592593
+ step: 393 mmin: 2.12379e+08 mmax: 2.12379e+08
+ step: 393 umin: 0.000619097 umax: 9.30104e+06
+ step: 393 dcmin: 2.24708e+06 dcmax: 2.27305e+06
+rank = 1 Np = 1801782851 
+rank = 9 Np = 2002053075 
+rank = 5 Np = 1861410311 
+rank = 13 Np = 1870896618 
+rank = 12 Np = 1871199382 
+rank = 4 Np = 1890726325 
+rank = 11 Np = 1876916033 
+rank = 3 Np = 1878218448 
+rank = 6 Np = 2020833150 
+rank = 14 Np = 1910093007 
+rank = 0 Np = 1900736640 
+rank = 8 Np = 2184903229 
+rank = 10 Np = 1848093083 
+rank = 2 Np = 1860087135 
+rank = 7 Np = 2257154548 
+rank = 15 Np = 1907772660 
+Read 11 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_ADIABATIC/output/m000p.lc.mpicosmo.394 (799965579327 bytes) in 120.913s: 6309.54 MB/s [excluding header read]
+rank = 0 Np_final = 1900736640 
+rank = 8 Np_final = 2184903229 
+rank = 10 Np_final = 1848093083 
+rank = 1 Np_final = 1801782851 
+rank = 6 Np_final = 2020833150 
+rank = 5 Np_final = 1861410311 
+rank = 4 Np_final = 1890726325 
+rank = 3 Np_final = 1878218448 
+rank = 15 Np_final = 1907772660 
+rank = 2 Np_final = 1860087135 
+rank = 9 Np_final = 2002053075 
+rank = 14 Np_final = 1910093007 
+rank = 13 Np_final = 1870896618 
+rank = 12 Np_final = 1871199382 
+rank = 11 Np_final = 1876916033 
+rank = 7 Np_final = 2257154548 
+Finished accumulating particles for rank 1
+Finished accumulating particles for rank 12
+Finished accumulating particles for rank 5
+Finished accumulating particles for rank 13
+Finished accumulating particles for rank 10
+Finished accumulating particles for rank 15
+Finished accumulating particles for rank 14
+Finished accumulating particles for rank 3
+Finished accumulating particles for rank 4
+Finished accumulating particles for rank 2
+Finished accumulating particles for rank 11
+Finished accumulating particles for rank 0
+Finished accumulating particles for rank 9
+Finished accumulating particles for rank 6
+Finished accumulating particles for rank 8
+Finished accumulating particles for rank 7
+ step: 394 amin: 0.632239 amax: 0.633831
+ step: 394 mumin: 0.592593 mumax: 0.592593
+ step: 394 mmin: 2.12379e+08 mmax: 2.12379e+08
+ step: 394 umin: 0.00061599 umax: 9.26613e+06
+ step: 394 dcmin: 2.22132e+06 dcmax: 2.24708e+06
+rank = 2 Np = 1823767479 
+rank = 10 Np = 1853659871 
+rank = 4 Np = 1902820260 
+rank = 12 Np = 1838718600 
+rank = 14 Np = 1908466016 
+rank = 6 Np = 1907270683 
+rank = 1 Np = 1789103925 
+rank = 9 Np = 1909034657 
+rank = 5 Np = 1870477753 
+rank = 13 Np = 1850567603 
+rank = 7 Np = 2262625137 
+rank = 15 Np = 1879112444 
+rank = 3 Np = 1855747998 
+rank = 11 Np = 1895539629 
+rank = 0 Np = 1918477560 
+rank = 8 Np = 2168049598 
+Read 11 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_ADIABATIC/output/m000p.lc.mpicosmo.395 (760807873190 bytes) in 121.408s: 5976.24 MB/s [excluding header read]
+rank = 0 Np_final = 1918477560 
+rank = 2 Np_final = 1823767479 
+rank = 1 Np_final = 1789103925 
+rank = 6 Np_final = 1907270683 
+rank = 5 Np_final = 1870477753 
+rank = 4 Np_final = 1902820260 
+rank = 11 Np_final = 1895539629 
+rank = 7 Np_final = 2262625137 
+rank = 8 Np_final = 2168049598 
+rank = 10 Np_final = 1853659871 
+rank = 9 Np_final = 1909034657 
+rank = 14 Np_final = 1908466016 
+rank = 13 Np_final = 1850567603 
+rank = 12 Np_final = 1838718600 
+rank = 3 Np_final = 1855747998 
+rank = 15 Np_final = 1879112444 
+Finished accumulating particles for rank 1
+Finished accumulating particles for rank 12
+Finished accumulating particles for rank 15
+Finished accumulating particles for rank 13
+Finished accumulating particles for rank 3
+Finished accumulating particles for rank 10
+Finished accumulating particles for rank 5
+Finished accumulating particles for rank 14
+Finished accumulating particles for rank 4
+Finished accumulating particles for rank 9
+Finished accumulating particles for rank 6
+Finished accumulating particles for rank 2
+Finished accumulating particles for rank 11
+Finished accumulating particles for rank 0
+Finished accumulating particles for rank 8
+Finished accumulating particles for rank 7
+ step: 395 amin: 0.633831 amax: 0.635423
+ step: 395 mumin: 0.592593 mumax: 0.592593
+ step: 395 mmin: 2.12379e+08 mmax: 2.12379e+08
+ step: 395 umin: 0.000612908 umax: 8.5789e+06
+ step: 395 dcmin: 2.19578e+06 dcmax: 2.22132e+06
+rank = 6 Np = 1794887378 
+rank = 14 Np = 1902621970 
+rank = 13 Np = 1853080162 
+rank = 9 Np = 1800515717 
+rank = 5 Np = 1846519283 
+rank = 1 Np = 1787177051 
+rank = 7 Np = 2195354378 
+rank = 15 Np = 1881609306 
+rank = 0 Np = 1865377770 
+rank = 8 Np = 2128392821 
+rank = 3 Np = 1823336084 
+rank = 10 Np = 1827595058 
+rank = 2 Np = 1822290071 
+rank = 11 Np = 1848776185 
+rank = 4 Np = 1927781564 
+rank = 12 Np = 1810841016 
+Read 11 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_ADIABATIC/output/m000p.lc.mpicosmo.396 (775770416151 bytes) in 117.543s: 6294.14 MB/s [excluding header read]
+rank = 0 Np_final = 1865377770 
+rank = 8 Np_final = 2128392821 
+rank = 2 Np_final = 1822290071 
+rank = 9 Np_final = 1800515717 
+rank = 6 Np_final = 1794887378 
+rank = 5 Np_final = 1846519283 
+rank = 4 Np_final = 1927781564 
+rank = 3 Np_final = 1823336084 
+rank = 10 Np_final = 1827595058 
+rank = 1 Np_final = 1787177051 
+rank = 14 Np_final = 1902621970 
+rank = 13 Np_final = 1853080162 
+rank = 12 Np_final = 1810841016 
+rank = 11 Np_final = 1848776185 
+rank = 15 Np_final = 1881609306 
+rank = 7 Np_final = 2195354378 
+Finished accumulating particles for rank 12
+Finished accumulating particles for rank 1
+Finished accumulating particles for rank 9
+Finished accumulating particles for rank 6
+Finished accumulating particles for rank 15
+Finished accumulating particles for rank 5
+Finished accumulating particles for rank 3
+Finished accumulating particles for rank 10
+Finished accumulating particles for rank 13
+Finished accumulating particles for rank 14
+Finished accumulating particles for rank 2
+Finished accumulating particles for rank 11
+Finished accumulating particles for rank 4
+Finished accumulating particles for rank 0
+Finished accumulating particles for rank 8
+Finished accumulating particles for rank 7
+ step: 396 amin: 0.635423 amax: 0.637015
+ step: 396 mumin: 0.592593 mumax: 0.592593
+ step: 396 mmin: 2.12379e+08 mmax: 2.12379e+08
+ step: 396 umin: 0.000609848 umax: 7.7415e+06
+ step: 396 dcmin: 2.17045e+06 dcmax: 2.19578e+06
+rank = 3 Np = 1829312968 
+rank = 6 Np = 1799520230 
+rank = 11 Np = 1815700375 
+rank = 14 Np = 1863527411 
+rank = 8 Np = 2016455524 
+rank = 0 Np = 1797099138 
+rank = 2 Np = 1841229739 
+rank = 10 Np = 1809836725 
+rank = 4 Np = 1928612335 
+rank = 12 Np = 1805277778 
+rank = 5 Np = 1863178164 
+rank = 13 Np = 1825989793 
+rank = 7 Np = 2125146040 
+rank = 15 Np = 1857066070 
+rank = 1 Np = 1785144730 
+rank = 9 Np = 1781495278 
+rank = 2 Np_final = 1841229739 
+Read 11 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_ADIABATIC/output/m000p.lc.mpicosmo.397 (738587557288 bytes) in 115.548s: 6095.95 MB/s [excluding header read]
+rank = 0 Np_final = 1797099138 
+rank = 10 Np_final = 1809836725 
+rank = 1 Np_final = 1785144730 
+rank = 6 Np_final = 1799520230 
+rank = 5 Np_final = 1863178164 
+rank = 12 Np_final = 1805277778 
+rank = 11 Np_final = 1815700375 
+rank = 8 Np_final = 2016455524 
+rank = 9 Np_final = 1781495278 
+rank = 14 Np_final = 1863527411 
+rank = 13 Np_final = 1825989793 
+rank = 4 Np_final = 1928612335 
+rank = 3 Np_final = 1829312968 
+rank = 15 Np_final = 1857066070 
+rank = 7 Np_final = 2125146040 
+Finished accumulating particles for rank 12
+Finished accumulating particles for rank 1
+Finished accumulating particles for rank 9
+Finished accumulating particles for rank 13
+Finished accumulating particles for rank 6
+Finished accumulating particles for rank 10
+Finished accumulating particles for rank 15
+Finished accumulating particles for rank 3
+Finished accumulating particles for rank 14
+Finished accumulating particles for rank 5
+Finished accumulating particles for rank 11
+Finished accumulating particles for rank 4
+Finished accumulating particles for rank 0
+Finished accumulating particles for rank 2
+Finished accumulating particles for rank 8
+Finished accumulating particles for rank 7
+ step: 397 amin: 0.637015 amax: 0.638607
+ step: 397 mumin: 0.592593 mumax: 0.592593
+ step: 397 mmin: 2.12379e+08 mmax: 2.12379e+08
+ step: 397 umin: 0.000606811 umax: 6.88612e+06
+ step: 397 dcmin: 2.14534e+06 dcmax: 2.17045e+06
+rank = 9 Np = 1762703250 
+rank = 1 Np = 1760211244 
+rank = 4 Np = 1872670986 
+rank = 12 Np = 1777277176 
+rank = 3 Np = 1779008775 
+rank = 11 Np = 1811148177 
+rank = 15 Np = 1859706169 
+rank = 7 Np = 2019570326 
+rank = 5 Np = 1822095731 
+rank = 13 Np = 1807281837 
+rank = 8 Np = 1905432244 
+rank = 0 Np = 1803913994 
+rank = 10 Np = 1790985373 
+rank = 2 Np = 1821607234 
+rank = 6 Np = 1814480293 
+rank = 14 Np = 1854679784 
+Read 11 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_ADIABATIC/output/m000p.lc.mpicosmo.398 (726895499136 bytes) in 112.307s: 6172.54 MB/s [excluding header read]
+rank = 0 Np_final = 1803913994 
+rank = 8 Np_final = 1905432244 
+rank = 1 Np_final = 1760211244 
+rank = 6 Np_final = 1814480293 
+rank = 4 Np_final = 1872670986 
+rank = 3 Np_final = 1779008775 
+rank = 7 Np_final = 2019570326 
+rank = 9 Np_final = 1762703250 
+rank = 14 Np_final = 1854679784 
+rank = 12 Np_final = 1777277176 
+rank = 11 Np_final = 1811148177 
+rank = 15 Np_final = 1859706169 
+rank = 5 Np_final = 1822095731 
+rank = 13 Np_final = 1807281837 
+rank = 2 Np_final = 1821607234 
+rank = 10 Np_final = 1790985373 
+Finished accumulating particles for rank 12
+Finished accumulating particles for rank 1
+Finished accumulating particles for rank 9
+Finished accumulating particles for rank 3
+Finished accumulating particles for rank 13
+Finished accumulating particles for rank 10
+Finished accumulating particles for rank 15
+Finished accumulating particles for rank 5
+Finished accumulating particles for rank 14
+Finished accumulating particles for rank 6
+Finished accumulating particles for rank 4
+Finished accumulating particles for rank 8
+Finished accumulating particles for rank 11
+Finished accumulating particles for rank 0
+Finished accumulating particles for rank 2
+Finished accumulating particles for rank 7
+ step: 398 amin: 0.638607 amax: 0.640199
+ step: 398 mumin: 0.592593 mumax: 0.592593
+ step: 398 mmin: 2.12379e+08 mmax: 2.12379e+08
+ step: 398 umin: 0.000603797 umax: 7.03392e+06
+ step: 398 dcmin: 2.12044e+06 dcmax: 2.14534e+06
+rank = 5 Np = 1799386879 
+rank = 13 Np = 1785988432 
+rank = 6 Np = 1755071606 
+rank = 14 Np = 1840010530 
+rank = 1 Np = 1742693159 
+rank = 9 Np = 1751676360 
+rank = 4 Np = 1790897549 
+rank = 12 Np = 1756988073 
+rank = 11 Np = 1804109990 
+rank = 3 Np = 1772816533 
+rank = 8 Np = 1816901785 
+rank = 0 Np = 1806713532 
+rank = 2 Np = 1820576474 
+rank = 10 Np = 1779309602 
+rank = 15 Np = 1846218658 
+rank = 7 Np = 1910220703 
+Read 11 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_ADIABATIC/output/m000p.lc.mpicosmo.399 (717038760219 bytes) in 110.757s: 6174.08 MB/s [excluding header read]
+rank = 0 Np_final = 1806713532 
+rank = 8 Np_final = 1816901785 
+rank = 1 Np_final = 1742693159 
+rank = 14 Np_final = 1840010530 
+rank = 5 Np_final = 1799386879 
+rank = 4 Np_final = 1790897549 
+rank = 11 Np_final = 1804109990 
+rank = 15 Np_final = 1846218658 
+rank = 9 Np_final = 1751676360 
+rank = 6 Np_final = 1755071606 
+rank = 13 Np_final = 1785988432 
+rank = 12 Np_final = 1756988073 
+rank = 3 Np_final = 1772816533 
+rank = 7 Np_final = 1910220703 
+rank = 10 Np_final = 1779309602 
+rank = 2 Np_final = 1820576474 
+Finished accumulating particles for rank 12
+Finished accumulating particles for rank 1
+Finished accumulating particles for rank 9
+Finished accumulating particles for rank 13
+Finished accumulating particles for rank 6
+Finished accumulating particles for rank 3
+Finished accumulating particles for rank 10
+Finished accumulating particles for rank 5
+Finished accumulating particles for rank 15
+Finished accumulating particles for rank 14
+Finished accumulating particles for rank 4
+Finished accumulating particles for rank 8
+Finished accumulating particles for rank 11
+Finished accumulating particles for rank 0
+Finished accumulating particles for rank 2
+Finished accumulating particles for rank 7
+ step: 399 amin: 0.640199 amax: 0.641791
+ step: 399 mumin: 0.592593 mumax: 0.592593
+ step: 399 mmin: 2.12379e+08 mmax: 2.12379e+08
+ step: 399 umin: 0.000600805 umax: 8.80008e+06
+ step: 399 dcmin: 2.09574e+06 dcmax: 2.12044e+06
+rank = 12 Np = 1740822783 
+rank = 4 Np = 1769278967 
+rank = 8 Np = 1730047209 
+rank = 0 Np = 1782597866 
+rank = 7 Np = 1788536507 
+rank = 15 Np = 1832882052 
+rank = 1 Np = 1715982198 
+rank = 9 Np = 1741122659 
+rank = 2 Np = 1777757808 
+rank = 10 Np = 1742667216 
+rank = 3 Np = 1785098225 
+rank = 11 Np = 1768881130 
+rank = 6 Np = 1726115722 
+rank = 14 Np = 1841498581 
+rank = 13 Np = 1770686055 
+rank = 5 Np = 1777215931 
+Read 11 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_ADIABATIC/output/m000p.lc.mpicosmo.400 (703052030554 bytes) in 122.328s: 5481.04 MB/s [excluding header read]
+rank = 0 Np_final = 1782597866 
+rank = 8 Np_final = 1730047209 
+rank = 2 Np_final = 1777757808 
+rank = 9 Np_final = 1741122659 
+rank = 6 Np_final = 1726115722 
+rank = 5 Np_final = 1777215931 
+rank = 3 Np_final = 1785098225 
+rank = 7 Np_final = 1788536507 
+rank = 10 Np_final = 1742667216 
+rank = 1 Np_final = 1715982198 
+rank = 14 Np_final = 1841498581 
+rank = 13 Np_final = 1770686055 
+rank = 11 Np_final = 1768881130 
+rank = 15 Np_final = 1832882052 
+rank = 4 Np_final = 1769278967 
+rank = 12 Np_final = 1740822783 
+Finished accumulating particles for rank 1
+Finished accumulating particles for rank 12
+Finished accumulating particles for rank 9
+Finished accumulating particles for rank 8
+Finished accumulating particles for rank 10
+Finished accumulating particles for rank 13
+Finished accumulating particles for rank 6
+Finished accumulating particles for rank 5
+Finished accumulating particles for rank 15
+Finished accumulating particles for rank 3
+Finished accumulating particles for rank 4
+Finished accumulating particles for rank 14
+Finished accumulating particles for rank 7
+Finished accumulating particles for rank 11
+Finished accumulating particles for rank 2
+Finished accumulating particles for rank 0
+ step: 400 amin: 0.641791 amax: 0.643383
+ step: 400 mumin: 0.592593 mumax: 0.592593
+ step: 400 mmin: 2.12379e+08 mmax: 2.12379e+08
+ step: 400 umin: 0.000597835 umax: 7.47898e+06
+ step: 400 dcmin: 2.07126e+06 dcmax: 2.09574e+06
+rank = 0 Np = 1793579250 
+rank = 8 Np = 1652184339 
+rank = 1 Np = 1707160802 
+rank = 3 Np = 1787869514 
+rank = 11 Np = 1776559544 
+rank = 9 Np = 1731516355 
+rank = 13 Np = 1759663024 
+rank = 5 Np = 1768378689 
+rank = 6 Np = 1683031518 
+rank = 14 Np = 1835681389 
+rank = 12 Np = 1714463360 
+rank = 4 Np = 1768256631 
+rank = 7 Np = 1707202325 
+rank = 15 Np = 1839198206 
+rank = 10 Np = 1725282498 
+rank = 2 Np = 1780795987 
+Read 11 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_ADIABATIC/output/m000p.lc.mpicosmo.401 (723389603097 bytes) in 106.67s: 6467.38 MB/s [excluding header read]
+rank = 0 Np_final = 1793579250 
+rank = 8 Np_final = 1652184339 
+rank = 1 Np_final = 1707160802 
+rank = 6 Np_final = 1683031518 
+rank = 5 Np_final = 1768378689 
+rank = 4 Np_final = 1768256631 
+rank = 3 Np_final = 1787869514 
+rank = 7 Np_final = 1707202325 
+rank = 9 Np_final = 1731516355 
+rank = 14 Np_final = 1835681389 
+rank = 13 Np_final = 1759663024 
+rank = 12 Np_final = 1714463360 
+rank = 11 Np_final = 1776559544 
+rank = 15 Np_final = 1839198206 
+rank = 2 Np_final = 1780795987 
+rank = 10 Np_final = 1725282498 
+Finished accumulating particles for rank 8
+Finished accumulating particles for rank 12
+Finished accumulating particles for rank 1
+Finished accumulating particles for rank 6
+Finished accumulating particles for rank 9
+Finished accumulating particles for rank 7
+Finished accumulating particles for rank 10
+Finished accumulating particles for rank 13
+Finished accumulating particles for rank 5
+Finished accumulating particles for rank 15
+Finished accumulating particles for rank 3
+Finished accumulating particles for rank 4
+Finished accumulating particles for rank 14
+Finished accumulating particles for rank 11
+Finished accumulating particles for rank 2
+Finished accumulating particles for rank 0
+ step: 401 amin: 0.643383 amax: 0.644975
+ step: 401 mumin: 0.592593 mumax: 0.592593
+ step: 401 mmin: 2.12379e+08 mmax: 2.12379e+08
+ step: 401 umin: 0.000594887 umax: 6.42304e+06
+ step: 401 dcmin: 2.04698e+06 dcmax: 2.07126e+06
+rank = 6 Np = 1673379135 
+rank = 14 Np = 1827468823 
+rank = 10 Np = 1742389582 
+rank = 2 Np = 1760716037 
+rank = 3 Np = 1750511891 
+rank = 11 Np = 1791918432 
+rank = 13 Np = 1738531321 
+rank = 5 Np = 1767181801 
+rank = 1 Np = 1701283941 
+rank = 9 Np = 1718468498 
+rank = 12 Np = 1716311572 
+rank = 4 Np = 1744908425 
+rank = 7 Np = 1597077833 
+rank = 15 Np = 1829586823 
+rank = 8 Np = 1551536419 
+rank = 0 Np = 1787179998 
+Read 11 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_ADIABATIC/output/m000p.lc.mpicosmo.402 (688292738024 bytes) in 107.333s: 6115.62 MB/s [excluding header read]
+rank = 0 Np_final = 1787179998 
+rank = 8 Np_final = 1551536419 
+rank = 1 Np_final = 1701283941 
+rank = 6 Np_final = 1673379135 
+rank = 13 Np_final = 1738531321 
+rank = 4 Np_final = 1744908425 
+rank = 3 Np_final = 1750511891 
+rank = 7 Np_final = 1597077833 
+rank = 9 Np_final = 1718468498 
+rank = 14 Np_final = 1827468823 
+rank = 5 Np_final = 1767181801 
+rank = 12 Np_final = 1716311572 
+rank = 11 Np_final = 1791918432 
+rank = 15 Np_final = 1829586823 
+rank = 2 Np_final = 1760716037 
+rank = 10 Np_final = 1742389582 
+Finished accumulating particles for rank 8
+Finished accumulating particles for rank 7
+Finished accumulating particles for rank 12
+Finished accumulating particles for rank 1
+Finished accumulating particles for rank 9
+Finished accumulating particles for rank 6
+Finished accumulating particles for rank 13
+Finished accumulating particles for rank 10
+Finished accumulating particles for rank 3
+Finished accumulating particles for rank 4
+Finished accumulating particles for rank 5
+Finished accumulating particles for rank 15
+Finished accumulating particles for rank 14
+Finished accumulating particles for rank 2
+Finished accumulating particles for rank 11
+Finished accumulating particles for rank 0
+ step: 402 amin: 0.644975 amax: 0.646567
+ step: 402 mumin: 0.592593 mumax: 0.592593
+ step: 402 mmin: 2.12379e+08 mmax: 2.12379e+08
+ step: 402 umin: 0.000591961 umax: 6.80617e+06
+ step: 402 dcmin: 2.02291e+06 dcmax: 2.04698e+06
+rank = 7 Np = 1475953597 
+rank = 6 Np = 1668246715 
+rank = 15 Np = 1827505959 
+rank = 14 Np = 1794345021 
+rank = 2 Np = 1722526334 
+rank = 10 Np = 1697456662 
+rank = 3 Np = 1714288317 
+rank = 11 Np = 1781127009 
+rank = 1 Np = 1659725698 
+rank = 9 Np = 1708597691 
+rank = 13 Np = 1731122118 
+rank = 5 Np = 1779321929 
+rank = 8 Np = 1460078267 
+rank = 0 Np = 1764462989 
+rank = 12 Np = 1740137939 
+rank = 4 Np = 1741657647 
+Read 11 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_ADIABATIC/output/m000p.lc.mpicosmo.403 (677777169241 bytes) in 106.067s: 6094.04 MB/s [excluding header read]
+rank = 0 Np_final = 1764462989 
+rank = 8 Np_final = 1460078267 
+rank = 2 Np_final = 1722526334 
+rank = 1 Np_final = 1659725698 
+rank = 6 Np_final = 1668246715 
+rank = 5 Np_final = 1779321929 
+rank = 4 Np_final = 1741657647 
+rank = 3 Np_final = 1714288317 
+rank = 15 Np_final = 1827505959 
+rank = 10 Np_final = 1697456662 
+rank = 9 Np_final = 1708597691 
+rank = 14 Np_final = 1794345021 
+rank = 13 Np_final = 1731122118 
+rank = 12 Np_final = 1740137939 
+rank = 11 Np_final = 1781127009 
+rank = 7 Np_final = 1475953597 
+Finished accumulating particles for rank 8
+Finished accumulating particles for rank 7
+Finished accumulating particles for rank 1
+Finished accumulating particles for rank 12
+Finished accumulating particles for rank 9
+Finished accumulating particles for rank 6
+Finished accumulating particles for rank 10
+Finished accumulating particles for rank 13
+Finished accumulating particles for rank 3
+Finished accumulating particles for rank 4
+Finished accumulating particles for rank 14
+Finished accumulating particles for rank 15
+Finished accumulating particles for rank 5
+Finished accumulating particles for rank 2
+Finished accumulating particles for rank 11
+Finished accumulating particles for rank 0
+ step: 403 amin: 0.646567 amax: 0.648159
+ step: 403 mumin: 0.592593 mumax: 0.592593
+ step: 403 mmin: 2.12379e+08 mmax: 2.12379e+08
+ step: 403 umin: 0.000589057 umax: 6.87712e+06
+ step: 403 dcmin: 1.99904e+06 dcmax: 2.02291e+06
+rank = 2 Np = 1708581431 
+rank = 10 Np = 1687772633 
+rank = 9 Np = 1702861823 
+rank = 1 Np = 1657601764 
+rank = 6 Np = 1644157456 
+rank = 14 Np = 1786951525 
+rank = 5 Np = 1714950217 
+rank = 13 Np = 1702211065 
+rank = 3 Np = 1701831778 
+rank = 11 Np = 1707429259 
+rank = 0 Np = 1769507214 
+rank = 8 Np = 1387475414 
+rank = 4 Np = 1751194192 
+rank = 12 Np = 1697506068 
+rank = 15 Np = 1797933357 
+rank = 7 Np = 1403398637 
+rank = 7 Np_final = 1403398637 
+Read 11 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_ADIABATIC/output/m000p.lc.mpicosmo.404 (668466478312 bytes) in 104.372s: 6107.96 MB/s [excluding header read]
+rank = 0 Np_final = 1769507214 
+rank = 10 Np_final = 1687772633 
+rank = 1 Np_final = 1657601764 
+rank = 5 Np_final = 1714950217 
+rank = 4 Np_final = 1751194192 
+rank = 3 Np_final = 1701831778 
+rank = 15 Np_final = 1797933357 
+rank = 8 Np_final = 1387475414 
+rank = 2 Np_final = 1708581431 
+rank = 9 Np_final = 1702861823 
+rank = 13 Np_final = 1702211065 
+rank = 12 Np_final = 1697506068 
+rank = 11 Np_final = 1707429259 
+rank = 6 Np_final = 1644157456 
+rank = 14 Np_final = 1786951525 
+Finished accumulating particles for rank 8
+Finished accumulating particles for rank 7
+Finished accumulating particles for rank 1
+Finished accumulating particles for rank 12
+Finished accumulating particles for rank 6
+Finished accumulating particles for rank 9
+Finished accumulating particles for rank 13
+Finished accumulating particles for rank 10
+Finished accumulating particles for rank 3
+Finished accumulating particles for rank 5
+Finished accumulating particles for rank 15
+Finished accumulating particles for rank 14
+Finished accumulating particles for rank 4
+Finished accumulating particles for rank 11
+Finished accumulating particles for rank 2
+Finished accumulating particles for rank 0
+ step: 404 amin: 0.648159 amax: 0.649751
+ step: 404 mumin: 0.592593 mumax: 0.592593
+ step: 404 mmin: 2.12379e+08 mmax: 2.12379e+08
+ step: 404 umin: 0.000586174 umax: 6.99657e+06
+ step: 404 dcmin: 1.97538e+06 dcmax: 1.99904e+06
+rank = 9 Np = 1657623376 
+rank = 1 Np = 1652029452 
+rank = 5 Np = 1665721925 
+rank = 13 Np = 1707998985 
+rank = 3 Np = 1735308488 
+rank = 11 Np = 1735101573 
+rank = 0 Np = 1754598428 
+rank = 8 Np = 1321186834 
+rank = 6 Np = 1613512516 
+rank = 14 Np = 1765606060 
+rank = 2 Np = 1715607247 
+rank = 10 Np = 1680956426 
+rank = 15 Np = 1758542192 
+rank = 7 Np = 1344615377 
+rank = 4 Np = 1738659385 
+rank = 12 Np = 1693831155 
+Read 11 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_ADIABATIC/output/m000p.lc.mpicosmo.405 (676372969633 bytes) in 103.315s: 6243.42 MB/s [excluding header read]
+rank = 0 Np_final = 1754598428 
+rank = 3 Np_final = 1735308488 
+rank = 8 Np_final = 1321186834 
+rank = 2 Np_final = 1715607247 
+rank = 1 Np_final = 1652029452 
+rank = 6 Np_final = 1613512516 
+rank = 5 Np_final = 1665721925 
+rank = 4 Np_final = 1738659385 
+rank = 11 Np_final = 1735101573 
+rank = 15 Np_final = 1758542192 
+rank = 10 Np_final = 1680956426 
+rank = 9 Np_final = 1657623376 
+rank = 14 Np_final = 1765606060 
+rank = 13 Np_final = 1707998985 
+rank = 12 Np_final = 1693831155 
+rank = 7 Np_final = 1344615377 

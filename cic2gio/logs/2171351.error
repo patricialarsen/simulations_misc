@@ -1,0 +1,80 @@
+[cli_2]: aborting job:
+Fatal error in PMPI_Gatherv:
+Invalid count, error stack:
+PMPI_Gatherv(547): MPI_Gatherv failed(sbuf=0xbd93f3cc0, scount=-1610612736, dtype=USER<struct>, rbuf=0xbd93f3cc0, rcnts=0xd8e7d840, displs=0xd8e7d8d0, dtype=USER<struct>, root=0, MPI_COMM_WORLD) failed
+PMPI_Gatherv(439): Negative count, value is -1610612736
+
+[cli_6]: aborting job:
+Fatal error in PMPI_Gatherv:
+Invalid count, error stack:
+PMPI_Gatherv(547): MPI_Gatherv failed(sbuf=0x93b4f9280, scount=-1073741824, dtype=USER<struct>, rbuf=0x93b4f9280, rcnts=0xda9c0c40, displs=0xda9c0880, dtype=USER<struct>, root=0, MPI_COMM_WORLD) failed
+PMPI_Gatherv(439): Negative count, value is -1073741824
+
+[cli_4]: aborting job:
+Fatal error in PMPI_Gatherv:
+Invalid count, error stack:
+PMPI_Gatherv(547): MPI_Gatherv failed(sbuf=0x5a5773770, scount=-2147483648, dtype=USER<struct>, rbuf=0x5a5773770, rcnts=0xd90b1820, displs=0xd90b18b0, dtype=USER<struct>, root=0, MPI_COMM_WORLD) failed
+PMPI_Gatherv(439): Negative count, value is -2147483648
+
+[cli_10]: aborting job:
+Fatal error in PMPI_Gatherv:
+Invalid count, error stack:
+PMPI_Gatherv(547): MPI_Gatherv failed(sbuf=0x5d1654e50, scount=-1610612736, dtype=USER<struct>, rbuf=0x5d1654e50, rcnts=0xc19ce7750, displs=0xd94c1d40, dtype=USER<struct>, root=0, MPI_COMM_WORLD) failed
+PMPI_Gatherv(439): Negative count, value is -1610612736
+
+[cli_14]: aborting job:
+Fatal error in PMPI_Gatherv:
+Invalid count, error stack:
+PMPI_Gatherv(547): MPI_Gatherv failed(sbuf=0x598915af0, scount=-1073741824, dtype=USER<struct>, rbuf=0x598915af0, rcnts=0xbaf1e3790, displs=0xd99e59c0, dtype=USER<struct>, root=0, MPI_COMM_WORLD) failed
+PMPI_Gatherv(439): Negative count, value is -1073741824
+
+[cli_12]: aborting job:
+Fatal error in PMPI_Gatherv:
+Invalid count, error stack:
+PMPI_Gatherv(547): MPI_Gatherv failed(sbuf=0x52d794130, scount=-1610612736, dtype=USER<struct>, rbuf=0x52d794130, rcnts=0xb5789a9e0, displs=0xda9039c0, dtype=USER<struct>, root=0, MPI_COMM_WORLD) failed
+PMPI_Gatherv(439): Negative count, value is -1610612736
+
+[cli_22]: aborting job:
+Fatal error in PMPI_Gatherv:
+Invalid count, error stack:
+PMPI_Gatherv(547): MPI_Gatherv failed(sbuf=0x5ac780910, scount=-790802624, dtype=USER<struct>, rbuf=0x5ac780910, rcnts=0xbd8fad150, displs=0xd9d2d9c0, dtype=USER<struct>, root=0, MPI_COMM_WORLD) failed
+PMPI_Gatherv(439): Negative count, value is -790802624
+
+[cli_20]: aborting job:
+Fatal error in PMPI_Gatherv:
+Invalid count, error stack:
+PMPI_Gatherv(547): MPI_Gatherv failed(sbuf=0x554844500, scount=-1519816880, dtype=USER<struct>, rbuf=0x554844500, rcnts=0xba83bdbd0, displs=0xd952a900, dtype=USER<struct>, root=0, MPI_COMM_WORLD) failed
+PMPI_Gatherv(439): Negative count, value is -1519816880
+
+[cli_8]: aborting job:
+Fatal error in PMPI_Gatherv:
+Invalid count, error stack:
+PMPI_Gatherv(547): MPI_Gatherv failed(sbuf=0xc807d0bd0, scount=-1073741824, dtype=USER<struct>, rbuf=0xc807d0bd0, rcnts=0xda4b5a40, displs=0xda4b5e00, dtype=USER<struct>, root=0, MPI_COMM_WORLD) failed
+PMPI_Gatherv(439): Negative count, value is -1073741824
+
+[cli_16]: aborting job:
+Fatal error in PMPI_Gatherv:
+Invalid count, error stack:
+PMPI_Gatherv(547): MPI_Gatherv failed(sbuf=0x53e9e8270, scount=-1073741824, dtype=USER<struct>, rbuf=0x53e9e8270, rcnts=0xb096855d0, displs=0xd9288a00, dtype=USER<struct>, root=0, MPI_COMM_WORLD) failed
+PMPI_Gatherv(439): Negative count, value is -1073741824
+
+Warning! Rndv Receiver is expecting 16979484176 Bytes But, is receiving 402653184 Bytes 
+Warning! Rndv Receiver is expecting 33740461568 Bytes But, is receiving 402653184 Bytes 
+Warning! Rndv Receiver is expecting 17152728480 Bytes But, is receiving 402653184 Bytes 
+[cc039:mpi_rank_27][error_sighandler] Caught error: Segmentation fault (signal 11)
+[cc098:mpi_rank_1][error_sighandler] Caught error: Segmentation fault (signal 11)
+[cc069:mpi_rank_29][error_sighandler] Caught error: Segmentation fault (signal 11)
+[cc118:mpi_rank_15][error_sighandler] Caught error: Segmentation fault (signal 11)
+[proxy:0:3@cc039] HYD_pmcd_pmip_control_cmd_cb (pm/pmiserv/pmip_cb.c:878): assert (!closed) failed
+[proxy:0:3@cc039] HYDT_dmxu_poll_wait_for_event (tools/demux/demux_poll.c:77): callback returned error status
+[proxy:0:3@cc039] main (pm/pmiserv/pmip.c:200): demux engine error waiting for event
+[proxy:0:1@cc098] HYD_pmcd_pmip_control_cmd_cb (pm/pmiserv/pmip_cb.c:878): assert (!closed) failed
+[proxy:0:1@cc098] HYDT_dmxu_poll_wait_for_event (tools/demux/demux_poll.c:77): callback returned error status
+[proxy:0:1@cc098] main (pm/pmiserv/pmip.c:200): demux engine error waiting for event
+[proxy:0:5@cc069] HYD_pmcd_pmip_control_cmd_cb (pm/pmiserv/pmip_cb.c:878): assert (!closed) failed
+[proxy:0:5@cc069] HYDT_dmxu_poll_wait_for_event (tools/demux/demux_poll.c:77): callback returned error status
+[proxy:0:5@cc069] main (pm/pmiserv/pmip.c:200): demux engine error waiting for event
+[mpiexec@cc059] HYDT_bscu_wait_for_completion (tools/bootstrap/utils/bscu_wait.c:75): one of the processes terminated badly; aborting
+[mpiexec@cc059] HYDT_bsci_wait_for_completion (tools/bootstrap/src/bsci_wait.c:22): launcher returned error waiting for completion
+[mpiexec@cc059] HYD_pmci_wait_for_completion (pm/pmiserv/pmiserv_pmci.c:215): launcher returned error waiting for completion
+[mpiexec@cc059] main (ui/mpich/mpiexec.c:336): process manager error waiting for completion

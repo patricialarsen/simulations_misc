@@ -1,0 +1,60 @@
+[cc066:mpi_rank_0][error_sighandler] Caught error: Segmentation fault (signal 11)
+[cli_7]: aborting job:
+Fatal error in PMPI_Gatherv:
+Invalid count, error stack:
+PMPI_Gatherv(547): MPI_Gatherv failed(sbuf=0x186019e0, scount=-1073741824, dtype=USER<struct>, rbuf=0x186019e0, rcnts=0x1002fa60, displs=0x1002faf0, dtype=USER<struct>, root=0, MPI_COMM_WORLD) failed
+PMPI_Gatherv(439): Negative count, value is -1073741824
+
+[cli_25]: aborting job:
+Fatal error in PMPI_Gatherv:
+Invalid count, error stack:
+PMPI_Gatherv(547): MPI_Gatherv failed(sbuf=0x20bda170, scount=-843442556, dtype=USER<struct>, rbuf=0x20bda170, rcnts=0x23105b90, displs=0xed8b900, dtype=USER<struct>, root=0, MPI_COMM_WORLD) failed
+PMPI_Gatherv(439): Negative count, value is -843442556
+
+[cli_3]: aborting job:
+Fatal error in PMPI_Gatherv:
+Invalid count, error stack:
+PMPI_Gatherv(547): MPI_Gatherv failed(sbuf=0x30430d90, scount=-536870912, dtype=USER<struct>, rbuf=0x30430d90, rcnts=0x1f15c8e0, displs=0xec01840, dtype=USER<struct>, root=0, MPI_COMM_WORLD) failed
+PMPI_Gatherv(439): Negative count, value is -536870912
+
+[cli_5]: aborting job:
+Fatal error in PMPI_Gatherv:
+Invalid count, error stack:
+PMPI_Gatherv(547): MPI_Gatherv failed(sbuf=0x20d9c050, scount=-1073741824, dtype=USER<struct>, rbuf=0x20d9c050, rcnts=0x330366b0, displs=0xf879a40, dtype=USER<struct>, root=0, MPI_COMM_WORLD) failed
+PMPI_Gatherv(439): Negative count, value is -1073741824
+
+[cli_12]: aborting job:
+Fatal error in PMPI_Gatherv:
+Invalid count, error stack:
+PMPI_Gatherv(547): MPI_Gatherv failed(sbuf=0xe47d4f0, scount=-1005211875, dtype=USER<struct>, rbuf=0xe47d4f0, rcnts=0xe47b9c0, displs=0x11c725b0, dtype=USER<struct>, root=0, MPI_COMM_WORLD) failed
+PMPI_Gatherv(439): Negative count, value is -1005211875
+
+[cli_8]: aborting job:
+Fatal error in PMPI_Gatherv:
+Invalid count, error stack:
+PMPI_Gatherv(547): MPI_Gatherv failed(sbuf=0xf421570, scount=-1005211875, dtype=USER<struct>, rbuf=0xf421570, rcnts=0xf41fb00, displs=0xf41f9c0, dtype=USER<struct>, root=0, MPI_COMM_WORLD) failed
+PMPI_Gatherv(439): Negative count, value is -1005211875
+
+[cli_20]: aborting job:
+Fatal error in PMPI_Gatherv:
+Invalid count, error stack:
+PMPI_Gatherv(547): MPI_Gatherv failed(sbuf=0xf7254d0, scount=-1005211875, dtype=USER<struct>, rbuf=0xf7254d0, rcnts=0x13177050, displs=0xf723900, dtype=USER<struct>, root=0, MPI_COMM_WORLD) failed
+PMPI_Gatherv(439): Negative count, value is -1005211875
+
+[cli_16]: aborting job:
+Fatal error in PMPI_Gatherv:
+Invalid count, error stack:
+PMPI_Gatherv(547): MPI_Gatherv failed(sbuf=0xf4ef470, scount=-1005211875, dtype=USER<struct>, rbuf=0xf4ef470, rcnts=0xf4ed9c0, displs=0x130287d0, dtype=USER<struct>, root=0, MPI_COMM_WORLD) failed
+PMPI_Gatherv(439): Negative count, value is -1005211875
+
+mlx5: cc023: got completion with error:
+00000000 00000000 00000000 00000000
+00000000 00000000 00000000 00000000
+00000000 00000000 00000000 00000000
+00000000 00008914 0a00c30e 004636d2
+[cc023:mpi_rank_2][handle_cqe] Send desc error in msg to 0, wc_opcode=0
+[cc023:mpi_rank_2][handle_cqe] Msg from 0: wc.status=11, wc.wr_id=0x27bf300, wc.opcode=0, vbuf->phead->type=32 = MPIDI_CH3_PKT_RNDV_REQ_TO_SEND
+[cc023:mpi_rank_2][handle_cqe] src/mpid/ch3/channels/mrail/src/gen2/ibv_channel_manager.c:547: [] Got completion with error 11, vendor code=0x89, dest rank=0
+: Bad address (14)
+[cc122:mpi_rank_30][error_sighandler] Caught error: Segmentation fault (signal 11)
+[cc122:mpi_rank_22][error_sighandler] Caught error: Segmentation fault (signal 11)

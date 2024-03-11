@@ -5,46 +5,140 @@
 #include <string>
 #include <cassert>
 
-#include "GenericIO.h"
 
+#include "GenericIO.h"
 #include "BasicDefinition.h"
 
 #include <sstream>
 
-//TODO add link to basic definitions
-// cosmotools/algorithms/halofinder/BasicDefinition.h
+#include "chealpix.h"
 
 
 #include <healpix_base.h>
-
 #include "healpix_map_fitsio.h"
 #include "healpix_map.h"
 #include "fitshandle.h"
-//#include "share_utils.h"
 #include "string_utils.h"
 #include "healpix_tables.h"
-//#include "c_utils.h"
 #include "math_utils.h"
 #include "vec3.h"
 #include "stdio.h"
 #include "fitsio.h"
 
+
 #include <fstream>
 #include <vector>
 #include <algorithm>
 
+
 #define MASK_SPECIES 2
 #define POSVEL_T float
-#define ID_T int64_t
 #define MASK_T uint16_t
 
 // uncomment for adiabatic simulations
 #define HYBRID_SG
 
-
-
 using namespace std;
 using namespace gio;
+
+
+struct sz_props{
+    int64_t pix_num;
+    double tsz;
+    double ksz;
+    int rank;
+};
+
+struct sz_output{
+    int64_t pix_num;
+    float tsz;
+    float ksz;
+};
+
+MPI_Datatype set_SZ_MPI_Type()
+{
+    MPI_Datatype SZ_MPI_Type;
+    MPI_Datatype type[4] = { MPI_INT64_T, MPI_DOUBLE, MPI_DOUBLE, MPI_INT };
+    int blocklen[4] = {1,1,1,1};
+    MPI_Aint disp[4] = {offsetof(sz_props,pix_num),
+                        offsetof(sz_props,tsz),
+                        offsetof(sz_props,ksz),
+                        offsetof(sz_props,rank)};
+    MPI_Type_struct(4,blocklen,disp,type,&SZ_MPI_Type);
+    MPI_Type_commit(&SZ_MPI_Type);
+    return SZ_MPI_Type;
+}
+
+/*
+void Set_MPIType(MPI_Datatype SZ_MPI_Type){
+    MPI_Datatype type[4] = { MPI_INT64_T, MPI_DOUBLE, MPI_DOUBLE, MPI_INT };
+    int blocklen[4] = {1,1,1,1};
+
+    sz_props sz;
+
+    MPI_Aint base;
+    MPI_Aint disp[4];
+
+    MPI_Get_address(&sz, &base);
+    MPI_Get_address(&sz.pix_num,  &disp[0]);
+    MPI_Get_address(&sz.tsz,   &disp[1]);
+    MPI_Get_address(&sz.ksz,    &disp[2]);
+    MPI_Get_address(&sz.rank,    &disp[3]);
+
+    disp[0]-=base; disp[1]-=base; disp[2]-=base; disp[3]-=base;
+
+    MPI_Type_struct(4,blocklen,disp,type,&SZ_MPI_Type);
+    MPI_Type_commit(&SZ_MPI_Type);
+}
+
+void Set_MPIType_OUT(MPI_Datatype SZ_MPI_Type){
+    MPI_Datatype type[3] = { MPI_INT64_T, MPI_FLOAT, MPI_FLOAT };
+    int blocklen[3] = {1,1,1};
+
+    sz_output sz;
+
+    MPI_Aint base;
+    MPI_Aint disp[3];
+
+    MPI_Get_address(&sz, &base);
+    MPI_Get_address(&sz.pix_num,  &disp[0]);
+    MPI_Get_address(&sz.tsz,   &disp[1]);
+    MPI_Get_address(&sz.ksz,    &disp[2]);
+
+    disp[0]-=base; disp[1]-=base; disp[2]-=base; 
+
+    MPI_Type_struct(3,blocklen,disp,type,&SZ_MPI_Type);
+    MPI_Type_commit(&SZ_MPI_Type);
+}
+*/
+MPI_Datatype set_SZ_OUT_MPI_Type()
+{
+    MPI_Datatype SZ_OUT_MPI_Type;
+    MPI_Datatype type[3] = { MPI_INT64_T, MPI_FLOAT, MPI_FLOAT};
+    int blocklen[3] = {1,1,1};
+    MPI_Aint disp[3] = {offsetof(sz_output,pix_num),
+                        offsetof(sz_output,tsz),
+                        offsetof(sz_output,ksz)};
+    MPI_Type_struct(3,blocklen,disp,type,&SZ_OUT_MPI_Type);
+    MPI_Type_commit(&SZ_OUT_MPI_Type);
+    return SZ_OUT_MPI_Type;
+}
+
+
+
+bool comp_by_pixnum(const sz_output &a, const sz_output &b){
+  return a.pix_num < b.pix_num;
+}
+
+
+bool comp_by_rank(const sz_props &a, const sz_props &b){
+  return a.rank < b.rank;
+}
+
+int num_to_rank(int64_t pix_num, int commRanks){
+   return pix_num%commRanks; 
+}
+
 
 int main(int argc, char *argv[]) {
 
@@ -79,6 +173,8 @@ int main(int argc, char *argv[]) {
   nsteps = atoi(argv[5]);
   start_step = atoi(argv[6]);
   nside_in = atoi(argv[7]);
+
+  // assert user chooses sensible map resolution 
   assert(nside_in>1);
   assert(nside_in<32768);
 
@@ -87,8 +183,6 @@ int main(int argc, char *argv[]) {
   vector<POSVEL_T> vx, vy, vz;
   vector<POSVEL_T> a; 
   vector<MASK_T> mask;
-
-
 #ifdef HYBRID_SG
   const double mu0 = MU_ION;
 #else
@@ -97,8 +191,6 @@ int main(int argc, char *argv[]) {
   vector<POSVEL_T> mass; 
   vector<POSVEL_T> uu;
 
-  assert(sizeof(ID_T) == 8);
-  vector<ID_T> id;
 
   size_t Np = 0;
   unsigned Method = GenericIO::FileIOPOSIX;
@@ -106,29 +198,44 @@ int main(int argc, char *argv[]) {
   if (EnvStr && string(EnvStr) == "1")
     Method = GenericIO::FileIOMPI;
  
+
   Healpix_Ordering_Scheme ring = RING;
-  int64 nside= (int64) nside_in;
-
-  T_Healpix_Base<int64> map; // this certainly exists
-  map = Healpix_Base2 (nside, ring, SET_NSIDE);
-   
-  int order = Healpix_Base::nside2order(nside);
-  int64 npix = map.Npix();
-
-  // area in steradians
+  int64_t nside= (int64_t) nside_in;
+  int64_t npix = nside2npix64(nside);
   float pixsize = (4.*3.141529/npix);
 
-  arr<double> map_output_total_ksz(npix);
-  arr<double> map_output_total_tsz(npix);
-  vector<double> map_output_ksz;
-  vector<double> map_output_tsz;
+  // create MPI datatype
+  //
+  MPI_Datatype SZ_OUT_MPI_Type = set_SZ_OUT_MPI_Type();
+  MPI_Datatype SZ_MPI_Type = set_SZ_MPI_Type();
 
-  map_output_ksz.resize(npix);
-  map_output_tsz.resize(npix);
-  for (int64 i=0;i<npix;i++){
-      map_output_ksz[i] = 0.0;
-      map_output_tsz[i] = 0.0;
+  //MPI_Datatype SZ_MPI_Type;
+  //Set_MPIType(SZ_MPI_Type);
+  //MPI_Datatype SZ_OUT_MPI_Type;
+  //Set_MPIType_OUT(SZ_OUT_MPI_Type);
+
+  // create map for pixel list on rank 
+  map<int64_t,int64_t> pixel_rank;
+  map<int64_t,int64_t> pixel_rank_inv;
+
+  int tmp_rank;
+  int pix_count = 0; 
+  for (int64_t i=0; i< npix; i++){
+    tmp_rank = num_to_rank(i,commRanks);
+    if (tmp_rank==commRank){
+        pixel_rank[i] = pix_count;
+        pixel_rank_inv[pix_count] = i; 
+        pix_count++; 
+    }
   }
+
+    vector<double> map_output_ksz, map_output_tsz;
+    map_output_ksz.resize(pix_count);
+    map_output_tsz.resize(pix_count);
+    for (int64_t i=0; i<pix_count; i++){
+        map_output_ksz[i] = 0;
+        map_output_tsz[i] = 0;
+    }
 
   for (int ii=0;ii<nsteps;ii++) { 
 
@@ -153,7 +260,6 @@ int main(int argc, char *argv[]) {
       yy.resize(Np + GIO.requestedExtraSpace()/sizeof(POSVEL_T));
       zz.resize(Np + GIO.requestedExtraSpace()/sizeof(POSVEL_T));
       a.resize(Np + GIO.requestedExtraSpace()/sizeof(POSVEL_T));
-      id.resize(Np + GIO.requestedExtraSpace()/sizeof(POSVEL_T));
       vx.resize(Np + GIO.requestedExtraSpace()/sizeof(POSVEL_T));
       vy.resize(Np + GIO.requestedExtraSpace()/sizeof(POSVEL_T));
       vz.resize(Np + GIO.requestedExtraSpace()/sizeof(POSVEL_T));
@@ -165,7 +271,6 @@ int main(int argc, char *argv[]) {
 #endif
 
       //  READ IN VARIABLES
-
       GIO.addVariable("x", xx, true);
       GIO.addVariable("y", yy, true);
       GIO.addVariable("z", zz, true);
@@ -178,13 +283,12 @@ int main(int argc, char *argv[]) {
 #ifndef HYBRID_SG
       GIO.addVariable("mu", mu, true);
 #endif
-      GIO.addVariable("id", id, true);
       GIO.addVariable("mask",mask,true);
 
       GIO.readData();
     } // destroy GIO prior to calling MPI_Finalize
 
-    printf("rank = %d Np_final = %lu \n", commRank, Np);
+    //printf("rank = %d Np_final = %lu \n", commRank, Np);
     xx.resize(Np);
     yy.resize(Np);
     zz.resize(Np);
@@ -200,8 +304,6 @@ int main(int argc, char *argv[]) {
 #endif
     a.resize(Np);
 
-    vector<float> total_weights;
-    total_weights.resize(Np);
 
     double amin = 1.e20;
     double amax = -1.e20;
@@ -213,6 +315,15 @@ int main(int argc, char *argv[]) {
     double umax = -1.e20;
     double dcmin = 1.e20;
     double dcmax = -1.e20;
+
+
+    vector<int> send_count;
+    send_count.resize(commRanks,0);
+
+    vector<sz_props> sz_send;
+    vector<sz_props> sz_recv;
+    sz_send.resize(Np);
+
 
     for (int i=0; i<Np; i++) {
 
@@ -230,16 +341,8 @@ int main(int argc, char *argv[]) {
       double vzd_los = vz[i] *(zd/sqrt(dist_comov2));  
 
       double v_los = vxd_los+vyd_los+vzd_los;
-      //double vxd = vx[i];
-      //double vyd = vy[i];
-      //double vzd = vz[i];
-     // double H = H0 * (om * a[i]*a[i]*a[i] + ol + o) ...
-     //TODO: velocities might not have a factor of h! Check this! 
-     // also v = d(ra)/dt = dr/dt a + r da/dt 
-     //  v/a = dr/dt + r H 
-     //  dr/dt = v/a - r H 
-
-      vec3 vec_val = vec3(xd,yd,zd);
+      double vec_val[3]; 
+      vec_val[0] = (double) xd; vec_val[1] = (double) yd; vec_val[2] = (double) zd;
 
 #ifdef HYBRID_SG
       double mui = mu0;
@@ -250,18 +353,72 @@ int main(int argc, char *argv[]) {
       double ui = uu[i];
       double aa = a[i];
 
+      // check for min/max values as a sanity check 
       amin = std::min(amin, aa) ; amax = std::max(amax, aa);
       mumin = std::min(mumin, mui) ; mumax = std::max(mumax, mui);
       mmin = std::min(mmin, mi) ; mmax = std::max(mmax, mi);
       umin = std::min(umin, ui) ; umax = std::max(umax, ui);
       dcmin = std::min(dcmin, dist_comov2) ; dcmax = std::max(dcmax, dist_comov2);
        
-      //TODO make sure this is right 
-      // int64 -  
-      int64 pix_num = map.vec2pix(vec_val);
-      map_output_ksz[pix_num] += mi*v_los/dist_comov2/aa; // one factor of a cancels from v_los and dist_comov2
-      map_output_tsz[pix_num] += mi*mui*ui/dist_comov2;   // a^2 factors cancel out in ui and dist_comov2  
+      int64_t pix_num_tmp; 
+      double tsz_pix_tmp;
+      double ksz_pix_tmp;
+      vec2pix_ring64(nside, vec_val, &pix_num_tmp); 
+
+      sz_send[i].pix_num = pix_num_tmp;
+      sz_send[i].tsz = mi*mui*ui/dist_comov2;
+      sz_send[i].ksz = mi*v_los/dist_comov2/aa;
+      sz_send[i].rank = num_to_rank(pix_num_tmp,commRanks);
+      ++send_count[sz_send[i].rank];
     }    
+
+    std::sort(sz_send.begin(),sz_send.end(),comp_by_rank);
+
+
+    vector<int> recv_count;
+    recv_count.resize(commRanks,0);
+    MPI_Alltoall(&send_count[0],1,MPI_INT,&recv_count[0],1,MPI_INT,MPI_COMM_WORLD);
+
+    // compute offsets
+    vector<int> send_offset;
+    send_offset.resize(commRanks,0);
+    vector<int> recv_offset;
+    recv_offset.resize(commRanks,0);
+    send_offset[0] = recv_offset[0] = 0;
+    for (int i=1; i<commRanks; ++i) {
+      send_offset[i] = send_offset[i-1] + send_count[i-1];
+      recv_offset[i] = recv_offset[i-1] + recv_count[i-1];
+    }
+
+    // compute totals
+    int64_t recv_total = 0;
+    for (int i=0; i<commRanks; ++i) {
+      recv_total += recv_count[i];
+    }
+
+    sz_recv.resize(recv_total);
+
+
+    MPI_Barrier(MPI_COMM_WORLD);
+    if (commRank == 0) 
+       cout << "About to send data" << endl;
+
+
+    MPI_Alltoallv(&sz_send[0],&send_count[0],&send_offset[0],SZ_MPI_Type,\
+                   &sz_recv[0],&recv_count[0],&recv_offset[0],SZ_MPI_Type,MPI_COMM_WORLD);
+
+
+    sz_send.resize(0); // might not be optimal to keep resizing this
+
+    // sum values 
+    int64_t Np2 = sz_recv.size();
+    for (int64_t i=0; i < Np2; i++){
+      int64_t rank_pix = pixel_rank[sz_recv[i].pix_num];
+      map_output_ksz[rank_pix] += sz_recv[i].ksz;
+      map_output_tsz[rank_pix] += sz_recv[i].tsz;
+    }
+
+    // then multiply by scaling factor and finally combine into one map and output 
 
     printf("Finished accumulating particles for rank %d\n", commRank);
 
@@ -309,19 +466,93 @@ int main(int argc, char *argv[]) {
     std::cout << " CHIE: " << CHIE << " SAMPLERATE: " << samplerate << std::endl;
     std::cout << " KSZ_CONV: " << KSZ_CONV << " TSZ_CONV: " << TSZ_CONV << std::endl;
   }
-  for (int64 j=0; j<npix; j++) {
+  for (int64_t j=0; j<pix_count; j++) {
     map_output_ksz[j] *= KSZ_CONV;
     map_output_tsz[j] *= TSZ_CONV;
   }
 
-   // Accumulate over all ranks
-  int ncell = 16;
-  int npix2 = npix/ncell;
 
-  for (int64 j=0; j<npix; j++) {
-    map_output_total_ksz[j] = 0.0;
-    map_output_total_tsz[j] = 0.0;
+  // cast to float and get the pixel number 
+  vector<sz_output> map_output;
+  map_output.resize(pix_count); 
+  for (int64_t j=0; j<pix_count; j++) {
+    map_output[j].ksz = (float)map_output_ksz[j];
+    map_output[j].tsz = (float)map_output_tsz[j];
+    map_output[j].pix_num = pixel_rank_inv[j];
   }
+
+
+  vector<sz_output> map_output2;
+  map_output2.resize(pix_count);
+  for (int64_t j=0; j<pix_count; j++) {
+    map_output2[j].ksz = 0.0;
+    map_output2[j].tsz = 0.0;
+    map_output2[j].pix_num = 0;
+  }
+
+  // remove the doubles 
+  map_output_tsz.resize(0);
+  map_output_ksz.resize(0);
+
+  // compute offsets - need to make sure the recv_offset fits into integer type - this will break for 16384 currently 
+  vector<int> recv_offset_arr;
+  vector<int> pix_count_arr;
+  pix_count_arr.resize(commRanks);
+  recv_offset_arr.resize(commRanks); 
+
+  printf("pix count (1) for rank %d is %d \n ", commRank, pix_count);
+
+  MPI_Allgather(&pix_count, 1, MPI_INT, &pix_count_arr[0],1,MPI_INT,MPI_COMM_WORLD);
+  //MPI_Alltoall(&pix_count,1,MPI_INT,&pix_count_arr[0],1,MPI_INT,MPI_COMM_WORLD);
+
+  printf("pix count for rank %d is %d \n ", commRank, pix_count_arr[commRank]);
+  recv_offset_arr[0] = 0; 
+  for (int i=1; i<commRanks; ++i) {
+      recv_offset_arr[i] = recv_offset_arr[i-1] + pix_count_arr[i-1];
+  }
+  printf("recv offset for rank %d is %d \n ", commRank, recv_offset_arr[commRank]);
+
+
+  // communicate map to rank 0 
+  //
+  /*
+  if (commRank==0){
+  MPI_Gatherv(MPI_IN_PLACE,pix_count_arr[commRank], SZ_OUT_MPI_Type,\
+                   &map_output[0],&pix_count_arr[0],&recv_offset_arr[0],SZ_OUT_MPI_Type,0, MPI_COMM_WORLD);
+}
+   else {
+      MPI_Gatherv(&map_output[0],pix_count_arr[commRank], SZ_OUT_MPI_Type,\
+                   NULL,0,0,SZ_OUT_MPI_Type,0, MPI_COMM_WORLD);
+}
+*/
+
+MPI_Gatherv(&map_output[0],pix_count_arr[commRank],SZ_OUT_MPI_Type,
+            &map_output2[0],&pix_count_arr[0],&recv_offset_arr[0],SZ_OUT_MPI_Type,0,MPI_COMM_WORLD);
+
+//  MPI_Gatherv(&map_output[0],pix_count_arr[commRank], SZ_OUT_MPI_Type,\
+                   &map_output[0],&pix_count_arr[0],&recv_offset_arr[0],SZ_OUT_MPI_Type,0, MPI_COMM_WORLD);
+
+  std::sort(map_output2.begin(),map_output2.end(),comp_by_pixnum);
+
+ // now just have to write out the map 
+
+  arr<float> map_output_total_ksz_float(npix);
+  arr<float> map_output_total_tsz_float(npix);
+  for (int64_t j=0; j<npix; j++) {
+    map_output_total_ksz_float[j] = map_output2[j].ksz; 
+    map_output_total_tsz_float[j] = map_output2[j].tsz;
+  }
+  if(commRank == root_process) printf("about to write ksz and tsz files\n");
+
+  Healpix_Map<float> map_new_ksz(map_output_total_ksz_float,ring);
+  Healpix_Map<float> map_new_tsz(map_output_total_tsz_float,ring);
+  if(commRank == root_process) printf("about to write ksz and tsz files\n");
+    write_Healpix_map_to_fits(outfile_ksz,map_new_ksz,planckType<float>());
+    write_Healpix_map_to_fits(outfile_tsz,map_new_tsz,planckType<float>());
+
+
+
+/*
 
   t3 = MPI_Wtime();
   if(commRank == root_process) printf(" ELAPSED TIME FOR FIRST STAGE: %f\n", t3 - t1 );
@@ -349,26 +580,18 @@ int main(int argc, char *argv[]) {
   sum_count_ksz = sqrt(sum_count_ksz)/npix;
   sum_count_tsz = sqrt(sum_count_tsz)/npix;
   if(commRank == root_process) std::cout << " mean squared y: " << sum_count_tsz << " b: " << sum_count_ksz << std::endl; 
+  */
 
-  arr<float> map_output_total_ksz_float(npix);
-  arr<float> map_output_total_tsz_float(npix);
-  for (int64 j=0; j<npix; j++) {
-    map_output_total_ksz_float[j] = (float)map_output_total_ksz[j]; 
-    map_output_total_tsz_float[j] = (float)map_output_total_tsz[j];
-  }
 
-  if(commRank == root_process){
-    Healpix_Map<float> map_new_ksz(map_output_total_ksz_float,ring);
-    Healpix_Map<float> map_new_tsz(map_output_total_tsz_float,ring);
-    if(commRank == root_process) printf("about to write ksz and tsz files\n");
-    write_Healpix_map_to_fits(outfile_ksz,map_new_ksz,planckType<float>());
-    write_Healpix_map_to_fits(outfile_tsz,map_new_tsz,planckType<float>());
-  }
 
   t2 = MPI_Wtime();
   if(commRank == root_process) printf( "Elapsed time is %f\n", t2 - t1 );
 
+
   MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Type_free(&SZ_MPI_Type);
+  MPI_Type_free(&SZ_OUT_MPI_Type);
+
   MPI_Finalize();
 
   return 0;
