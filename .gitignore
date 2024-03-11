@@ -10,6 +10,7 @@ density_maps/*.output
 pixelize_halo_lightcones/LJ/*.error
 pixelize_halo_lightcones/LJ/*.cobaltlog
 pixelize_halo_lightcones/LJ/*.output
+pixelize_halo_lightcones/LJ/pixelize_LJ
 
 cic2gio/logs/*.error
 cic2gio/logs/*.cobaltlog
