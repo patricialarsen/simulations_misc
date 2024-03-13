@@ -1,0 +1,846 @@
+
+Lmod is automatically replacing "nvhpc/21.9" with "gcc/11.2.0".
+
+
+Lmod is automatically replacing "PrgEnv-nvhpc/8.3.3" with "PrgEnv-gnu/8.3.3".
+
+
+Due to MODULEPATH changes, the following have been reloaded:
+  1) cray-mpich/8.1.16
+
+
+The following have been reloaded with a version change:
+  1) gcc/11.2.0 => gcc/10.3.0
+
+[1;96m----------------------------------------------------------------------------------
+[1;96m     cmake 3.23.2 successfully loaded
+[1;96m----------------------------------------------------------------------------------
+[0mWorking directory is /home/prlarsen/codes/simulations_misc_new/simulations_misc/density_maps
+NUM_OF_NODES=64  TOTAL_NUM_RANKS=512  RANKS_PER_NODE=8  THREADS_PER_RANK=4
+300
+hybrid_sg defined
+rank diff = 8 
+commRanks = 512 
+OpenMP is defined 
+Created get_pix_list_rank  
+Elapsed time for initialization is 0.355771
+Read 18 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_SEED_1.25e6_NPERH_AGN_2_NEWCOSMO/output/m000p.lc.mpicosmo.300 (48604627283 bytes) in 1.12056s: 41366 MB/s [excluding header read]
+Redistribute time is 7.869733
+a values: average = 0.483382, minimum value = 0.482587, maximum value = 0.484179
+T values (CGS units): average = 852110, minimum value = 180.668, maximum value = 2.86537e+09
+mu values: average = 0.595048, minimum value = 0.592003, maximum value = 0.726396
+Reading in Cloudy Metadata...
+CLOUDY Metadata:
+  a_min : 0.114943 a_max : 1.000000 n_a : 50 da: 0.018062
+  Yp_min : 0.250000 Yp_max : 0.330000 n_Yp : 5 dYp: 0.020000
+  R_min : 0.000000 R_max : 10.000000 n_R : 50 dR: 0.204082
+  nH_min : -8.000000 nH_max : 5.000000 n_nH : 200 dnH: 0.065327
+  T_min : 0.000000 T_max : 9.000000 n_T : 226 dT: 0.040000
+  m_tsize: 11300000
+map tsz sum = 1.79574e-05
+particle tsz sum = 1.79643e-05
+particle tsz sum (adiabatic) = 1.79793e-05
+CIC time is 5.108366
+Starting file output 
+Write time is 4.398353
+Elapsed time is 17.732230
+301
+hybrid_sg defined
+rank diff = 8 
+commRanks = 512 
+OpenMP is defined 
+Created get_pix_list_rank  
+Elapsed time for initialization is 0.369554
+Read 18 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_SEED_1.25e6_NPERH_AGN_2_NEWCOSMO/output/m000p.lc.mpicosmo.301 (42401423583 bytes) in 0.919252s: 43989.2 MB/s [excluding header read]
+Redistribute time is 7.680694
+a values: average = 0.484974, minimum value = 0.484179, maximum value = 0.485771
+T values (CGS units): average = 853069, minimum value = 164.4, maximum value = 3.83254e+09
+mu values: average = 0.595064, minimum value = 0.592003, maximum value = 0.7238
+Reading in Cloudy Metadata...
+CLOUDY Metadata:
+  a_min : 0.114943 a_max : 1.000000 n_a : 50 da: 0.018062
+  Yp_min : 0.250000 Yp_max : 0.330000 n_Yp : 5 dYp: 0.020000
+  R_min : 0.000000 R_max : 10.000000 n_R : 50 dR: 0.204082
+  nH_min : -8.000000 nH_max : 5.000000 n_nH : 200 dnH: 0.065327
+  T_min : 0.000000 T_max : 9.000000 n_T : 226 dT: 0.040000
+  m_tsize: 11300000
+map tsz sum = 1.99247e-05
+particle tsz sum = 1.99333e-05
+particle tsz sum (adiabatic) = 1.99485e-05
+CIC time is 2.968404
+Starting file output 
+Write time is 4.396709
+Elapsed time is 15.415368
+302
+hybrid_sg defined
+rank diff = 8 
+commRanks = 512 
+OpenMP is defined 
+Created get_pix_list_rank  
+Elapsed time for initialization is 0.346025
+Read 18 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_SEED_1.25e6_NPERH_AGN_2_NEWCOSMO/output/m000p.lc.mpicosmo.302 (42069507835 bytes) in 0.89748s: 44703.6 MB/s [excluding header read]
+Redistribute time is 7.227545
+a values: average = 0.486566, minimum value = 0.485771, maximum value = 0.487363
+T values (CGS units): average = 862635, minimum value = 160.798, maximum value = 7.96039e+09
+mu values: average = 0.59508, minimum value = 0.592003, maximum value = 0.73068
+Reading in Cloudy Metadata...
+CLOUDY Metadata:
+  a_min : 0.114943 a_max : 1.000000 n_a : 50 da: 0.018062
+  Yp_min : 0.250000 Yp_max : 0.330000 n_Yp : 5 dYp: 0.020000
+  R_min : 0.000000 R_max : 10.000000 n_R : 50 dR: 0.204082
+  nH_min : -8.000000 nH_max : 5.000000 n_nH : 200 dnH: 0.065327
+  T_min : 0.000000 T_max : 9.000000 n_T : 226 dT: 0.040000
+  m_tsize: 11300000
+map tsz sum = 1.79405e-05
+particle tsz sum = 1.79479e-05
+particle tsz sum (adiabatic) = 1.7962e-05
+CIC time is 2.585924
+Starting file output 
+Write time is 4.299633
+Elapsed time is 14.459134
+303
+hybrid_sg defined
+rank diff = 8 
+commRanks = 512 
+OpenMP is defined 
+Created get_pix_list_rank  
+Elapsed time for initialization is 0.359092
+Read 18 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_SEED_1.25e6_NPERH_AGN_2_NEWCOSMO/output/m000p.lc.mpicosmo.303 (47156267875 bytes) in 0.942504s: 47715.1 MB/s [excluding header read]
+Redistribute time is 7.569281
+a values: average = 0.488158, minimum value = 0.487363, maximum value = 0.488955
+T values (CGS units): average = 870063, minimum value = 157.385, maximum value = 8.63923e+09
+mu values: average = 0.595097, minimum value = 0.592003, maximum value = 0.743879
+Reading in Cloudy Metadata...
+CLOUDY Metadata:
+  a_min : 0.114943 a_max : 1.000000 n_a : 50 da: 0.018062
+  Yp_min : 0.250000 Yp_max : 0.330000 n_Yp : 5 dYp: 0.020000
+  R_min : 0.000000 R_max : 10.000000 n_R : 50 dR: 0.204082
+  nH_min : -8.000000 nH_max : 5.000000 n_nH : 200 dnH: 0.065327
+  T_min : 0.000000 T_max : 9.000000 n_T : 226 dT: 0.040000
+  m_tsize: 11300000
+map tsz sum = 1.83257e-05
+particle tsz sum = 1.83333e-05
+particle tsz sum (adiabatic) = 1.83482e-05
+CIC time is 2.144169
+Starting file output 
+Write time is 4.107178
+Elapsed time is 14.179726
+304
+hybrid_sg defined
+rank diff = 8 
+commRanks = 512 
+OpenMP is defined 
+Created get_pix_list_rank  
+Elapsed time for initialization is 20.371741
+Read 18 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_SEED_1.25e6_NPERH_AGN_2_NEWCOSMO/output/m000p.lc.mpicosmo.304 (46646490478 bytes) in 1.09086s: 40780.3 MB/s [excluding header read]
+Redistribute time is 7.538804
+a values: average = 0.48975, minimum value = 0.488955, maximum value = 0.490547
+T values (CGS units): average = 877856, minimum value = 158.711, maximum value = 6.48783e+09
+mu values: average = 0.595111, minimum value = 0.592003, maximum value = 0.725265
+Reading in Cloudy Metadata...
+CLOUDY Metadata:
+  a_min : 0.114943 a_max : 1.000000 n_a : 50 da: 0.018062
+  Yp_min : 0.250000 Yp_max : 0.330000 n_Yp : 5 dYp: 0.020000
+  R_min : 0.000000 R_max : 10.000000 n_R : 50 dR: 0.204082
+  nH_min : -8.000000 nH_max : 5.000000 n_nH : 200 dnH: 0.065327
+  T_min : 0.000000 T_max : 9.000000 n_T : 226 dT: 0.040000
+  m_tsize: 11300000
+map tsz sum = 1.70668e-05
+particle tsz sum = 1.70728e-05
+particle tsz sum (adiabatic) = 1.70872e-05
+CIC time is 2.547109
+Starting file output 
+Write time is 3.895613
+Elapsed time is 34.353273
+305
+hybrid_sg defined
+rank diff = 8 
+commRanks = 512 
+OpenMP is defined 
+Created get_pix_list_rank  
+Elapsed time for initialization is 0.368393
+Read 18 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_SEED_1.25e6_NPERH_AGN_2_NEWCOSMO/output/m000p.lc.mpicosmo.305 (45870468559 bytes) in 0.894547s: 48902.4 MB/s [excluding header read]
+Redistribute time is 7.642704
+a values: average = 0.491342, minimum value = 0.490547, maximum value = 0.492139
+T values (CGS units): average = 884772, minimum value = 146.204, maximum value = 5.31976e+09
+mu values: average = 0.595123, minimum value = 0.592003, maximum value = 0.726596
+Reading in Cloudy Metadata...
+CLOUDY Metadata:
+  a_min : 0.114943 a_max : 1.000000 n_a : 50 da: 0.018062
+  Yp_min : 0.250000 Yp_max : 0.330000 n_Yp : 5 dYp: 0.020000
+  R_min : 0.000000 R_max : 10.000000 n_R : 50 dR: 0.204082
+  nH_min : -8.000000 nH_max : 5.000000 n_nH : 200 dnH: 0.065327
+  T_min : 0.000000 T_max : 9.000000 n_T : 226 dT: 0.040000
+  m_tsize: 11300000
+map tsz sum = 1.59413e-05
+particle tsz sum = 1.59475e-05
+particle tsz sum (adiabatic) = 1.59606e-05
+CIC time is 2.569966
+Starting file output 
+Write time is 4.499820
+Elapsed time is 15.080888
+306
+hybrid_sg defined
+rank diff = 8 
+commRanks = 512 
+OpenMP is defined 
+Created get_pix_list_rank  
+Elapsed time for initialization is 0.365562
+Read 18 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_SEED_1.25e6_NPERH_AGN_2_NEWCOSMO/output/m000p.lc.mpicosmo.306 (39789581219 bytes) in 0.852492s: 44512.2 MB/s [excluding header read]
+Redistribute time is 7.318636
+a values: average = 0.492933, minimum value = 0.492139, maximum value = 0.493731
+T values (CGS units): average = 892099, minimum value = 115.474, maximum value = 8.98379e+09
+mu values: average = 0.595137, minimum value = 0.592003, maximum value = 0.730074
+Reading in Cloudy Metadata...
+CLOUDY Metadata:
+  a_min : 0.114943 a_max : 1.000000 n_a : 50 da: 0.018062
+  Yp_min : 0.250000 Yp_max : 0.330000 n_Yp : 5 dYp: 0.020000
+  R_min : 0.000000 R_max : 10.000000 n_R : 50 dR: 0.204082
+  nH_min : -8.000000 nH_max : 5.000000 n_nH : 200 dnH: 0.065327
+  T_min : 0.000000 T_max : 9.000000 n_T : 226 dT: 0.040000
+  m_tsize: 11300000
+map tsz sum = 1.41755e-05
+particle tsz sum = 1.41815e-05
+particle tsz sum (adiabatic) = 1.41926e-05
+CIC time is 2.588543
+Starting file output 
+Write time is 4.200839
+Elapsed time is 14.473584
+307
+hybrid_sg defined
+rank diff = 8 
+commRanks = 512 
+OpenMP is defined 
+Created get_pix_list_rank  
+Elapsed time for initialization is 0.354716
+Read 18 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_SEED_1.25e6_NPERH_AGN_2_NEWCOSMO/output/m000p.lc.mpicosmo.307 (44907995265 bytes) in 0.847797s: 50516.3 MB/s [excluding header read]
+Redistribute time is 7.387894
+a values: average = 0.494525, minimum value = 0.493731, maximum value = 0.495323
+T values (CGS units): average = 889520, minimum value = 111.702, maximum value = 7.95668e+09
+mu values: average = 0.595147, minimum value = 0.592003, maximum value = 0.723971
+Reading in Cloudy Metadata...
+CLOUDY Metadata:
+  a_min : 0.114943 a_max : 1.000000 n_a : 50 da: 0.018062
+  Yp_min : 0.250000 Yp_max : 0.330000 n_Yp : 5 dYp: 0.020000
+  R_min : 0.000000 R_max : 10.000000 n_R : 50 dR: 0.204082
+  nH_min : -8.000000 nH_max : 5.000000 n_nH : 200 dnH: 0.065327
+  T_min : 0.000000 T_max : 9.000000 n_T : 226 dT: 0.040000
+  m_tsize: 11300000
+map tsz sum = 1.22239e-05
+particle tsz sum = 1.22285e-05
+particle tsz sum (adiabatic) = 1.22387e-05
+CIC time is 2.663733
+Starting file output 
+Write time is 4.317340
+Elapsed time is 14.723689
+308
+hybrid_sg defined
+rank diff = 8 
+commRanks = 512 
+OpenMP is defined 
+Created get_pix_list_rank  
+Elapsed time for initialization is 0.369090
+Read 18 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_SEED_1.25e6_NPERH_AGN_2_NEWCOSMO/output/m000p.lc.mpicosmo.308 (44360421307 bytes) in 0.879853s: 48082.4 MB/s [excluding header read]
+Redistribute time is 7.358966
+a values: average = 0.496118, minimum value = 0.495323, maximum value = 0.496915
+T values (CGS units): average = 909927, minimum value = 127.025, maximum value = 4.54069e+09
+mu values: average = 0.595155, minimum value = 0.592003, maximum value = 0.724346
+Reading in Cloudy Metadata...
+CLOUDY Metadata:
+  a_min : 0.114943 a_max : 1.000000 n_a : 50 da: 0.018062
+  Yp_min : 0.250000 Yp_max : 0.330000 n_Yp : 5 dYp: 0.020000
+  R_min : 0.000000 R_max : 10.000000 n_R : 50 dR: 0.204082
+  nH_min : -8.000000 nH_max : 5.000000 n_nH : 200 dnH: 0.065327
+  T_min : 0.000000 T_max : 9.000000 n_T : 226 dT: 0.040000
+  m_tsize: 11300000
+map tsz sum = 1.56319e-05
+particle tsz sum = 1.56381e-05
+particle tsz sum (adiabatic) = 1.56511e-05
+CIC time is 2.103761
+Starting file output 
+Write time is 4.910832
+Elapsed time is 14.742656
+309
+hybrid_sg defined
+rank diff = 8 
+commRanks = 512 
+OpenMP is defined 
+Created get_pix_list_rank  
+Elapsed time for initialization is 0.369102
+Read 18 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_SEED_1.25e6_NPERH_AGN_2_NEWCOSMO/output/m000p.lc.mpicosmo.309 (38672674429 bytes) in 0.851667s: 43304.6 MB/s [excluding header read]
+Redistribute time is 7.421255
+a values: average = 0.49771, minimum value = 0.496915, maximum value = 0.498507
+T values (CGS units): average = 913637, minimum value = 128.357, maximum value = 7.37773e+09
+mu values: average = 0.595172, minimum value = 0.592003, maximum value = 0.717873
+Reading in Cloudy Metadata...
+CLOUDY Metadata:
+  a_min : 0.114943 a_max : 1.000000 n_a : 50 da: 0.018062
+  Yp_min : 0.250000 Yp_max : 0.330000 n_Yp : 5 dYp: 0.020000
+  R_min : 0.000000 R_max : 10.000000 n_R : 50 dR: 0.204082
+  nH_min : -8.000000 nH_max : 5.000000 n_nH : 200 dnH: 0.065327
+  T_min : 0.000000 T_max : 9.000000 n_T : 226 dT: 0.040000
+  m_tsize: 11300000
+map tsz sum = 1.50743e-05
+particle tsz sum = 1.50801e-05
+particle tsz sum (adiabatic) = 1.50926e-05
+CIC time is 2.492775
+Starting file output 
+Write time is 4.724960
+Elapsed time is 15.008098
+310
+hybrid_sg defined
+rank diff = 8 
+commRanks = 512 
+OpenMP is defined 
+Created get_pix_list_rank  
+Elapsed time for initialization is 0.365487
+Read 18 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_SEED_1.25e6_NPERH_AGN_2_NEWCOSMO/output/m000p.lc.mpicosmo.310 (3631147322953 bytes) in 29.5424s: 117219 MB/s [excluding header read]
+Redistribute time is 188.650214
+a values: average = 0.499302, minimum value = 0.498507, maximum value = 0.500099
+T values (CGS units): average = 915877, minimum value = 76.3038, maximum value = 2.46292e+10
+mu values: average = 0.595184, minimum value = 0.592003, maximum value = 0.755908
+Reading in Cloudy Metadata...
+CLOUDY Metadata:
+  a_min : 0.114943 a_max : 1.000000 n_a : 50 da: 0.018062
+  Yp_min : 0.250000 Yp_max : 0.330000 n_Yp : 5 dYp: 0.020000
+  R_min : 0.000000 R_max : 10.000000 n_R : 50 dR: 0.204082
+  nH_min : -8.000000 nH_max : 5.000000 n_nH : 200 dnH: 0.065327
+  T_min : 0.000000 T_max : 9.000000 n_T : 226 dT: 0.040000
+  m_tsize: 11300000
+map tsz sum = 0.00172048
+particle tsz sum = 0.00172117
+particle tsz sum (adiabatic) = 0.00172256
+CIC time is 133.586108
+Starting file output 
+Write time is 4.508224
+Elapsed time is 327.110039
+311
+hybrid_sg defined
+rank diff = 8 
+commRanks = 512 
+OpenMP is defined 
+Created get_pix_list_rank  
+Elapsed time for initialization is 0.355248
+Read 18 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_SEED_1.25e6_NPERH_AGN_2_NEWCOSMO/output/m000p.lc.mpicosmo.311 (3560694380833 bytes) in 37.2805s: 91086.3 MB/s [excluding header read]
+Redistribute time is 203.032688
+a values: average = 0.500894, minimum value = 0.500099, maximum value = 0.501692
+T values (CGS units): average = 929797, minimum value = 75.63, maximum value = 2.79625e+10
+mu values: average = 0.595198, minimum value = 0.592003, maximum value = 0.757413
+Reading in Cloudy Metadata...
+CLOUDY Metadata:
+  a_min : 0.114943 a_max : 1.000000 n_a : 50 da: 0.018062
+  Yp_min : 0.250000 Yp_max : 0.330000 n_Yp : 5 dYp: 0.020000
+  R_min : 0.000000 R_max : 10.000000 n_R : 50 dR: 0.204082
+  nH_min : -8.000000 nH_max : 5.000000 n_nH : 200 dnH: 0.065327
+  T_min : 0.000000 T_max : 9.000000 n_T : 226 dT: 0.040000
+  m_tsize: 11300000
+map tsz sum = 0.00133567
+particle tsz sum = 0.00133615
+particle tsz sum (adiabatic) = 0.00133729
+CIC time is 132.085546
+Starting file output 
+Write time is 4.267618
+Elapsed time is 339.741107
+312
+hybrid_sg defined
+rank diff = 8 
+commRanks = 512 
+OpenMP is defined 
+Created get_pix_list_rank  
+Elapsed time for initialization is 0.350089
+Read 18 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_SEED_1.25e6_NPERH_AGN_2_NEWCOSMO/output/m000p.lc.mpicosmo.312 (3496742896544 bytes) in 22.7588s: 146526 MB/s [excluding header read]
+Redistribute time is 179.479300
+a values: average = 0.502486, minimum value = 0.501692, maximum value = 0.503284
+T values (CGS units): average = 935346, minimum value = 89.5366, maximum value = 1.98486e+10
+mu values: average = 0.595214, minimum value = 0.592003, maximum value = 0.762405
+Reading in Cloudy Metadata...
+CLOUDY Metadata:
+  a_min : 0.114943 a_max : 1.000000 n_a : 50 da: 0.018062
+  Yp_min : 0.250000 Yp_max : 0.330000 n_Yp : 5 dYp: 0.020000
+  R_min : 0.000000 R_max : 10.000000 n_R : 50 dR: 0.204082
+  nH_min : -8.000000 nH_max : 5.000000 n_nH : 200 dnH: 0.065327
+  T_min : 0.000000 T_max : 9.000000 n_T : 226 dT: 0.040000
+  m_tsize: 11300000
+map tsz sum = 0.00172453
+particle tsz sum = 0.00172519
+particle tsz sum (adiabatic) = 0.00172662
+CIC time is 127.697056
+Starting file output 
+Write time is 4.229871
+Elapsed time is 311.756323
+313
+hybrid_sg defined
+rank diff = 8 
+commRanks = 512 
+OpenMP is defined 
+Created get_pix_list_rank  
+Elapsed time for initialization is 0.369090
+Read 18 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_SEED_1.25e6_NPERH_AGN_2_NEWCOSMO/output/m000p.lc.mpicosmo.313 (3476426651732 bytes) in 22.1495s: 149682 MB/s [excluding header read]
+Redistribute time is 177.426656
+a values: average = 0.504078, minimum value = 0.503284, maximum value = 0.504876
+T values (CGS units): average = 946216, minimum value = 90.4762, maximum value = 1.39278e+10
+mu values: average = 0.595226, minimum value = 0.592003, maximum value = 0.771967
+Reading in Cloudy Metadata...
+CLOUDY Metadata:
+  a_min : 0.114943 a_max : 1.000000 n_a : 50 da: 0.018062
+  Yp_min : 0.250000 Yp_max : 0.330000 n_Yp : 5 dYp: 0.020000
+  R_min : 0.000000 R_max : 10.000000 n_R : 50 dR: 0.204082
+  nH_min : -8.000000 nH_max : 5.000000 n_nH : 200 dnH: 0.065327
+  T_min : 0.000000 T_max : 9.000000 n_T : 226 dT: 0.040000
+  m_tsize: 11300000
+map tsz sum = 0.0019665
+particle tsz sum = 0.00196733
+particle tsz sum (adiabatic) = 0.00196881
+CIC time is 154.650036
+Starting file output 
+Write time is 3.933190
+Elapsed time is 336.378980
+314
+hybrid_sg defined
+rank diff = 8 
+commRanks = 512 
+OpenMP is defined 
+Created get_pix_list_rank  
+Elapsed time for initialization is 0.355284
+Read 18 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_SEED_1.25e6_NPERH_AGN_2_NEWCOSMO/output/m000p.lc.mpicosmo.314 (3403503059247 bytes) in 26.3675s: 123100 MB/s [excluding header read]
+Redistribute time is 181.937449
+a values: average = 0.50567, minimum value = 0.504876, maximum value = 0.506468
+T values (CGS units): average = 935637, minimum value = 65.293, maximum value = 2.51724e+10
+mu values: average = 0.595241, minimum value = 0.592003, maximum value = 0.756637
+Reading in Cloudy Metadata...
+CLOUDY Metadata:
+  a_min : 0.114943 a_max : 1.000000 n_a : 50 da: 0.018062
+  Yp_min : 0.250000 Yp_max : 0.330000 n_Yp : 5 dYp: 0.020000
+  R_min : 0.000000 R_max : 10.000000 n_R : 50 dR: 0.204082
+  nH_min : -8.000000 nH_max : 5.000000 n_nH : 200 dnH: 0.065327
+  T_min : 0.000000 T_max : 9.000000 n_T : 226 dT: 0.040000
+  m_tsize: 11300000
+map tsz sum = 0.0020603
+particle tsz sum = 0.00206117
+particle tsz sum (adiabatic) = 0.00206276
+CIC time is 127.792402
+Starting file output 
+Write time is 4.867176
+Elapsed time is 314.952317
+315
+hybrid_sg defined
+rank diff = 8 
+commRanks = 512 
+OpenMP is defined 
+Created get_pix_list_rank  
+Elapsed time for initialization is 0.359386
+Read 18 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_SEED_1.25e6_NPERH_AGN_2_NEWCOSMO/output/m000p.lc.mpicosmo.315 (3374263036655 bytes) in 38.6303s: 83301.2 MB/s [excluding header read]
+Redistribute time is 196.832556
+a values: average = 0.507262, minimum value = 0.506468, maximum value = 0.50806
+T values (CGS units): average = 957194, minimum value = 67.4126, maximum value = 2.46017e+10
+mu values: average = 0.595258, minimum value = 0.592003, maximum value = 0.76932
+Reading in Cloudy Metadata...
+CLOUDY Metadata:
+  a_min : 0.114943 a_max : 1.000000 n_a : 50 da: 0.018062
+  Yp_min : 0.250000 Yp_max : 0.330000 n_Yp : 5 dYp: 0.020000
+  R_min : 0.000000 R_max : 10.000000 n_R : 50 dR: 0.204082
+  nH_min : -8.000000 nH_max : 5.000000 n_nH : 200 dnH: 0.065327
+  T_min : 0.000000 T_max : 9.000000 n_T : 226 dT: 0.040000
+  m_tsize: 11300000
+map tsz sum = 0.00185353
+particle tsz sum = 0.00185433
+particle tsz sum (adiabatic) = 0.00185575
+CIC time is 145.075000
+Starting file output 
+Write time is 4.464431
+Elapsed time is 346.731380
+316
+hybrid_sg defined
+rank diff = 8 
+commRanks = 512 
+OpenMP is defined 
+Created get_pix_list_rank  
+Elapsed time for initialization is 0.319643
+Read 18 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_SEED_1.25e6_NPERH_AGN_2_NEWCOSMO/output/m000p.lc.mpicosmo.316 (3329294468348 bytes) in 26.7404s: 118737 MB/s [excluding header read]
+Redistribute time is 215.557440
+a values: average = 0.508855, minimum value = 0.50806, maximum value = 0.509652
+T values (CGS units): average = 965963, minimum value = 94.7517, maximum value = 2.94639e+10
+mu values: average = 0.595277, minimum value = 0.592003, maximum value = 0.782454
+Reading in Cloudy Metadata...
+CLOUDY Metadata:
+  a_min : 0.114943 a_max : 1.000000 n_a : 50 da: 0.018062
+  Yp_min : 0.250000 Yp_max : 0.330000 n_Yp : 5 dYp: 0.020000
+  R_min : 0.000000 R_max : 10.000000 n_R : 50 dR: 0.204082
+  nH_min : -8.000000 nH_max : 5.000000 n_nH : 200 dnH: 0.065327
+  T_min : 0.000000 T_max : 9.000000 n_T : 226 dT: 0.040000
+  m_tsize: 11300000
+map tsz sum = 0.00158172
+particle tsz sum = 0.00158236
+particle tsz sum (adiabatic) = 0.00158362
+CIC time is 126.145546
+Starting file output 
+Write time is 4.274120
+Elapsed time is 346.296756
+317
+hybrid_sg defined
+rank diff = 8 
+commRanks = 512 
+OpenMP is defined 
+Created get_pix_list_rank  
+Elapsed time for initialization is 0.367933
+Read 18 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_SEED_1.25e6_NPERH_AGN_2_NEWCOSMO/output/m000p.lc.mpicosmo.317 (3271129229883 bytes) in 30.4574s: 102425 MB/s [excluding header read]
+Redistribute time is 239.549082
+a values: average = 0.510446, minimum value = 0.509652, maximum value = 0.511244
+T values (CGS units): average = 975134, minimum value = 68.1747, maximum value = 9.52866e+10
+mu values: average = 0.595296, minimum value = 0.592003, maximum value = 0.766065
+Reading in Cloudy Metadata...
+CLOUDY Metadata:
+  a_min : 0.114943 a_max : 1.000000 n_a : 50 da: 0.018062
+  Yp_min : 0.250000 Yp_max : 0.330000 n_Yp : 5 dYp: 0.020000
+  R_min : 0.000000 R_max : 10.000000 n_R : 50 dR: 0.204082
+  nH_min : -8.000000 nH_max : 5.000000 n_nH : 200 dnH: 0.065327
+  T_min : 0.000000 T_max : 9.000000 n_T : 226 dT: 0.040000
+  m_tsize: 11300000
+map tsz sum = 0.00152184
+particle tsz sum = 0.00152242
+particle tsz sum (adiabatic) = 0.0015237
+CIC time is 131.634865
+Starting file output 
+Write time is 4.785861
+Elapsed time is 376.337748
+318
+hybrid_sg defined
+rank diff = 8 
+commRanks = 512 
+OpenMP is defined 
+Created get_pix_list_rank  
+Elapsed time for initialization is 0.353629
+Read 18 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_SEED_1.25e6_NPERH_AGN_2_NEWCOSMO/output/m000p.lc.mpicosmo.318 (3217722212971 bytes) in 28.637s: 107157 MB/s [excluding header read]
+x3004c0s31b1n0.hsn.cm.polaris.alcf.anl.gov: rank 456 died from signal 11 and dumped core
+319
+hybrid_sg defined
+rank diff = 8 
+commRanks = 512 
+OpenMP is defined 
+Created get_pix_list_rank  
+Elapsed time for initialization is 0.357555
+Read 18 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_SEED_1.25e6_NPERH_AGN_2_NEWCOSMO/output/m000p.lc.mpicosmo.319 (3158657985732 bytes) in 28.8294s: 104488 MB/s [excluding header read]
+Redistribute time is 265.044929
+a values: average = 0.513631, minimum value = 0.512836, maximum value = 0.514428
+T values (CGS units): average = 983905, minimum value = 67.3665, maximum value = 1.356e+10
+mu values: average = 0.595327, minimum value = 0.592003, maximum value = 0.757874
+Reading in Cloudy Metadata...
+CLOUDY Metadata:
+  a_min : 0.114943 a_max : 1.000000 n_a : 50 da: 0.018062
+  Yp_min : 0.250000 Yp_max : 0.330000 n_Yp : 5 dYp: 0.020000
+  R_min : 0.000000 R_max : 10.000000 n_R : 50 dR: 0.204082
+  nH_min : -8.000000 nH_max : 5.000000 n_nH : 200 dnH: 0.065327
+  T_min : 0.000000 T_max : 9.000000 n_T : 226 dT: 0.040000
+  m_tsize: 11300000
+map tsz sum = 0.00133362
+particle tsz sum = 0.00133411
+particle tsz sum (adiabatic) = 0.00133523
+CIC time is 119.224342
+Starting file output 
+Write time is 4.461690
+Elapsed time is 389.088522
+320
+hybrid_sg defined
+rank diff = 8 
+commRanks = 512 
+OpenMP is defined 
+Created get_pix_list_rank  
+Elapsed time for initialization is 0.349113
+Read 18 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_SEED_1.25e6_NPERH_AGN_2_NEWCOSMO/output/m000p.lc.mpicosmo.320 (3137221226174 bytes) in 26.2598s: 113934 MB/s [excluding header read]
+x3208c0s7b1n0.hsn.cm.polaris.alcf.anl.gov: rank 53 died from signal 11 and dumped core
+321
+hybrid_sg defined
+rank diff = 8 
+commRanks = 512 
+OpenMP is defined 
+Created get_pix_list_rank  
+Elapsed time for initialization is 0.369637
+Read 18 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_SEED_1.25e6_NPERH_AGN_2_NEWCOSMO/output/m000p.lc.mpicosmo.321 (3097394640025 bytes) in 28.2351s: 104618 MB/s [excluding header read]
+Redistribute time is 220.142677
+a values: average = 0.516814, minimum value = 0.51602, maximum value = 0.517612
+T values (CGS units): average = 997322, minimum value = 80.3426, maximum value = 6.86684e+10
+mu values: average = 0.595355, minimum value = 0.592003, maximum value = 0.754411
+Reading in Cloudy Metadata...
+CLOUDY Metadata:
+  a_min : 0.114943 a_max : 1.000000 n_a : 50 da: 0.018062
+  Yp_min : 0.250000 Yp_max : 0.330000 n_Yp : 5 dYp: 0.020000
+  R_min : 0.000000 R_max : 10.000000 n_R : 50 dR: 0.204082
+  nH_min : -8.000000 nH_max : 5.000000 n_nH : 200 dnH: 0.065327
+  T_min : 0.000000 T_max : 9.000000 n_T : 226 dT: 0.040000
+  m_tsize: 11300000
+map tsz sum = 0.00106636
+particle tsz sum = 0.00106672
+particle tsz sum (adiabatic) = 0.00106769
+CIC time is 121.544754
+Starting file output 
+Write time is 4.380581
+Elapsed time is 346.437655
+322
+hybrid_sg defined
+rank diff = 8 
+commRanks = 512 
+OpenMP is defined 
+Created get_pix_list_rank  
+Elapsed time for initialization is 0.369172
+Read 18 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_SEED_1.25e6_NPERH_AGN_2_NEWCOSMO/output/m000p.lc.mpicosmo.322 (3030457331931 bytes) in 24.6122s: 117424 MB/s [excluding header read]
+Redistribute time is 195.415837
+a values: average = 0.518407, minimum value = 0.517612, maximum value = 0.519204
+T values (CGS units): average = 1.00767e+06, minimum value = 82.5349, maximum value = 8.26033e+10
+mu values: average = 0.595368, minimum value = 0.592003, maximum value = 0.76261
+Reading in Cloudy Metadata...
+CLOUDY Metadata:
+  a_min : 0.114943 a_max : 1.000000 n_a : 50 da: 0.018062
+  Yp_min : 0.250000 Yp_max : 0.330000 n_Yp : 5 dYp: 0.020000
+  R_min : 0.000000 R_max : 10.000000 n_R : 50 dR: 0.204082
+  nH_min : -8.000000 nH_max : 5.000000 n_nH : 200 dnH: 0.065327
+  T_min : 0.000000 T_max : 9.000000 n_T : 226 dT: 0.040000
+  m_tsize: 11300000
+map tsz sum = 0.00132849
+particle tsz sum = 0.00132899
+particle tsz sum (adiabatic) = 0.00133013
+CIC time is 119.660928
+Starting file output 
+Write time is 4.221620
+Elapsed time is 319.667564
+323
+hybrid_sg defined
+rank diff = 8 
+commRanks = 512 
+OpenMP is defined 
+Created get_pix_list_rank  
+Elapsed time for initialization is 0.368720
+Read 18 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_SEED_1.25e6_NPERH_AGN_2_NEWCOSMO/output/m000p.lc.mpicosmo.323 (3013559142458 bytes) in 23.2893s: 123402 MB/s [excluding header read]
+Redistribute time is 194.634271
+a values: average = 0.519998, minimum value = 0.519204, maximum value = 0.520796
+T values (CGS units): average = 1.02723e+06, minimum value = 76.458, maximum value = 5.79489e+10
+mu values: average = 0.595381, minimum value = 0.592003, maximum value = 0.755803
+Reading in Cloudy Metadata...
+CLOUDY Metadata:
+  a_min : 0.114943 a_max : 1.000000 n_a : 50 da: 0.018062
+  Yp_min : 0.250000 Yp_max : 0.330000 n_Yp : 5 dYp: 0.020000
+  R_min : 0.000000 R_max : 10.000000 n_R : 50 dR: 0.204082
+  nH_min : -8.000000 nH_max : 5.000000 n_nH : 200 dnH: 0.065327
+  T_min : 0.000000 T_max : 9.000000 n_T : 226 dT: 0.040000
+  m_tsize: 11300000
+map tsz sum = 0.00107717
+particle tsz sum = 0.00107753
+particle tsz sum (adiabatic) = 0.00107849
+CIC time is 116.398847
+Starting file output 
+Write time is 4.261453
+Elapsed time is 315.663298
+324
+hybrid_sg defined
+rank diff = 8 
+commRanks = 512 
+OpenMP is defined 
+Created get_pix_list_rank  
+Elapsed time for initialization is 0.362962
+Read 18 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_SEED_1.25e6_NPERH_AGN_2_NEWCOSMO/output/m000p.lc.mpicosmo.324 (2945811381520 bytes) in 22.4336s: 125229 MB/s [excluding header read]
+Redistribute time is 196.563717
+a values: average = 0.52159, minimum value = 0.520796, maximum value = 0.522388
+T values (CGS units): average = 1.01196e+06, minimum value = 75.1378, maximum value = 3.34333e+10
+mu values: average = 0.595395, minimum value = 0.592003, maximum value = 0.759917
+Reading in Cloudy Metadata...
+CLOUDY Metadata:
+  a_min : 0.114943 a_max : 1.000000 n_a : 50 da: 0.018062
+  Yp_min : 0.250000 Yp_max : 0.330000 n_Yp : 5 dYp: 0.020000
+  R_min : 0.000000 R_max : 10.000000 n_R : 50 dR: 0.204082
+  nH_min : -8.000000 nH_max : 5.000000 n_nH : 200 dnH: 0.065327
+  T_min : 0.000000 T_max : 9.000000 n_T : 226 dT: 0.040000
+  m_tsize: 11300000
+map tsz sum = 0.00134026
+particle tsz sum = 0.00134073
+particle tsz sum (adiabatic) = 0.00134188
+CIC time is 130.917063
+Starting file output 
+Write time is 4.254150
+Elapsed time is 332.097898
+325
+hybrid_sg defined
+rank diff = 8 
+commRanks = 512 
+OpenMP is defined 
+Created get_pix_list_rank  
+Elapsed time for initialization is 0.379097
+Read 18 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_SEED_1.25e6_NPERH_AGN_2_NEWCOSMO/output/m000p.lc.mpicosmo.325 (2916968969215 bytes) in 23.595s: 117900 MB/s [excluding header read]
+Redistribute time is 202.002333
+a values: average = 0.523182, minimum value = 0.522388, maximum value = 0.52398
+T values (CGS units): average = 1.0381e+06, minimum value = 78.5011, maximum value = 3.22346e+10
+mu values: average = 0.595401, minimum value = 0.592003, maximum value = 0.7662
+Reading in Cloudy Metadata...
+CLOUDY Metadata:
+  a_min : 0.114943 a_max : 1.000000 n_a : 50 da: 0.018062
+  Yp_min : 0.250000 Yp_max : 0.330000 n_Yp : 5 dYp: 0.020000
+  R_min : 0.000000 R_max : 10.000000 n_R : 50 dR: 0.204082
+  nH_min : -8.000000 nH_max : 5.000000 n_nH : 200 dnH: 0.065327
+  T_min : 0.000000 T_max : 9.000000 n_T : 226 dT: 0.040000
+  m_tsize: 11300000
+map tsz sum = 0.00197586
+particle tsz sum = 0.00197669
+particle tsz sum (adiabatic) = 0.00197825
+CIC time is 125.844328
+Starting file output 
+Write time is 7.669309
+Elapsed time is 335.895074
+326
+hybrid_sg defined
+rank diff = 8 
+commRanks = 512 
+OpenMP is defined 
+Created get_pix_list_rank  
+Elapsed time for initialization is 0.370298
+Read 18 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_SEED_1.25e6_NPERH_AGN_2_NEWCOSMO/output/m000p.lc.mpicosmo.326 (2876393435217 bytes) in 23.496s: 116749 MB/s [excluding header read]
+Redistribute time is 193.364700
+a values: average = 0.524774, minimum value = 0.52398, maximum value = 0.525572
+T values (CGS units): average = 1.04552e+06, minimum value = 86.4958, maximum value = 2.89052e+10
+mu values: average = 0.595413, minimum value = 0.592003, maximum value = 0.766496
+Reading in Cloudy Metadata...
+CLOUDY Metadata:
+  a_min : 0.114943 a_max : 1.000000 n_a : 50 da: 0.018062
+  Yp_min : 0.250000 Yp_max : 0.330000 n_Yp : 5 dYp: 0.020000
+  R_min : 0.000000 R_max : 10.000000 n_R : 50 dR: 0.204082
+  nH_min : -8.000000 nH_max : 5.000000 n_nH : 200 dnH: 0.065327
+  T_min : 0.000000 T_max : 9.000000 n_T : 226 dT: 0.040000
+  m_tsize: 11300000
+map tsz sum = 0.00233144
+particle tsz sum = 0.0023325
+particle tsz sum (adiabatic) = 0.00233426
+CIC time is 110.185318
+Starting file output 
+Write time is 4.018935
+Elapsed time is 307.939257
+327
+hybrid_sg defined
+rank diff = 8 
+commRanks = 512 
+OpenMP is defined 
+Created get_pix_list_rank  
+Elapsed time for initialization is 0.358797
+Read 18 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_SEED_1.25e6_NPERH_AGN_2_NEWCOSMO/output/m000p.lc.mpicosmo.327 (2811827994610 bytes) in 22.5889s: 118712 MB/s [excluding header read]
+x3208c0s7b1n0.hsn.cm.polaris.alcf.anl.gov: rank 55 died from signal 11 and dumped core
+328
+hybrid_sg defined
+rank diff = 8 
+commRanks = 512 
+OpenMP is defined 
+Created get_pix_list_rank  
+Elapsed time for initialization is 0.349869
+Read 18 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_SEED_1.25e6_NPERH_AGN_2_NEWCOSMO/output/m000p.lc.mpicosmo.328 (2784724462894 bytes) in 21.0594s: 126106 MB/s [excluding header read]
+Redistribute time is 188.342531
+a values: average = 0.527959, minimum value = 0.527164, maximum value = 0.528756
+T values (CGS units): average = 1.05279e+06, minimum value = 58.8969, maximum value = 2.52242e+10
+mu values: average = 0.595444, minimum value = 0.592003, maximum value = 0.770304
+Reading in Cloudy Metadata...
+CLOUDY Metadata:
+  a_min : 0.114943 a_max : 1.000000 n_a : 50 da: 0.018062
+  Yp_min : 0.250000 Yp_max : 0.330000 n_Yp : 5 dYp: 0.020000
+  R_min : 0.000000 R_max : 10.000000 n_R : 50 dR: 0.204082
+  nH_min : -8.000000 nH_max : 5.000000 n_nH : 200 dnH: 0.065327
+  T_min : 0.000000 T_max : 9.000000 n_T : 226 dT: 0.040000
+  m_tsize: 11300000
+map tsz sum = 0.00149532
+particle tsz sum = 0.00149592
+particle tsz sum (adiabatic) = 0.00149712
+CIC time is 106.025214
+Starting file output 
+Write time is 4.237113
+Elapsed time is 298.954737
+329
+hybrid_sg defined
+rank diff = 8 
+commRanks = 512 
+OpenMP is defined 
+Created get_pix_list_rank  
+Elapsed time for initialization is 0.360167
+Read 18 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_SEED_1.25e6_NPERH_AGN_2_NEWCOSMO/output/m000p.lc.mpicosmo.329 (2744069698387 bytes) in 21.8367s: 119842 MB/s [excluding header read]
+Redistribute time is 179.178586
+a values: average = 0.529551, minimum value = 0.528756, maximum value = 0.530348
+T values (CGS units): average = 1.05347e+06, minimum value = 66.759, maximum value = 3.42434e+10
+mu values: average = 0.595459, minimum value = 0.592003, maximum value = 0.763532
+Reading in Cloudy Metadata...
+CLOUDY Metadata:
+  a_min : 0.114943 a_max : 1.000000 n_a : 50 da: 0.018062
+  Yp_min : 0.250000 Yp_max : 0.330000 n_Yp : 5 dYp: 0.020000
+  R_min : 0.000000 R_max : 10.000000 n_R : 50 dR: 0.204082
+  nH_min : -8.000000 nH_max : 5.000000 n_nH : 200 dnH: 0.065327
+  T_min : 0.000000 T_max : 9.000000 n_T : 226 dT: 0.040000
+  m_tsize: 11300000
+map tsz sum = 0.00114743
+particle tsz sum = 0.00114785
+particle tsz sum (adiabatic) = 0.00114882
+CIC time is 106.098027
+Starting file output 
+Write time is 3.792377
+Elapsed time is 289.429167
+330
+hybrid_sg defined
+rank diff = 8 
+commRanks = 512 
+OpenMP is defined 
+Created get_pix_list_rank  
+Elapsed time for initialization is 0.369857
+Read 18 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_SEED_1.25e6_NPERH_AGN_2_NEWCOSMO/output/m000p.lc.mpicosmo.330 (2738059163412 bytes) in 19.8786s: 131358 MB/s [excluding header read]
+Redistribute time is 181.268685
+a values: average = 0.531143, minimum value = 0.530348, maximum value = 0.53194
+T values (CGS units): average = 1.07948e+06, minimum value = 72.7946, maximum value = 2.91285e+10
+mu values: average = 0.595478, minimum value = 0.592003, maximum value = 0.764994
+Reading in Cloudy Metadata...
+CLOUDY Metadata:
+  a_min : 0.114943 a_max : 1.000000 n_a : 50 da: 0.018062
+  Yp_min : 0.250000 Yp_max : 0.330000 n_Yp : 5 dYp: 0.020000
+  R_min : 0.000000 R_max : 10.000000 n_R : 50 dR: 0.204082
+  nH_min : -8.000000 nH_max : 5.000000 n_nH : 200 dnH: 0.065327
+  T_min : 0.000000 T_max : 9.000000 n_T : 226 dT: 0.040000
+  m_tsize: 11300000
+map tsz sum = 0.00127254
+particle tsz sum = 0.00127303
+particle tsz sum (adiabatic) = 0.00127408
+CIC time is 105.312463
+Starting file output 
+Write time is 3.761058
+Elapsed time is 290.712071
+331
+hybrid_sg defined
+rank diff = 8 
+commRanks = 512 
+OpenMP is defined 
+Created get_pix_list_rank  
+Elapsed time for initialization is 0.360789
+Read 18 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_SEED_1.25e6_NPERH_AGN_2_NEWCOSMO/output/m000p.lc.mpicosmo.331 (2697704129324 bytes) in 23.6677s: 108702 MB/s [excluding header read]
+Redistribute time is 163.698805
+a values: average = 0.532735, minimum value = 0.53194, maximum value = 0.533532
+T values (CGS units): average = 1.07547e+06, minimum value = 57.49, maximum value = 3.68542e+10
+mu values: average = 0.5955, minimum value = 0.592003, maximum value = 0.760135
+Reading in Cloudy Metadata...
+CLOUDY Metadata:
+  a_min : 0.114943 a_max : 1.000000 n_a : 50 da: 0.018062
+  Yp_min : 0.250000 Yp_max : 0.330000 n_Yp : 5 dYp: 0.020000
+  R_min : 0.000000 R_max : 10.000000 n_R : 50 dR: 0.204082
+  nH_min : -8.000000 nH_max : 5.000000 n_nH : 200 dnH: 0.065327
+  T_min : 0.000000 T_max : 9.000000 n_T : 226 dT: 0.040000
+  m_tsize: 11300000
+map tsz sum = 0.00181349
+particle tsz sum = 0.00181425
+particle tsz sum (adiabatic) = 0.00181564
+CIC time is 103.968691
+Starting file output 
+Write time is 4.277014
+Elapsed time is 272.305305
+332
+hybrid_sg defined
+x3005c0s19b1n0.hsn.cm.polaris.alcf.anl.gov: rank 501 died from signal 11 and dumped core
+333
+hybrid_sg defined
+rank diff = 8 
+commRanks = 512 
+OpenMP is defined 
+Created get_pix_list_rank  
+Elapsed time for initialization is 0.359588
+Read 18 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_SEED_1.25e6_NPERH_AGN_2_NEWCOSMO/output/m000p.lc.mpicosmo.333 (2613124180821 bytes) in 35.2983s: 70600.2 MB/s [excluding header read]
+Redistribute time is 205.761906
+a values: average = 0.53592, minimum value = 0.535124, maximum value = 0.536716
+T values (CGS units): average = 1.08471e+06, minimum value = 75.2814, maximum value = 3.25243e+10
+mu values: average = 0.595536, minimum value = 0.592003, maximum value = 0.767696
+=>> PBS: job killed: walltime 7251 exceeded limit 7200
+x3005c0s1b0n0.hsn.cm.polaris.alcf.anl.gov: rank 508 died from signal 15

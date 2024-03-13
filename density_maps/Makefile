@@ -45,3 +45,9 @@ hydro_compile: hydro.cxx
 hydro_link: hydro.cxx
 	${CXX} -O3 -fopenmp -o hydro_p hydro.o utils.o pix_funcs.o PLParticles.o ${HYDROINC}/RadiativeCooling.o ${HYDROINC}/Domain.o /home/prlarsen/hacc_fresh/HACC/polaris.kokkos_cuda/mpi/cosmotools/algorithms/halofinder/Partition.o /home/prlarsen/hacc_fresh/HACC/polaris.kokkos_cuda/mpi/cosmotools/algorithms/halofinder/dims.o ${INCDIRS} -L${GIOLIBDIR}  -lGenericIOMPI  -L${CFTLIBDIR} -lcfitsio  -L${HPXLIBDIR} -lchealpix -lhealpix_cxx  -std=c++11
 
+bhp_compile: bhp.cxx
+	${CXX} -c -fopenmp ${INCDIRS} bhp.cxx utils.cxx pix_funcs.cxx PLParticles.cxx PLHalos.cxx -std=c++11
+
+bhp_link: bhp.cxx
+	${CXX} -O3 -fopenmp -o adiabatic_bhp bhp.o utils.o pix_funcs.o PLParticles.o PLHalos.o ${HYDROINC}/RadiativeCooling.o ${HYDROINC}/Domain.o /home/prlarsen/hacc_fresh/HACC/polaris.kokkos_cuda/mpi/cosmotools/algorithms/halofinder/Partition.o /home/prlarsen/hacc_fresh/HACC/polaris.kokkos_cuda/mpi/cosmotools/algorithms/halofinder/dims.o ${INCDIRS} -L${GIOLIBDIR}  -lGenericIOMPI  -L${CFTLIBDIR} -lcfitsio  -L${HPXLIBDIR} -lchealpix -lhealpix_cxx  -std=c++11
+
