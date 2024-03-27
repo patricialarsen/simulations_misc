@@ -59,7 +59,8 @@ int main(int argc, char *argv[]) {
   // arguments that need to be added 
   bool borgcube = false;
   bool adiabatic = false;
-  string cloudypath = "/lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_SEED_1.25e6_NPERH_AGN_2_NEWCOSMO/output/";
+  string cloudypath = "/pscratch/sd/p/plarsen/cloudy/";
+  // string cloudypath = "/lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_SEED_1.25e6_NPERH_AGN_2_NEWCOSMO/output/";
 
   #ifndef HYBRID_SG
      if (commRank==0)

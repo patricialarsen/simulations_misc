@@ -424,6 +424,11 @@ int assign_sz_xray_cic(vector<float> &rho, vector<float> &phi, vector<float> &ve
     double Tcmb = 2.725f;
     m_radcool->setTCMB(Tcmb);
     m_radcool->readCloudyScaleFactor((RAD_T)aa_av);
+    if (commRank==0){
+    cout << "Initialized cloudy tables"<<endl;
+    }
+    
+
   }
   #endif
   double tsz_tot2 = 0;
@@ -472,6 +477,7 @@ int assign_sz_xray_cic(vector<float> &rho, vector<float> &phi, vector<float> &ve
         }
       }
 
+
       double rhoi = (double) (*P).float_data[12]->at(ii);
       double Vi = mass/rhoi/MPC_IN_CM/MPC_IN_CM/MPC_IN_CM *aa*aa*aa/hval/hval/hval ; //  Vi in physical CGS units
       double Zi = (double) (*P).float_data[13]->at(ii); 
@@ -501,24 +507,27 @@ int assign_sz_xray_cic(vector<float> &rho, vector<float> &phi, vector<float> &ve
       RAD_T nHIi = 0.0;
       RAD_T nei = 0.0;
       RAD_T mui = (RAD_T)mu;
-      // RAD_T LCval = 0.0;
-      // RAD_T LHval = 0.0;
-      // RAD_T mue = 0.0;
+      RAD_T LCval = 0.0;
+      RAD_T LHval = 0.0;
+      RAD_T mue = 0.0;
       double Li_free_Bolo = 0.0;
       double Li_free_ROSAT = 0.0; 
+
 
       if (!adiabatic) {
         #ifdef HYBRID_SG
         if ((Ti>0)&&(isNormGas(mask))){
 	// change to this
-	//RAD_T lambda = (*m_radcool)(Ti, (RAD_T)rhoi, (RAD_T)Zi, (RAD_T)Yp, (RAD_T)aa_av, mui, &iter, false, &nHIi, &nei, %LCval, &LHval, &mue);
+	RAD_T lambda = (*m_radcool)(Ti, (RAD_T)rhoi, (RAD_T)Zi, (RAD_T)Yp, (RAD_T)aa_av, mui, &iter, false, &nHIi, &nei, &LCval, &LHval, &mue);
 
-        RAD_T lambda = (*m_radcool)(Ti, (RAD_T)rhoi, (RAD_T)Zi, (RAD_T)Yi, (RAD_T)aa_av, mui, &iter, false, &nHIi, &nei);
+        //RAD_T lambda = (*m_radcool)(Ti, (RAD_T)rhoi, (RAD_T)Zi, (RAD_T)Yi, (RAD_T)aa_av, mui, &iter, false, &nHIi, &nei);
         nei *= nHi;
 	}
+	
 	// PL: I'm going to assume this mask check is fine 
 	// we're using aa here, in the SZ stuff we used aa_av as the average value as that's where we're setting the cloudy redshift to be
 	//
+	
         if(XrayGasCondition(mask, Ti)){
           //Calculate L500:
           double mCGS = mass*G_IN_MSUN/hval;//Mass in grams
@@ -570,16 +579,18 @@ int assign_sz_xray_cic(vector<float> &rho, vector<float> &phi, vector<float> &ve
           double ROSAT_int = exp(-XRAY_BAND_ROSAT_EMIN/(KB_KEV*Ti*aa)) - exp(-XRAY_BAND_ROSAT_EMAX/(KB_KEV*Ti*aa));
 	  //Integrate ROSAT band (note the 1/aa scalefactor for redshift dependence)
 
-          Li_free_Bolo = Li_free_analytic*ROSAT_int;//Li_free*Bolo_int;//Bolometric Luminosity
+          Li_free_Bolo = Li_free*Bolo_int;//Li_free*Bolo_int;//Bolometric Luminosity
           Li_free_ROSAT = Li_free*ROSAT_int;//ROSAT Luminosity
 						   // for now let's swap the Bolo luminosity for the analytic one
-        }	
+        }
         #endif
       } 
 
       const double NE_SCALING = (double)CHIE/MUE/MP*G_IN_MSUN/hval; 
       double ne_scaled = nei*Vi/(double)NE_SCALING; // this is the SPH volume multiplied by the electron density per unit volume 
       // double ne_scaled = mass/(mue*MH); // check that mH is in the right units. probably an h factor difference here 
+      //double ne_scaled = mass/(mue*MH)/CHIE*MUE*MP;//      //ne*Vi is in units of nH (per some unit volume) * volume
+						 //      mass /mue*MH is in units of total number. Assuming units match
 
       float dist_com2 = xd*xd + yd*yd + zd*zd;
       float vel_los = (vx*xd +vy*yd + vz*zd)/sqrt(dist_com2);
@@ -607,8 +618,8 @@ int assign_sz_xray_cic(vector<float> &rho, vector<float> &phi, vector<float> &ve
   	  else{
             tsz[new_idx] += ne_scaled*mu*uu/dist_com2*weights[j];
             ksz[new_idx] += ne_scaled*vel_los/dist_com2/aa*weights[j]; // one factor of a cancels from v_los and dist_comov2
-	    xray1[new_idx] += Li_free_Bolo/dist_com2/MPC_IN_CM/MPC_IN_CM*aa*aa*hval*hval*weights[j];
-            xray2[new_idx] += Li_free_ROSAT/dist_com2/MPC_IN_CM/MPC_IN_CM*aa*aa*hval*hval*weights[j]; // factor of a^2 from luminosity distance		    
+	    xray1[new_idx] += Li_free_Bolo/dist_com2*MPC_IN_CM*MPC_IN_CM*aa*aa*hval*hval*weights[j];
+            xray2[new_idx] += Li_free_ROSAT/dist_com2*MPC_IN_CM*MPC_IN_CM*aa*aa*hval*hval*weights[j]; // factor of a^2 from luminosity distance		    
           }
 
           tsz_tot2 += ne_scaled*mui*uu/dist_com2*weights[j];
@@ -622,11 +633,11 @@ int assign_sz_xray_cic(vector<float> &rho, vector<float> &phi, vector<float> &ve
        }
       }
    }
-  /*if (commRank==0){
+  if (commRank==0){
 
   cout << "particle count is = "<< count_part << endl;
   cout << "masked particle count is = "<< count_mask << endl;
-  }*/
+  }
   #ifdef HYBRID_SG
   delete m_radcool;
   #endif
@@ -743,6 +754,8 @@ void initialize_pixel_hydro(int pix_val,  T_Healpix_Base<int> map_lores, T_Healp
                         vel.push_back(0.0);
                         ksz.push_back(0.0);
                         tsz.push_back(0.0);
+			xray1.push_back(0.0);
+			xray2.push_back(0.0);
                          count++;
     }
      end_idx.push_back(count);

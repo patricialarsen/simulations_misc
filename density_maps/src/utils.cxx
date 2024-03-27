@@ -39,7 +39,7 @@
 
 //#include "particle_def.h"
 #include "PLParticles.h"
-#include "PLHalos.h"
+//#include "PLHalos.h"
 
 #include "utils.h"
 #include "pix_funcs.h"
@@ -51,31 +51,6 @@ using namespace std;
 #define POSVEL_T float
 #define ID_T int64_t
 #define MASK_T uint16_t
-
-
-
-void read_halos(PLHalos* P, string file_name) {
-
-  GenericIO GIO(MPI_COMM_WORLD,file_name,GenericIO::FileIOMPI);
-  GIO.openAndReadHeader(GenericIO::MismatchRedistribute);
-  size_t num_elems = GIO.readNumElems();
-
-  (*P).Resize(num_elems + GIO.requestedExtraSpace());
-
-  for (int i=0; i<N_FLOATS_HALOS; ++i)
-    GIO.addVariable((const string)float_names_halos[i], *((*P).float_data[i]), true);
-  for (int i=0; i<N_INTS_HALOS; ++i)
-    GIO.addVariable((const string)int_names_halos[i], *((*P).int_data[i]), true);
-  for (int i=0; i<N_INT64S_HALOS; ++i)
-    GIO.addVariable((const string)int64_names_halos[i], *((*P).int64_data[i]), true);
-  for (int i=0; i<N_DOUBLES_HALOS; ++i)
-    GIO.addVariable((const string)double_names_halos[i], *((*P).double_data[i]), true);
-  for (int i=0; i<N_MASKS_HALOS; ++i)
-    GIO.addVariable((const string)mask_names_halos[i], *((*P).mask_data[i]), true);
-
-  GIO.readData();
-  (*P).Resize(num_elems);
-}
 
 
 
@@ -124,56 +99,6 @@ static void distributeProperty(std::vector<T>& vA, T* sendbuf,
     MPI_Alltoallv(&sendbuf[0], sendcounts, sdispls, sendtype,
                   &vA[0], recvcounts, rdispls, recvtype, comm);
 }
-
-
-
-void redistribute_halos(PLHalos* P, vector<int> send_counts, int numranks,T_Healpix_Base<int> map_lores, int rank_diff){
-    vector<int> recv_counts(numranks,0);
-    vector<int> recv_offset(numranks,0);
-    vector<int> send_offset(numranks,0);
-    MPI_Alltoall( &send_counts[0], 1 , MPI_INT, &recv_counts[0], 1, MPI_INT, MPI_COMM_WORLD); // check this
-
-    for (int k=1;k<numranks;k++){
-        send_offset[k] = send_offset[k-1] + send_counts[k-1];
-        recv_offset[k] = recv_offset[k-1] + recv_counts[k-1];
-    }
-
-    // check this
-    size_t tot_send = send_offset.back()+send_counts.back();
-    vector<int64_t> id_tot(tot_send);
-
-    compute_ranks_index_halo( P, map_lores, numranks,  send_offset, id_tot,  rank_diff);
-
-    // then for each variable   - loop over variables
-    vector<int64_t>scratch(tot_send);
-    size_t tot_recv = recv_offset.back()+recv_counts.back();
-
-        // check typings here - do more beyond the floats
-    for (int i=0; i<N_FLOATS_HALOS; i++){
-          string var_name = float_names_halos[i];
-          distributeProperty((*P->float_data[i]), (float*)(&scratch[0]), &id_tot[0], tot_send, tot_recv, &send_counts[0], &send_offset[0], MPI_FLOAT, &recv_counts[0], &recv_offset[0], MPI_FLOAT, MPI_COMM_WORLD);
-    }
-    for (int i=0; i<N_DOUBLES_HALOS; i++){
-          string var_name = double_names_halos[i];
-          distributeProperty((*P->double_data[i]), (double*)(&scratch[0]), &id_tot[0], tot_send, tot_recv, &send_counts[0], &send_offset[0], MPI_DOUBLE, &recv_counts[0], &recv_offset[0], MPI_DOUBLE, MPI_COMM_WORLD);
-    }
-    for (int i=0; i<N_INTS_HALOS; i++){
-          string var_name = int_names_halos[i];
-          distributeProperty((*P->int_data[i]), (int*)(&scratch[0]), &id_tot[0], tot_send, tot_recv, &send_counts[0], &send_offset[0], MPI_INT, &recv_counts[0], &recv_offset[0], MPI_INT, MPI_COMM_WORLD);
-    }
-    for (int i=0; i<N_INT64S_HALOS; i++){
-          string var_name = int64_names_halos[i];
-          distributeProperty((*P->int64_data[i]), (int64_t*)(&scratch[0]), &id_tot[0], tot_send, tot_recv, &send_counts[0], &send_offset[0], MPI_INT64_T, &recv_counts[0], &recv_offset[0], MPI_INT64_T, MPI_COMM_WORLD);
-    }
-    for (int i=0; i<N_MASKS_HALOS; i++){
-          string var_name = mask_names_halos[i];
-          distributeProperty((*P->mask_data[i]), (uint16_t*)(&scratch[0]), &id_tot[0], tot_send, tot_recv, &send_counts[0], &send_offset[0], MPI_UINT16_T, &recv_counts[0], &recv_offset[0], MPI_UINT16_T, MPI_COMM_WORLD);
-    }
-
-    (*P).Resize(tot_recv);
-
-    }
-
 
 
 // update send_counts and others to pass by reference to avoid memory copy
@@ -225,23 +150,6 @@ void redistribute_particles(PLParticles* P, vector<int> send_counts, int numrank
     }
 
 
-
-void read_and_redistribute_halocut(string file_name, string file_name2, int numranks, PLParticles* P, PLHalos* H, T_Healpix_Base<int> map_lores, T_Healpix_Base<int64_t> map_hires, int rank_diff){
-    int status;
-    vector<int> send_count(numranks,0);
-    vector<int> send_count_halos(numranks,0);
-
-    read_particles(P, file_name);
-    read_halos(H, file_name2);
-
-    status = compute_ranks_count_halos(H, map_lores, numranks, send_count_halos, rank_diff);
-    status = compute_ranks_count( P,  map_lores, map_hires, numranks, send_count, rank_diff);
-
-    redistribute_halos(H, send_count_halos,numranks,map_lores, rank_diff);
-    redistribute_particles(P, send_count,numranks,map_lores, map_hires, rank_diff);
-
-    return; 
-}
 
 
 void read_and_redistribute(string file_name, int numranks, PLParticles* P,  T_Healpix_Base<int> map_lores, T_Healpix_Base<int64_t> map_hires, int rank_diff){
@@ -295,6 +203,8 @@ void write_files_hydro(string outfile, string stepnumber,vector<int64_t> start_i
   string output_name_vel = outfile + stepnumber + "_vel.bin";
   string output_name_ksz = outfile + stepnumber + "_ksz.bin";
   string output_name_tsz = outfile + stepnumber + "_tsz.bin";
+  string output_name_x1 = outfile + stepnumber + "_xray1.bin";
+  string output_name_x2 = outfile + stepnumber + "_xray2.bin";
 
 
   const char *name_out = output_name.c_str();
@@ -302,16 +212,20 @@ void write_files_hydro(string outfile, string stepnumber,vector<int64_t> start_i
   const char *name_out_vel = output_name_vel.c_str();
   const char *name_out_ksz = output_name_ksz.c_str();
   const char *name_out_tsz = output_name_tsz.c_str();
+  const char *name_out_x1 = output_name_x1.c_str();
+  const char *name_out_x2 = output_name_x2.c_str();
 
 
-  MPI_File fh, fh_phi, fh_vel, fh_ksz, fh_tsz;
-  MPI_Request req, req_phi, req_vel, req_ksz, req_tsz;
+  MPI_File fh, fh_phi, fh_vel, fh_ksz, fh_tsz, fh_x1, fh_x2;
+  MPI_Request req, req_phi, req_vel, req_ksz, req_tsz, req_x1, req_x2;
 
   MPI_File_open(MPI_COMM_WORLD, name_out, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &fh);
   MPI_File_open(MPI_COMM_WORLD, name_out_phi, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &fh_phi);
   MPI_File_open(MPI_COMM_WORLD, name_out_vel, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &fh_vel);
   MPI_File_open(MPI_COMM_WORLD, name_out_ksz, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &fh_ksz);
   MPI_File_open(MPI_COMM_WORLD, name_out_tsz, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &fh_tsz);
+  MPI_File_open(MPI_COMM_WORLD, name_out_x1, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &fh_x1);
+  MPI_File_open(MPI_COMM_WORLD, name_out_x2, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &fh_x2);
 
   MPI_Offset filesize = npix_hires*sizeof(float);
   MPI_Offset filesize_double = npix_hires*sizeof(double);
@@ -321,6 +235,8 @@ void write_files_hydro(string outfile, string stepnumber,vector<int64_t> start_i
   MPI_File_set_size(fh_vel, filesize);
   MPI_File_set_size(fh_ksz, filesize);
   MPI_File_set_size(fh_tsz, filesize_double);
+  MPI_File_set_size(fh_x1, filesize_double);
+  MPI_File_set_size(fh_x2, filesize_double);
 
 
   int status;
@@ -329,6 +245,8 @@ void write_files_hydro(string outfile, string stepnumber,vector<int64_t> start_i
   status = output_file(commRank, fh_vel, req_vel, vel, start_idx, end_idx, pix_nums_start);
   status = output_file(commRank, fh_ksz, req_ksz, ksz, start_idx, end_idx, pix_nums_start);
   status = output_file_double(commRank, fh_tsz, req_tsz, tsz, start_idx, end_idx, pix_nums_start);
+  status = output_file_double(commRank, fh_x1, req_x1, xray1, start_idx, end_idx, pix_nums_start);
+  status = output_file_double(commRank, fh_x2, req_x2, xray2, start_idx, end_idx, pix_nums_start);
 
 
   MPI_File_close(&fh);
@@ -336,6 +254,8 @@ void write_files_hydro(string outfile, string stepnumber,vector<int64_t> start_i
   MPI_File_close(&fh_vel);
   MPI_File_close(&fh_ksz);
   MPI_File_close(&fh_tsz);
+  MPI_File_close(&fh_x1);
+  MPI_File_close(&fh_x2);
 
 
   MPI_Barrier(MPI_COMM_WORLD);

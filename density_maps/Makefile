@@ -1,10 +1,13 @@
 CC = ${HACC_MPI_CC}
 CXX = ${HACC_MPI_CXX}
 
-HPXDIR = /home/prlarsen/codes/healpix/Healpix_3.82_polaris
-CFITSDIR = /home/prlarsen/usr/cfitsio-4.0.0/build
-GIODIR = /home/prlarsen/hacc_fresh/HACC/polaris.kokkos_cuda/mpi
-HACCDIR = /home/prlarsen/hacc_fresh/HACC
+#HPXDIR = /home/prlarsen/codes/healpix/Healpix_3.82_polaris
+HPXDIR = /global/homes/p/plarsen/plarsen_git/Healpix_3.82
+#CFITSDIR = /home/prlarsen/usr/cfitsio-4.0.0/build
+CFITSDIR = /global/homes/p/plarsen/plarsen_git/cfitsio-4.4.0/build
+
+GIODIR = /global/homes/p/plarsen/plarsen_git/HACC/perlmutter.kokkos_cuda/mpi
+HACCDIR = /global/homes/p/plarsen/plarsen_git/HACC
 
 SCDIR = src
 
@@ -22,13 +25,13 @@ GIOINCDIR = -I${HACCDIR}/submodules/genericio
 GIOLIBDIR = ${GIODIR}/lib
 HACCINCDIR = -I${HACCDIR}/cosmotools/algorithms/halofinder
 HACCINCDIR2 = -I${HACCDIR}/cosmotools/common
-HYDROINC = ${HACCDIR}/polaris.kokkos_cuda/mpi/nbody/common
+HYDROINC = ${HACCDIR}/perlmutter.kokkos_cuda/mpi/nbody/common
 HYDROINC2 = -I${HACCDIR}/nbody/common
-
+HYDROINC3 = ${HACCDIR}/perlmutter.kokkos_cuda/mpi/cosmotools/algorithms/halofinder
 BLOSCDIR = -I${GIODIR}/genericio/thirdparty/blosc
 
 
-INCDIRS = ${GIOINCDIR} ${HPXINCDIR}  ${HPXCINCDIR}  ${BLOSCDIR} ${HACCINCDIR} ${HACCINCDIR2} ${HYDROINC2} -I./inc/
+INCDIRS = ${GIOINCDIR} ${HPXINCDIR}  ${HPXCINCDIR}  ${BLOSCDIR} ${HACCINCDIR} ${HACCINCDIR2} ${HYDROINC2} -I${HYDROINC3} -I./inc/
 LIBDIRS = -L${HPXLIBDIR}  -L${GIOLIBDIR} -L${CFTLIBDIR}
 
 
@@ -44,6 +47,6 @@ hydro_compile: ${SCDIR}/hydro.cxx
 	${CXX} -c -fopenmp ${INCDIRS} ${SCDIR}/hydro.cxx ${SCDIR}/utils.cxx ${SCDIR}/pix_funcs.cxx ${SCDIR}/PLParticles.cxx ${SCDIR}/PLHalos.cxx -std=c++11
 
 hydro_link: ${SCDIR}/hydro.cxx
-	${CXX} -O3 -fopenmp -o hydro_xray hydro.o utils.o pix_funcs.o PLParticles.o PLHalos.o ${HYDROINC}/RadiativeCooling.o ${HYDROINC}/Domain.o /home/prlarsen/hacc_fresh/HACC/polaris.kokkos_cuda/mpi/cosmotools/algorithms/halofinder/Partition.o /home/prlarsen/hacc_fresh/HACC/polaris.kokkos_cuda/mpi/cosmotools/algorithms/halofinder/dims.o ${INCDIRS} -L${GIOLIBDIR}  -lGenericIOMPI  -L${CFTLIBDIR} -lcfitsio  -L${HPXLIBDIR} -lchealpix -lhealpix_cxx  -std=c++11
+	${CXX} -O3 -fopenmp -o hydro_xray hydro.o utils.o pix_funcs.o PLParticles.o PLHalos.o ${HYDROINC3}/RadiativeCooling.o ${HYDROINC}/Domain.o ${GIODIR}/cosmotools/algorithms/halofinder/Partition.o ${GIODIR}/cosmotools/algorithms/halofinder/dims.o ${INCDIRS} -L${GIOLIBDIR}  -lGenericIOMPI  -L${CFTLIBDIR} -lcfitsio  -L${HPXLIBDIR} -lchealpix -lhealpix_cxx  -std=c++11
 
 
