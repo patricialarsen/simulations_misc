@@ -326,6 +326,7 @@ int assign_sz_xray_cic(vector<float> &rho, vector<float> &phi, vector<float> &ve
   const double NE_SCALING = (double)CHIE/MUE/MP;
   const double KSZ_CONV = (double)(-SIGMAT*CHIE/MUE/MP/CLIGHT)*(G_IN_MSUN/MPC_TO_CM/MPC_TO_CM)*(1.0/samplerate)*(1.0/pixsize)*hval;
   const double TSZ_CONV = (double)((GAMMA-1.0)*SIGMAT*CHIE/MUE/MELECTRON/CLIGHT/CLIGHT)*(MH/MP)*(G_IN_MSUN/MPC_TO_CM/MPC_TO_CM)*(1.0/samplerate)*(1.0/pixsize)*hval;
+  const double XRAY_CONV = (double) (1.0/samplerate)*(1.0/pixsize)/(4.0*3.141529);
 
   // compute average a value for Radiative Cooling
   double sum_a = 0;
@@ -570,9 +571,6 @@ int assign_sz_xray_cic(vector<float> &rho, vector<float> &phi, vector<float> &ve
 	  // so erg  * g cm^2 /s^2 * s *cm^-2 /g
 	  // gives erg/s 
 
-
-	  // density / average mass of gas particle -> inverse volume. 
-
           //Apply frequency band 
           double Bolo_int = exp(-XRAY_BAND_BOLO_EMIN/(KB_KEV*Ti*aa)) - exp(-XRAY_BAND_BOLO_EMAX/(KB_KEV*Ti*aa));
 	  //Integrate bolometric band (note the 1/aa scalefactor for redshift dependence)
@@ -647,8 +645,8 @@ int assign_sz_xray_cic(vector<float> &rho, vector<float> &phi, vector<float> &ve
      tsz[j] = tsz[j]*TSZ_CONV;
      tsz_tot += tsz[j];
      ksz[j] = ksz[j]*KSZ_CONV;
-     //xray1[j] = xray1[j]*XRAY_CONV;
-     //xray2[j] = xray2[j]*XRAY_CONV;
+     xray1[j] = xray1[j]*XRAY_CONV;
+     xray2[j] = xray2[j]*XRAY_CONV;
     }
   if (commRank==0){
 
