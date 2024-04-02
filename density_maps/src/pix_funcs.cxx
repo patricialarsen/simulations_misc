@@ -296,6 +296,185 @@ int assign_dm_ngp(vector<float> &rho, vector<float> &phi, vector<float> &vel, PL
 }
 
 
+int check_xray_halo( PLParticles* P, float hval, bool borgcube, bool adiabatic,  float samplerate, string cloudypath){
+
+  int commRank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &commRank);
+
+  // extra constants 
+  const double SIGMAT = 6.65245e-25; // cm^2
+  const double MP = 1.672621e-24; // MP in g
+  const double MPC_TO_CM = KM_IN_MPC*CM_IN_KM;
+  // only used for adiabatic hydro 
+  const double MUE = 2.0/(2.0-PRIMORDIAL_Y);
+  double NHE = 2.0; // assume helium is fully ionized
+  double CHIE = (1.0-PRIMORDIAL_Y*(1.0-NHE/4.0))/(1.0-PRIMORDIAL_Y/2.0);
+  const double mu0 = MU_ION;
+
+  const double XRAY_CONV = (double) (1.0/samplerate)*(1.0/pixsize)/(4.0*3.141529);
+  double aa_av = 1.0;
+  #ifdef HYBRID_SG
+  RadiativeCooling* m_radcool = new RadiativeCooling(cloudypath);
+  if (!adiabatic) {
+    double Tcmb = 2.725f;
+    m_radcool->setTCMB(Tcmb);
+    m_radcool->readCloudyScaleFactor((RAD_T)aa_av);
+    if (commRank==0){
+    cout << "Initialized cloudy tables"<<endl;
+    }
+
+
+  }
+  #endif
+
+  int64_t count_part = 0;
+  int64_t count_mask = 0;
+  double xray1=0;
+  double xray2=0;
+
+  #ifdef _OPENMP
+  #pragma omp parallel for 
+  #endif
+  for (int64_t ii=0; ii<(*P).nparticles; ++ii){
+      #pragma omp critical
+      {
+      count_part ++;
+      }
+
+      float xd = (float) (*P).float_data[0]->at(ii);
+      float yd = (float) (*P).float_data[1]->at(ii);
+      float zd = (float) (*P).float_data[2]->at(ii);
+      float vx = (float) (*P).float_data[3]->at(ii);
+      float vy = (float) (*P).float_data[4]->at(ii);
+      float vz = (float) (*P).float_data[5]->at(ii);
+      float phid = (float) (*P).float_data[6]->at(ii);
+      float aa = (float) (*P).float_data[7]->at(ii);
+      float aa = 1.0; 
+      double mass = (double) (*P).float_data[9]->at(ii);
+      double uu = (double) (*P).float_data[10]->at(ii);
+
+      double mu;
+      #ifdef HYBRID_SG
+      if (!adiabatic)
+        mu = (double) (*P).float_data[11]->at(ii);
+      else
+        mu = (double) mu0;
+      #else
+        mu = (double) mu0;
+      #endif
+
+      uint16_t mask = (*P).mask_data[0]->at(ii);
+
+      if (isNormGas(mask)){
+        #pragma omp critical
+        {
+        count_mask++;
+        }
+      }
+      double rhoi = (double) (*P).float_data[12]->at(ii);
+      double Vi = mass/rhoi/MPC_IN_CM/MPC_IN_CM/MPC_IN_CM *aa*aa*aa/hval/hval/hval ; //  Vi in physical CGS units
+      double Zi = (double) (*P).float_data[13]->at(ii);
+      double Yi = (double) (*P).float_data[14]->at(ii);
+
+      int iter = 0;
+
+      rhoi *= G_IN_MSUN*MPC_IN_CM*MPC_IN_CM*MPC_IN_CM/aa/aa/aa*hval*hval;
+      RAD_T Xi = (1.0-Yi-Zi);
+      RAD_T Ti   = CONV_U_TO_T*UU_CGS*mu*uu*aa*aa; // UU_CGS is just the km to cm scaling 
+
+      double y = Yi/Xi; // nHe/nH * (mHe/mH)
+      double Yp = y/(1.0+y); // Metal-free helium fraction
+
+      RAD_T nHi  = rhoi*Xi*INV_MH; // density / mass in g
+      RAD_T nHIi = 0.0;
+      RAD_T nei = 0.0;
+      RAD_T mui = (RAD_T)mu;
+      RAD_T LCval = 0.0;
+      RAD_T LHval = 0.0;
+      RAD_T mue = 0.0;
+      double Li_free_Bolo = 0.0;
+      double Li_free_ROSAT = 0.0;
+
+      if (!adiabatic) {
+        #ifdef HYBRID_SG
+        if ((Ti>0)&&(isNormGas(mask))){
+        // change to this
+        RAD_T lambda = (*m_radcool)(Ti, (RAD_T)rhoi, (RAD_T)Zi, (RAD_T)Yp, (RAD_T)aa_av, mui, &iter, false, &nHIi, &nei, &LCval, &LHval, &mue);
+
+        //RAD_T lambda = (*m_radcool)(Ti, (RAD_T)rhoi, (RAD_T)Zi, (RAD_T)Yi, (RAD_T)aa_av, mui, &iter, false, &nHIi, &nei);
+        nei *= nHi;
+        }
+
+        // PL: I'm going to assume this mask check is fine 
+        // we're using aa here, in the SZ stuff we used aa_av as the average value as that's where we're setting the cloudy redshift to be
+        //
+
+        if(XrayGasCondition(mask, Ti)){
+          //Calculate L500:
+          double mCGS = mass*G_IN_MSUN/hval;//Mass in grams
+          double Li_free = 0.0;
+
+          // I've confirmed rhoi is equivalent to rhoCGS
+          PRIMORDIAL_FREE_FREE_EMISSIVITY(Li_free, Ti, rhoi, mCGS);
+
+          double Li_free_analytic = 0.0;
+          double Xe = 1.16;
+          double Xi = 1.079;
+          double Z = sqrt(1.15);
+          double gff = 1.3;
+          double planck = 6.6261e-27; // in cm^2*g/s
+
+          double prefactor = 6.8e-38*KB_CONST/planck*Z*Z*gff*Xe*Xi/(Xi+Xe)/(Xi+Xe); // units Erg/K cm^-2 g^-1 s 
+          // units here are confusing
+          double scaling = sqrt(Ti)*(rhoi/mui/MH)*(rhoi/mui/MH)*Vi;  // units K^1/2 cm^-3
+                                                                     // MH rather than MP because of mui definition
+          Li_free_analytic = prefactor * scaling;
+          // they then claim a erg K^1/2 cm^3 in Pakmor which I guess gives 
+          // erg^2  s cm^-2/g units in total. 
+          //
+          // luminosity should be in erg/s
+          // an erg is g cm^2/s^2
+          // so erg  * g cm^2 /s^2 * s *cm^-2 /g
+          // gives erg/s 
+
+          //Apply frequency band 
+          double Bolo_int = exp(-XRAY_BAND_BOLO_EMIN/(KB_KEV*Ti*aa)) - exp(-XRAY_BAND_BOLO_EMAX/(KB_KEV*Ti*aa));
+          //Integrate bolometric band (note the 1/aa scalefactor for redshift dependence)
+          double ROSAT_int = exp(-XRAY_BAND_ROSAT_EMIN/(KB_KEV*Ti*aa)) - exp(-XRAY_BAND_ROSAT_EMAX/(KB_KEV*Ti*aa));
+          //Integrate ROSAT band (note the 1/aa scalefactor for redshift dependence)
+
+          Li_free_Bolo = Li_free*Bolo_int;//Li_free*Bolo_int;//Bolometric Luminosity
+          Li_free_ROSAT = Li_free*ROSAT_int;//ROSAT Luminosity
+                                                   // for now let's swap the Bolo luminosity for the analytic one
+        }
+        #endif
+      }
+
+          #pragma omp critical
+          {
+          if (isNormGas(mask)){//TODO: see below 
+            xray1 += Li_free_Bolo;///dist_com2*MPC_IN_CM*MPC_IN_CM*aa*aa*hval*hval;
+            xray2 += Li_free_ROSAT;///dist_com2*MPC_IN_CM*MPC_IN_CM*aa*aa*hval*hval; // factor of a^2 from luminosity distance             
+        }
+       }
+      }
+   //}
+
+  if (commRank==0){
+  cout << "particle count is = "<< count_part << endl;
+  cout << "masked particle count is = "<< count_mask << endl;
+  cout << "xray Bolometric total is = "<< xray1 << endl;
+  cout << "xray ROSAT total is = "<< xray2<<endl;
+  }
+
+  #ifdef HYBRID_SG
+  delete m_radcool;
+  #endif
+
+   return 0;
+
+
+}
 
 
 int assign_sz_xray_cic(vector<float> &rho, vector<float> &phi, vector<float> &vel,vector<float> &ksz, vector<double> &tsz, vector<double> &xray1, vector<double> &xray2, PLParticles* P, T_Healpix_Base<int64_t> map_hires, vector<int64_t> pixnum_start, vector<int64_t> pixnum_end, vector<int64_t> start_idx,  unordered_map<int64_t, int64_t> ring_to_idx, float hval, bool borgcube, bool adiabatic, float samplerate, string cloudypath){
