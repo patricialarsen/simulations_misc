@@ -186,6 +186,13 @@ int main(int argc, char *argv[]) {
   strcpy(mpiioName,mpiioName_base);
   strcat(mpiioName,step);
 
+  
+  for (int ii=0; ii<lores_pix.size(); ++ii){  
+  clear_pixel_hydro(start_idx[ii], rank_diff,  rho, phi, vel, ksz, tsz, xray_band1, xray_band2);  
+  }
+    
+
+
 
   read_and_redistribute(mpiioName, commRanks, &P, map_lores, map_hires, rank_diff);
 

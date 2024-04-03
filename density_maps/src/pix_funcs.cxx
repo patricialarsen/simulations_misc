@@ -910,6 +910,32 @@ int assign_sz_ngp(vector<float> &rho, vector<float> &phi, vector<float> &vel,vec
      return 0;
 }
 
+void clear_pixel_hydro(int64_t start_idx, int rank_diff, vector<float> &rho , vector<float> &phi, vector<float> &vel, vector<float> &ksz, vector<double> &tsz, vector<double> &xray1, vector<double> &xray2){
+    int64_t len_pixel = pow(4,rank_diff);
+    for (int64_t idx=start_idx; idx<(len_pixel+start_idx); idx++){
+        rho[idx] = 0.0;
+	phi[idx] = 0.0;
+	vel[idx] = 0.0;
+	ksz[idx] = 0.0;
+	tsz[idx] = 0.0;
+	xray1[idx] = 0.0;
+	xray2[idx] = 0.0;
+    }
+    return;
+}
+
+void clear_pixel(int64_t start_idx, int rank_diff, vector<float> &rho , vector<float> &phi, vector<float> &vel){
+    int64_t len_pixel = pow(4,rank_diff);
+    for (int64_t idx=start_idx; idx<(len_pixel+start_idx); idx++){
+        rho[idx] = 0.0;
+        phi[idx] = 0.0;
+        vel[idx] = 0.0;
+    }
+    return;
+}
+
+
+
 void initialize_pixel_hydro(int pix_val,  T_Healpix_Base<int> map_lores, T_Healpix_Base<int64_t> map_hires, vector<float> &rho , vector<float> &phi, vector<float> &vel, vector<float> &ksz, vector<double> &tsz, vector<double> &xray1, vector<double> &xray2, int64_t &count, vector<int64_t> &start_idx, vector<int64_t> &end_idx, vector<int64_t> &pixnum_start, vector<int64_t> &pixnum_end, int rank_diff,  unordered_map<int64_t, int64_t>* ring_to_idx){
     int64_t npix = map_hires.Npix();
     

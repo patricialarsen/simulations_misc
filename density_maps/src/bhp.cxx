@@ -167,6 +167,7 @@ int main(int argc, char *argv[]) {
   int64_t count = 0; 
   vector<float> rho, phi, vel, ksz; // should generalize this so we're initializing it for an array of maps or a single map 
   vector<double> tsz;
+
   for (int ii=0;ii< lores_pix.size() ;++ii){
   int pix_val = lores_pix[ii];
   // initialize all pixels on rank
@@ -202,6 +203,12 @@ int main(int argc, char *argv[]) {
   strcpy(mpiioName2,mpiioName_base2);
   strcat(mpiioName2,step);
   strcat(mpiioName2,end2);
+
+
+
+  for (int ii=0; ii<lores_pix.size(); ++ii){
+  clear_pixel_hydro(start_idx[ii], rank_diff,  rho, phi, vel, ksz, tsz, xray_band1, xray_band2);
+  }
 
 
   read_and_redistribute_halocut(mpiioName, mpiioName2, commRanks, &P, &H,  map_lores, map_hires, rank_diff);
