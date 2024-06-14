@@ -29,6 +29,11 @@ BLOSCDIR = -I${GIODIR}/genericio/thirdparty/blosc
 INCDIRS = ${GIOINCDIR} ${HPXINCDIR}  ${HPXCINCDIR}  ${BLOSCDIR} ${HACCINCDIR} ${HACCINCDIR2} ${HYDROINC2} -I${HYDROINC3} -I./inc/
 LIBDIRS = -L${HPXLIBDIR}  -L${GIOLIBDIR} -L${CFTLIBDIR}
 
+go_compile: ${SCDIR}/gravonly.cxx
+	${CXX} -g -O3 -fopenmp -c  ${INCDIRS} ${SCDIR}/gravonly.cxx ${SCDIR}/utils_gravonly.cxx ${SCDIR}/pix_funcs_gravonly.cxx ${SCDIR}/PLParticles.cxx -std=c++17 ${HACC_MPI_CXXFLAGS}
+
+go_link: ${SCDIR}/gravonly.cxx
+	${CXX} -g  -O3 -fopenmp -o dens gravonly.o utils_gravonly.o pix_funcs_gravonly.o PLParticles.o ${INCDIRS} -L${GIOLIBDIR}  -lGenericIOMPI  -L${CFTLIBDIR} -lcfitsio  -L${HPXLIBDIR} -lchealpix -lhealpix_cxx  -std=c++17 ${HACC_MPI_LDFLAGS}  
 
 
 main_compile: ${SCDIR}/main.cxx 
