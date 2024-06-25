@@ -174,7 +174,7 @@ int main(int argc, char *argv[]) {
     printf( "Redistribute time is %f\n", t4 - t3 );
   }
 
-  int status = assign_dm_cic(rho, phi, vel,ksz, &P, map_hires, pix_nums_start, pix_nums_end,start_idx, ring_to_idx, samplerate);
+  int status = assign_dm_cic(rho, phi, vel, &P, map_hires, pix_nums_start, pix_nums_end,start_idx, ring_to_idx, samplerate);
 
 
   MPI_Barrier(MPI_COMM_WORLD);

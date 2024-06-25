@@ -1,6 +1,7 @@
 #!/bin/bash
 
-source /home/nfrontie/trunk/HACC/env/bashrc.aurora.kokkos_sycl
+source /home/prlarsen/codes/HACC/env/bashrc.aurora.kokkos_sycl_thirdparty
+#source /home/nfrontie/trunk/HACC/env/bashrc.aurora.kokkos_sycl
 
 rm dens
 rm *.o

@@ -12,7 +12,7 @@
 #include <math.h>
 #include <stdint.h>
 
-#include "chealpix.h"
+//#include "chealpix.h"
 #include "GenericIO.h"
 #include "BasicDefinition.h"
 

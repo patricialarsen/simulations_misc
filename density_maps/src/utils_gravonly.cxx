@@ -16,7 +16,7 @@
 #include <cmath>
 
 
-#include "chealpix.h"
+//#include "chealpix.h"
 #include "GenericIO.h"
 
 #include <cstdlib>
