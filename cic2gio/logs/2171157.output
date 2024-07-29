@@ -1,0 +1,143 @@
+commRanks and commrank are 32 0 
+rank = 6 Np = 953889490 
+rank = 14 Np = 1146313315 
+rank = 22 Np = 958938006 
+rank = 30 Np = 987672814 
+rank = 0 Np = 938171061 
+rank = 16 Np = 1099378774 
+rank = 8 Np = 1006271648 
+rank = 24 Np = 924943002 
+rank = 11 Np = 1061953196 
+rank = 3 Np = 965040279 
+rank = 19 Np = 1126429694 
+rank = 27 Np = 981209445 
+rank = 1 Np = 999332251 
+rank = 9 Np = 976667205 
+rank = 17 Np = 1166459075 
+rank = 25 Np = 1018977938 
+rank = 4 Np = 964763639 
+rank = 20 Np = 1047679424 
+rank = 28 Np = 1032255111 
+rank = 12 Np = 1099527461 
+rank = 18 Np = 1169675332 
+rank = 10 Np = 1057418943 
+rank = 2 Np = 894240818 
+rank = 26 Np = 972056737 
+rank = 5 Np = 955796049 
+rank = 13 Np = 1134726266 
+rank = 21 Np = 1031957666 
+rank = 29 Np = 931012811 
+rank = 31 Np = 986476555 
+rank = 7 Np = 986582814 
+rank = 15 Np = 1147979371 
+rank = 23 Np = 992757096 
+rank = 29 Np_final = 931012811 
+rank = 27 Np_final = 981209445 
+rank = 23 Np_final = 992757096 
+rank = 13 Np_final = 1134726266 
+rank = 11 Np_final = 1061953196 
+rank = 31 Np_final = 986476555 
+rank = 30 Np_final = 987672814 
+rank = 2 Np_final = 894240818 
+rank = 28 Np_final = 1032255111 
+rank = 24 Np_final = 924943002 
+rank = 21 Np_final = 1031957666 
+rank = 3 Np_final = 965040279 
+rank = 15 Np_final = 1147979371 
+rank = 6 Np_final = 953889490 
+rank = 26 Np_final = 972056737 
+rank = 4 Np_final = 964763639 
+Read rank = 5 Np_final = 955796049 
+rank = 7 Np_final = 986582814 
+rank = 14 Np_final = 1146313315 
+rank = 10 Np_final = 1057418943 
+rank = 12 Np_final = 1099527461 
+11 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_ADIABATIC/output/m000p.lc.mpicosmo.390 (811994366361 bytes) in rank = 19 Np_final = 1126429694 
+rank = 22 Np_final = 958938006 
+rank = 18 Np_final = 1169675332 
+rank = 20 Np_final = 1047679424 
+rank = 16 Np_final = 1099378774 
+rank = 8 Np_final = 1006271648 
+83.7142s: 9250.26 MB/s [excluding header read]
+rank = 0 Np_final = 938171061 
+rank = 9 Np_final = 976667205 
+rank = 17 Np_final = 1166459075 
+rank = 25 Np_final = 1018977938 
+rank = 1 Np_final = 999332251 
+Finished accumulating particles for rank 2
+Finished accumulating particles for rank 24
+Finished accumulating particles for rank 29
+Finished accumulating particles for rank 22
+Finished accumulating particles for rank 5
+Finished accumulating particles for rank 0
+Finished accumulating particles for rank 6
+Finished accumulating particles for rank 1
+Finished accumulating particles for rank 23
+Finished accumulating particles for rank 3
+Finished accumulating particles for rank 27
+Finished accumulating particles for rank 26
+Finished accumulating particles for rank 8
+Finished accumulating particles for rank 4
+Finished accumulating particles for rank 31
+Finished accumulating particles for rank 9
+Finished accumulating particles for rank 25
+Finished accumulating particles for rank 7
+Finished accumulating particles for rank 30
+Finished accumulating particles for rank 11
+Finished accumulating particles for rank 20
+Finished accumulating particles for rank 21
+Finished accumulating particles for rank 28
+Finished accumulating particles for rank 10
+Finished accumulating particles for rank 12
+Finished accumulating particles for rank 13
+Finished accumulating particles for rank 16
+Finished accumulating particles for rank 19
+Finished accumulating particles for rank 15
+Finished accumulating particles for rank 18
+Finished accumulating particles for rank 17
+Finished accumulating particles for rank 14
+ step: 390 amin: 0.625871 amax: 0.627463
+ step: 390 mumin: 0.592593 mumax: 0.592593
+ step: 390 mmin: 2.12379e+08 mmax: 2.12379e+08
+ step: 390 umin: 0.000628557 umax: 7.53714e+06
+ step: 390 dcmin: 2.32565e+06 dcmax: 2.35228e+06
+rank = 28 Np = 1009416802 
+rank = 12 Np = 1066043992 
+rank = 20 Np = 993630039 
+rank = 8 Np = 1012375838 
+rank = 0 Np = 928592420 
+rank = 24 Np = 918418466 
+rank = 4 Np = 951787705 
+rank = 16 Np = 1089102378 
+rank = 11 Np = 993914952 
+rank = 19 Np = 1122705237 
+rank = 27 Np = 970281952 
+rank = 30 Np = 980828849 
+rank = 14 Np = 1110458577 
+rank = 3 Np = 935443086 
+rank = 22 Np = 971245945 
+rank = 6 Np = 942961914 
+rank = 13 Np = 1128675129 
+rank = 29 Np = 935612995 
+rank = 21 Np = 981270203 
+rank = 5 Np = 963593044 
+rank = 18 Np = 1151181977 
+rank = 10 Np = 989108736 
+rank = 26 Np = 951454927 
+rank = 2 Np = 878263831 
+rank = 25 Np = 997430637 
+rank = 9 Np = 960549885 
+rank = 1 Np = 997539289 
+rank = 17 Np = 1142017163 
+rank = 23 Np = 989670966 
+rank = 15 Np = 1143449594 
+rank = 7 Np = 977973302 
+rank = 31 Np = 974522410 
+
+===================================================================================
+=   BAD TERMINATION OF ONE OF YOUR APPLICATION PROCESSES
+=   PID 26811 RUNNING AT cc007.cooley
+=   EXIT CODE: 135
+=   CLEANING UP REMAINING PROCESSES
+=   YOU CAN IGNORE THE BELOW CLEANUP MESSAGES
+===================================================================================

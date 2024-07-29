@@ -1,0 +1,25 @@
+Jobid: 2176396
+qsub -I -n 12 -q default -t 00:20:00 -A LastJourney
+Thu Jul 20 21:44:37 2023 +0000 (UTC) submitted with cwd set to: /home/prlarsen/codes/simulations_misc_new/simulations_misc/density_maps
+jobid 2176396 submitted from terminal /dev/pts/11
+Thu Jul 20 21:45:01 2023 +0000 (UTC) 
+Thu Jul 20 21:45:01 2023 +0000 (UTC) Command: '/usr/bin/ssh' 'cc066.cooley' '/usr/bin/cobalt-launcher.py' '--nf' '/var/tmp/cobalt.2176396' '--jobid' '2176396' '--cwd' '/home/prlarsen/codes/simulations_misc_new/simulations_misc/density_maps' '--env' 'COBALT_JOBID=2176396' '/bin/sleep' '1200'
+Thu Jul 20 21:45:01 2023 +0000 (UTC) 
+Thu Jul 20 21:45:01 2023 +0000 (UTC) Environment:
+Thu Jul 20 21:45:01 2023 +0000 (UTC) SHELL=/bin/bash
+Thu Jul 20 21:45:01 2023 +0000 (UTC) COBALT_NODEFILE=/tmp/tmpYnipAH
+Thu Jul 20 21:45:01 2023 +0000 (UTC) COBALT_PARTNAME=cc066.cooley
+Thu Jul 20 21:45:01 2023 +0000 (UTC) COBALT_JOBID=2176396
+Thu Jul 20 21:45:01 2023 +0000 (UTC) COBALT_STARTTIME=1689889484
+Thu Jul 20 21:45:01 2023 +0000 (UTC) LOGNAME=prlarsen
+Thu Jul 20 21:45:01 2023 +0000 (UTC) USER=prlarsen
+Thu Jul 20 21:45:01 2023 +0000 (UTC) COBALT_ENDTIME=1689890684
+Thu Jul 20 21:45:01 2023 +0000 (UTC) COBALT_PARTSIZE=12
+Thu Jul 20 21:45:01 2023 +0000 (UTC) HOME=/home/prlarsen
+Thu Jul 20 21:45:01 2023 +0000 (UTC) COBALT_JOBSIZE=12
+Thu Jul 20 21:45:01 2023 +0000 (UTC) 
+Thu Jul 20 21:45:01 2023 +0000 (UTC) Info: stdin received from /dev/null
+Thu Jul 20 21:45:01 2023 +0000 (UTC) Info: stdout sent to /home/prlarsen/codes/simulations_misc_new/simulations_misc/density_maps/2176396.output
+Thu Jul 20 21:45:01 2023 +0000 (UTC) Info: stderr sent to /home/prlarsen/codes/simulations_misc_new/simulations_misc/density_maps/2176396.error
+Thu Jul 20 21:45:01 2023 +0000 (UTC) 
+Thu Jul 20 21:54:50 2023 +0000 (UTC) Info: user delete requested with signal SIGTERM by user prlarsen

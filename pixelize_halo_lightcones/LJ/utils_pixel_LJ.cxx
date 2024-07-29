@@ -166,11 +166,11 @@ int write_files_slab(Halos_test &H_1, int rank,  vector<int> pixel_nums_rank, ve
         ss<<rank;
         string str_rank = ss.str();
 
-        string new_name = "/eagle/LastJourney/prlarsen/halo_lightcone_LJ/pixels_test4/" + zrange_str + "/cutout_" + str_rank + ".hdf5";
+        string new_name = "/eagle/LastJourney/prlarsen/halo_lightcone_LJ/pixel_outputs/" + zrange_str + "/cutout_" + str_rank + ".hdf5";
         H5::H5File file(new_name.c_str(), H5F_ACC_RDWR); // must already exist 
 
         int64_t fill_value = 0;
-        hsize_t chunk_dims[1] = {10000};
+        hsize_t chunk_dims[1] = {5000};
         H5::DSetCreatPropList plist;
         plist.setFillValue(H5::PredType::NATIVE_INT64, &fill_value);
         plist.setChunk(1,chunk_dims);

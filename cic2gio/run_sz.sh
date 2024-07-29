@@ -1,5 +1,12 @@
 #!/bin/bash
 
+mpirun -np 2 ./cic_gio /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_ADIABATIC/output/m000p.lc.mpicosmo. /eagle/LastJourney/prlarsen/LC_hydro/2023/ksz_150.fits /eagle/LastJourney/prlarsen/LC_hydro/2023/tsz_150.fits 0.01 20 400 8192
+
+mpirun -np 6 ./cic_gio /eagle/LastJourney/prlarsen/LC_hydro/m000.lc.mpicosmo. /eagle/LastJourney/prlarsen/LC_hydro/2023/ksz_150.fits /eagle/LastJourney/prlarsen/LC_hydro/2023/tsz_150.fits 0.01 50 20 8192
+
+50 150 151 152 153 154 155 156 157 158 159 160 161 162 163 164 165 166 167 168 169 170 171 172 173 174 175 176 177 178 179 180 181 182 183 184 185 186 187 188 189 190 191 192 193 194 195 196 197 198 199
+
+
 ./cic_gio /eagle/LastJourney/prlarsen/LC_hydro/m000.lc.mpicosmo. /eagle/LastJourney/prlarsen/LC_hydro/ksz_150.fits /eagle/LastJourney/prlarsen/LC_hydro/tsz_150.fits 0.01 50 150 151 152 153 154 155 156 157 158 159 160 161 162 163 164 165 166 167 168 169 170 171 172 173 174 175 176 177 178 179 180 181 182 183 184 185 186 187 188 189 190 191 192 193 194 195 196 197 198 199
 
 ./cic_gio /eagle/LastJourney/prlarsen/LC_hydro/m000.lc.mpicosmo. /eagle/LastJourney/prlarsen/LC_hydro/ksz_200.fits /eagle/LastJourney/prlarsen/LC_hydro/tsz_200.fits 0.01 50 200 201 202 203 204 205 206 207 208 209 210 211 212 213 214 215 216 217 218 219 220 221 222 223 224 225 226 227 228 229 230 231 232 233 234 235 236 237 238 239 240 241 242 243 244 245 246 247 248 249

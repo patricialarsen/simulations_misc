@@ -1,0 +1,25 @@
+Jobid: 2171355
+qsub -q default -n 8 -t 30 -A LastJourney -M prlarsen@anl.gov ./Cobalt_cooley.sh
+Mon May 01 21:49:39 2023 +0000 (UTC) submitted with cwd set to: /home/prlarsen/codes/simulations_misc_new/simulations_misc/cic2gio
+jobid 2171355 submitted from terminal /dev/pts/5
+Mon May 01 21:50:02 2023 +0000 (UTC) 
+Mon May 01 21:50:02 2023 +0000 (UTC) Command: '/usr/bin/ssh' 'cc066.cooley' '/usr/bin/cobalt-launcher.py' '--nf' '/var/tmp/cobalt.2171355' '--jobid' '2171355' '--cwd' '/home/prlarsen/codes/simulations_misc_new/simulations_misc/cic2gio' '--env' 'COBALT_JOBID=2171355' '/home/prlarsen/codes/simulations_misc_new/simulations_misc/cic2gio/./Cobalt_cooley.sh'
+Mon May 01 21:50:02 2023 +0000 (UTC) 
+Mon May 01 21:50:02 2023 +0000 (UTC) Environment:
+Mon May 01 21:50:02 2023 +0000 (UTC) SHELL=/bin/bash
+Mon May 01 21:50:02 2023 +0000 (UTC) COBALT_NODEFILE=/tmp/tmp0FUh07
+Mon May 01 21:50:02 2023 +0000 (UTC) COBALT_PARTNAME=cc066.cooley
+Mon May 01 21:50:02 2023 +0000 (UTC) COBALT_JOBID=2171355
+Mon May 01 21:50:02 2023 +0000 (UTC) COBALT_STARTTIME=1682977783
+Mon May 01 21:50:02 2023 +0000 (UTC) LOGNAME=prlarsen
+Mon May 01 21:50:02 2023 +0000 (UTC) USER=prlarsen
+Mon May 01 21:50:02 2023 +0000 (UTC) COBALT_ENDTIME=1682979583
+Mon May 01 21:50:02 2023 +0000 (UTC) COBALT_PARTSIZE=8
+Mon May 01 21:50:02 2023 +0000 (UTC) HOME=/home/prlarsen
+Mon May 01 21:50:02 2023 +0000 (UTC) COBALT_JOBSIZE=8
+Mon May 01 21:50:02 2023 +0000 (UTC) 
+Mon May 01 21:50:02 2023 +0000 (UTC) Info: stdin received from /dev/null
+Mon May 01 21:50:02 2023 +0000 (UTC) Info: stdout sent to /home/prlarsen/codes/simulations_misc_new/simulations_misc/cic2gio/2171355.output
+Mon May 01 21:50:02 2023 +0000 (UTC) Info: stderr sent to /home/prlarsen/codes/simulations_misc_new/simulations_misc/cic2gio/2171355.error
+Mon May 01 21:50:02 2023 +0000 (UTC) 
+Mon May 01 21:50:24 2023 +0000 (UTC) Info: task completed normally with an exit code of 139; initiating job cleanup and removal

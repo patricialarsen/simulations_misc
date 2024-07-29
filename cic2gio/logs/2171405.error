@@ -1,0 +1,57 @@
+[cli_8]: aborting job:
+Fatal error in PMPI_Gatherv:
+Invalid count, error stack:
+PMPI_Gatherv(547): MPI_Gatherv failed(sbuf=0xf3b0570, scount=-1005211875, dtype=USER<struct>, rbuf=0xf3b0570, rcnts=0xf3aeb00, displs=0xf3ae9c0, dtype=USER<struct>, root=0, MPI_COMM_WORLD) failed
+PMPI_Gatherv(439): Negative count, value is -1005211875
+
+[cli_12]: aborting job:
+Fatal error in PMPI_Gatherv:
+Invalid count, error stack:
+PMPI_Gatherv(547): MPI_Gatherv failed(sbuf=0xe6e3470, scount=-1005211875, dtype=USER<struct>, rbuf=0xe6e3470, rcnts=0xe6e19c0, displs=0x11ed8590, dtype=USER<struct>, root=0, MPI_COMM_WORLD) failed
+PMPI_Gatherv(439): Negative count, value is -1005211875
+
+[cc098:mpi_rank_0][error_sighandler] Caught error: Segmentation fault (signal 11)
+[cli_20]: aborting job:
+Fatal error in PMPI_Gatherv:
+Invalid count, error stack:
+PMPI_Gatherv(547): MPI_Gatherv failed(sbuf=0x10024470, scount=-1005211875, dtype=USER<struct>, rbuf=0x10024470, rcnts=0x100229c0, displs=0x13a76050, dtype=USER<struct>, root=0, MPI_COMM_WORLD) failed
+PMPI_Gatherv(439): Negative count, value is -1005211875
+
+[cli_16]: aborting job:
+Fatal error in PMPI_Gatherv:
+Invalid count, error stack:
+PMPI_Gatherv(547): MPI_Gatherv failed(sbuf=0xfc9d470, scount=-1005211875, dtype=USER<struct>, rbuf=0xfc9d470, rcnts=0xfc9b9c0, displs=0x137d67b0, dtype=USER<struct>, root=0, MPI_COMM_WORLD) failed
+PMPI_Gatherv(439): Negative count, value is -1005211875
+
+[cli_3]: [cli_7]: aborting job:
+Fatal error in PMPI_Gatherv:
+Invalid count, error stack:
+PMPI_Gatherv(547): MPI_Gatherv failed(sbuf=0x1873aa20, scount=-1073741824, dtype=USER<struct>, rbuf=0x1873aa20, rcnts=0x10168a80, displs=0x10168b10, dtype=USER<struct>, root=0, MPI_COMM_WORLD) failed
+PMPI_Gatherv(439): Negative count, value is -1073741824
+
+aborting job:
+Fatal error in PMPI_Gatherv:
+Invalid count, error stack:
+PMPI_Gatherv(547): MPI_Gatherv failed(sbuf=0x31ad1e70, scount=-536870912, dtype=USER<struct>, rbuf=0x31ad1e70, rcnts=0x207fd910, displs=0x102a2880, dtype=USER<struct>, root=0, MPI_COMM_WORLD) failed
+PMPI_Gatherv(439): Negative count, value is -536870912
+
+[cli_5]: aborting job:
+Fatal error in PMPI_Gatherv:
+Invalid count, error stack:
+PMPI_Gatherv(547): MPI_Gatherv failed(sbuf=0x213db050, scount=-1073741824, dtype=USER<struct>, rbuf=0x213db050, rcnts=0x33675730, displs=0xfeb8a40, dtype=USER<struct>, root=0, MPI_COMM_WORLD) failed
+PMPI_Gatherv(439): Negative count, value is -1073741824
+
+[cc101:mpi_rank_30][error_sighandler] Caught error: Segmentation fault (signal 11)
+[cc101:mpi_rank_22][error_sighandler] Caught error: Segmentation fault (signal 11)
+[cc047:mpi_rank_26][error_sighandler] Caught error: Segmentation fault (signal 11)
+[cc087:mpi_rank_1][error_sighandler] Caught error: Segmentation fault (signal 11)
+[proxy:0:1@cc087] HYD_pmcd_pmip_control_cmd_cb (pm/pmiserv/pmip_cb.c:878): assert (!closed) failed
+[proxy:0:1@cc087] HYDT_dmxu_poll_wait_for_event (tools/demux/demux_poll.c:77): callback returned error status
+[proxy:0:1@cc087] main (pm/pmiserv/pmip.c:200): demux engine error waiting for event
+[proxy:0:2@cc047] HYD_pmcd_pmip_control_cmd_cb (pm/pmiserv/pmip_cb.c:878): assert (!closed) failed
+[proxy:0:2@cc047] HYDT_dmxu_poll_wait_for_event (tools/demux/demux_poll.c:77): callback returned error status
+[proxy:0:2@cc047] main (pm/pmiserv/pmip.c:200): demux engine error waiting for event
+[mpiexec@cc098] HYDT_bscu_wait_for_completion (tools/bootstrap/utils/bscu_wait.c:75): one of the processes terminated badly; aborting
+[mpiexec@cc098] HYDT_bsci_wait_for_completion (tools/bootstrap/src/bsci_wait.c:22): launcher returned error waiting for completion
+[mpiexec@cc098] HYD_pmci_wait_for_completion (pm/pmiserv/pmiserv_pmci.c:215): launcher returned error waiting for completion
+[mpiexec@cc098] main (ui/mpich/mpiexec.c:336): process manager error waiting for completion

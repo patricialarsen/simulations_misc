@@ -1,0 +1,22 @@
+[cc007:mpi_rank_15][error_sighandler] Caught error: Bus error (signal 7)
+[proxy:0:1@cc015] HYD_pmcd_pmip_control_cmd_cb (pm/pmiserv/pmip_cb.c:878): assert (!closed) failed
+[proxy:0:1@cc015] HYDT_dmxu_poll_wait_for_event (tools/demux/demux_poll.c:77): callback returned error status
+[proxy:0:2@cc010] HYD_pmcd_pmip_control_cmd_cb (pm/pmiserv/pmip_cb.c:878): assert (!closed) failed
+[proxy:0:2@cc010] HYDT_dmxu_poll_wait_for_event (tools/demux/demux_poll.c:77): callback returned error status
+[proxy:0:2@cc010] main (pm/pmiserv/pmip.c:200): demux engine error waiting for event
+[proxy:0:3@cc009] HYD_pmcd_pmip_control_cmd_cb (pm/pmiserv/pmip_cb.c:878): assert (!closed) failed
+[proxy:0:3@cc009] HYDT_dmxu_poll_wait_for_event (tools/demux/demux_poll.c:77): callback returned error status
+[proxy:0:3@cc009] main (pm/pmiserv/pmip.c:200): demux engine error waiting for event
+[proxy:0:4@cc003] HYD_pmcd_pmip_control_cmd_cb (pm/pmiserv/pmip_cb.c:878): assert (!closed) failed
+[proxy:0:4@cc003] HYDT_dmxu_poll_wait_for_event (tools/demux/demux_poll.c:77): callback returned error status
+[proxy:0:4@cc003] main (pm/pmiserv/pmip.c:200): demux engine error waiting for event
+[proxy:0:5@cc008] HYD_pmcd_pmip_control_cmd_cb (pm/pmiserv/pmip_cb.c:878): assert (!closed) failed
+[proxy:0:5@cc008] HYDT_dmxu_poll_wait_for_event (tools/demux/demux_poll.c:77): callback returned error status
+[proxy:0:5@cc008] main (pm/pmiserv/pmip.c:200): demux engine error waiting for event
+[proxy:0:6@cc002] HYD_pmcd_pmip_control_cmd_cb (pm/pmiserv/pmip_cb.c:878): assert (!closed) failed
+[proxy:0:6@cc002] HYDT_dmxu_poll_wait_for_event (tools/demux/demux_poll.c:77): callback returned error status
+[proxy:0:6@cc002] main (pm/pmiserv/pmip.c:200): demux engine error waiting for event
+[mpiexec@cc005] HYDT_bscu_wait_for_completion (tools/bootstrap/utils/bscu_wait.c:75): one of the processes terminated badly; aborting
+[mpiexec@cc005] HYDT_bsci_wait_for_completion (tools/bootstrap/src/bsci_wait.c:22): launcher returned error waiting for completion
+[mpiexec@cc005] HYD_pmci_wait_for_completion (pm/pmiserv/pmiserv_pmci.c:215): launcher returned error waiting for completion
+[mpiexec@cc005] main (ui/mpich/mpiexec.c:336): process manager error waiting for completion

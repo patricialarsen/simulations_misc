@@ -1,0 +1,7 @@
+[cli_0]: aborting job:
+Fatal error in PMPI_Gatherv:
+Invalid buffer pointer, error stack:
+PMPI_Gatherv(547): MPI_Gatherv failed(sbuf=0x68be67ab0, scount=25165824, dtype=USER<struct>, rbuf=0x68be67ab0, rcnts=0xd8d94d40, displs=0xd8d96a70, dtype=USER<struct>, root=0, MPI_COMM_WORLD) failed
+PMPI_Gatherv(478): Buffers must not be aliased
+
+Killed by signal 15.

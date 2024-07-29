@@ -1,0 +1,5 @@
+Jobid: 2171077
+qsub -I -n 1 -q debug -t 00:30:00 -A LastJourney
+Wed Apr 26 17:40:14 2023 +0000 (UTC) submitted with cwd set to: /home/prlarsen/codes/simulations_misc_new/simulations_misc/cic2gio
+jobid 2171077 submitted from terminal /dev/pts/32
+Wed Apr 26 17:40:18 2023 +0000 (UTC) Info: user delete requested; removing job from the queue

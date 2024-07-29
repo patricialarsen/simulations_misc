@@ -86,6 +86,7 @@ int main(int argc, char *argv[]) {
   vector<POSVEL_T> xx, yy, zz;
   vector<POSVEL_T> vx, vy, vz;
   vector<POSVEL_T> a; 
+  vector<MASK_T> mask;
 
 
 #ifdef HYBRID_SG
@@ -158,6 +159,7 @@ int main(int argc, char *argv[]) {
       vz.resize(Np + GIO.requestedExtraSpace()/sizeof(POSVEL_T));
       uu.resize(Np + GIO.requestedExtraSpace()/sizeof(POSVEL_T));
       mass.resize(Np + GIO.requestedExtraSpace()/sizeof(POSVEL_T));
+      mask.resize(Np + GIO.requestedExtraSpace()/sizeof(MASK_T));
 #ifndef HYBRID_SG
       mu.resize(Np + GIO.requestedExtraSpace()/sizeof(POSVEL_T));
 #endif
@@ -177,6 +179,7 @@ int main(int argc, char *argv[]) {
       GIO.addVariable("mu", mu, true);
 #endif
       GIO.addVariable("id", id, true);
+      GIO.addVariable("mask",mask,true);
 
       GIO.readData();
     } // destroy GIO prior to calling MPI_Finalize
@@ -190,6 +193,8 @@ int main(int argc, char *argv[]) {
     vz.resize(Np);
     uu.resize(Np);
     mass.resize(Np);
+    mask.resize(Np);
+
 #ifndef HYBRID_SG
     mu.resize(Np);
 #endif
@@ -287,9 +292,9 @@ int main(int argc, char *argv[]) {
   const double SIGMAT = 6.652e-25;
   const double MP     = 1.6737236e-24;
   const double ME     = 9.1093836e-28;
-  const double CLIGHT = 2.99792458e10;
+  //const double CLIGHT = 2.99792458e10;
   const double MUE    = 1.14;
-  const double GAMMA  = 5.0/3.0;
+  //const double GAMMA  = 5.0/3.0;
   const double YP     = 0.24;
   const double NHE    = 0.0; // assume helium is neutral 
   const double CHIE   = (1.0-YP*(1.0-NHE/4.0))/(1.0-YP/2.0);

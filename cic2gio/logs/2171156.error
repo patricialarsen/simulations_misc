@@ -1,0 +1,9 @@
+/home/prlarsen/codes/simulations_misc_new/simulations_misc/cic2gio/./Cobalt_cooley.sh: line 3: 32: command not found
+[proxy:0:0@cc005] HYDU_create_process (utils/launch/launch.c:74): execvp error on file /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_ADIABATIC/output/m000p.lc.mpicosmo. (No such file or directory)
+[proxy:0:1@cc015] HYDU_create_process (utils/launch/launch.c:74): execvp error on file /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_ADIABATIC/output/m000p.lc.mpicosmo. (No such file or directory)
+[proxy:0:7@cc007] HYDU_create_process (utils/launch/launch.c:74): execvp error on file /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_ADIABATIC/output/m000p.lc.mpicosmo. (No such file or directory)
+[proxy:0:3@cc009] HYDU_create_process (utils/launch/launch.c:74): execvp error on file /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_ADIABATIC/output/m000p.lc.mpicosmo. (No such file or directory)
+[proxy:0:2@cc010] HYDU_create_process (utils/launch/launch.c:74): execvp error on file /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_ADIABATIC/output/m000p.lc.mpicosmo. (No such file or directory)
+[proxy:0:5@cc008] HYDU_create_process (utils/launch/launch.c:74): execvp error on file /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_ADIABATIC/output/m000p.lc.mpicosmo. (No such file or directory)
+[proxy:0:4@cc003] HYDU_create_process (utils/launch/launch.c:74): execvp error on file /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_ADIABATIC/output/m000p.lc.mpicosmo. (No such file or directory)
+[proxy:0:6@cc002] HYDU_create_process (utils/launch/launch.c:74): execvp error on file /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_ADIABATIC/output/m000p.lc.mpicosmo. (No such file or directory)

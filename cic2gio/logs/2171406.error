@@ -1,0 +1,13 @@
+[cli_0]: aborting job:
+Fatal error in PMPI_Gatherv:
+Other MPI error, error stack:
+PMPI_Gatherv(547).................: MPI_Gatherv failed(sbuf=MPI_IN_PLACE, scount=1572864, dtype=USER<struct>, rbuf=0x22044d60, rcnts=0xf5bd880, displs=0xf5bd910, dtype=USER<struct>, root=0, MPI_COMM_WORLD) failed
+MPIR_Gatherv_impl(313)............: 
+MPIR_Gatherv_MV2(93)..............: 
+MPIC_Waitall(789).................: 
+MPIR_Waitall_impl(166)............: 
+MPIDI_CH3I_Progress(209)..........: 
+MPIDI_CH3I_SMP_read_progress(1112): 
+MPIDI_CH3I_SMP_readv_rndv(4684)...: CMA: (MPIDI_CH3I_SMP_readv_rndv) process_vm_readv fail
+
+Killed by signal 15.

@@ -13,8 +13,8 @@ HPXLIBDIR2 = /home/prlarsen/usr/Healpix_3.31/src/cxx/generic_gcc/lib
 FITSINCDIR = -I/home/prlarsen/usr/cfitsio/lib/include
 FITSLIBDIR = /home/prlarsen/usr/cfitsio/lib/lib
 
-
-HACCDIR = /home/prlarsen/hacc_fresh/HACC/
+HACCDIR = /home/prlarsen/hacc_fresh/2022_hacc/HACC/
+#HACCDIR = /home/prlarsen/hacc_fresh/HACC/
 
 GIOINCDIR = -I${HACCDIR}/genericio
 BLOSCDIR = -I${HACCDIR}/genericio/thirdparty/blosc
@@ -25,8 +25,8 @@ BLOSCDIR = -I${HACCDIR}/genericio/thirdparty/blosc
 GIOLIBDIR=${HACCDIR}/cooley.cpu/mpi/lib
 GIOINCDIR2= -I${HACCDIR}/cooley.cpu/mpi/genericio
 
-
-AVDIR = -I/home/prlarsen/hacc_fresh/HACC/cosmotools/algorithms/mergertree_ct
+AVDIR = -I/home/prlarsen/hacc_fresh/2022_hacc/HACC/cosmotools/algorithms/mergertree_ct
+#AVDIR = -I/home/prlarsen/hacc_fresh/HACC/cosmotools/algorithms/mergertree_ct
 
 HPXOFILES= /home/prlarsen/usr/Healpix_3.31/src/cxx/build.generic_gcc/Healpix_cxx/healpix_base.o
 

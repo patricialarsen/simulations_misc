@@ -1,0 +1,70 @@
+commRanks and commrank are 6 0 
+rank = 3 Np = 0 
+rank = 5 Np = 44790397 
+rank = 0 Np = 42410094 
+rank = 1 Np = 16851112 
+rank = 2 Np = 0 
+rank = 4 Np = 13691635 
+Read 10 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_ADIABATIC/output/m000p.lc.mpicosmo.600 (2716902728 bytes) in 5.85325s: 442.667 MB/s [excluding header read]
+About to send data
+Finished accumulating particles for rank 0
+Finished accumulating particles for rank 2
+Finished accumulating particles for rank 1
+Finished accumulating particles for rank 5
+Finished accumulating particles for rank 4
+Finished accumulating particles for rank 3
+ step: 600 amin: 0.960199 amax: 0.961791
+ step: 600 mumin: 0.592593 mumax: 0.592593
+ step: 600 mmin: 2.12379e+08 mmax: 2.12379e+08
+ step: 600 umin: 0.000267522 umax: 3.1981e+06
+ step: 600 dcmin: 13921.9 dcmax: 15143.9
+rank = 0 Np = 42645311 
+rank = 4 Np = 11511278 
+rank = 5 Np = 43508801 
+rank = 3 Np = 0 
+rank = 2 Np = 0 
+rank = 1 Np = 12130356 
+Read 10 variables from /lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_ADIABATIC/output/m000p.lc.mpicosmo.601 (2495454560 bytes) in 5.4732s: 434.819 MB/s [excluding header read]
+About to send data
+Finished accumulating particles for rank 0
+Finished accumulating particles for rank 2
+Finished accumulating particles for rank 1
+Finished accumulating particles for rank 5
+Finished accumulating particles for rank 4
+Finished accumulating particles for rank 3
+ step: 601 amin: 0.961791 amax: 0.963383
+ step: 601 mumin: 0.592593 mumax: 0.592593
+ step: 601 mmin: 2.12379e+08 mmax: 2.12379e+08
+ step: 601 umin: 0.000266638 umax: 3.33499e+06
+ step: 601 dcmin: 12754.1 dcmax: 13921.9
+ CHIE: 0.863636 SAMPLERATE: 0.01
+ KSZ_CONV: -8.40114e-09 TSZ_CONV: 3.43259e-06
+pix count (1) for rank 5 is 8388608 
+ pix count (1) for rank 1 is 8388608 
+ pix count (1) for rank 3 is 8388608 
+ pix count (1) for rank 2 is 8388608 
+ pix count (1) for rank 0 is 8388608 
+ pix count (1) for rank 4 is 8388608 
+ pix count for rank 0 is 8388608 
+ recv offset for rank 0 is 0 
+ pix count for rank 1 is 8388608 
+ recv offset for rank 1 is 8388608 
+ pix count for rank 2 is 8388608 
+ recv offset for rank 2 is 16777216 
+ pix count for rank 3 is 8388608 
+ recv offset for rank 3 is 25165824 
+ pix count for rank 4 is 8388608 
+ recv offset for rank 4 is 33554432 
+ pix count for rank 5 is 8388608 
+ recv offset for rank 5 is 41943040 
+ 
+===================================================================================
+=   BAD TERMINATION OF ONE OF YOUR APPLICATION PROCESSES
+=   PID 25154 RUNNING AT cc060.cooley
+=   EXIT CODE: 11
+=   CLEANING UP REMAINING PROCESSES
+=   YOU CAN IGNORE THE BELOW CLEANUP MESSAGES
+===================================================================================
+YOUR APPLICATION TERMINATED WITH THE EXIT STRING: Segmentation fault (signal 11)
+This typically refers to a problem with your application.
+Please see the FAQ page for debugging suggestions

@@ -1,3 +1,24 @@
 check_halo_direct/obj/*
 check_halo_direct/params_*.txt
 check_halo_direct/run_test
+
+# log files 
+density_maps/*.error
+density_maps/*.cobaltlog
+density_maps/*.output
+denstiy_maps/logs/*
+
+pixelize_halo_lightcones/LJ/*.error
+pixelize_halo_lightcones/LJ/*.cobaltlog
+pixelize_halo_lightcones/LJ/*.output
+pixelize_halo_lightcones/LJ/pixelize_LJ
+
+cic2gio/logs/*.error
+cic2gio/logs/*.cobaltlog
+cic2gio/logs/*.output
+cic2gio/cic_gio
+cic2gio/memtest
+
+# executables
+density_maps/dens
+density_maps/hydro

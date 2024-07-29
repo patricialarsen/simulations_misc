@@ -1,0 +1,80 @@
+[cc084:mpi_rank_0][error_sighandler] Caught error: Segmentation fault (signal 11)
+[cli_8]: aborting job:
+Fatal error in PMPI_Gatherv:
+Invalid count, error stack:
+PMPI_Gatherv(547): MPI_Gatherv failed(sbuf=0x934a46030, scount=-1073741824, dtype=USER<struct>, rbuf=0x934a46030, rcnts=0x962c7a890, displs=0xef979c0, dtype=USER<struct>, root=0, MPI_COMM_WORLD) failed
+PMPI_Gatherv(439): Negative count, value is -1073741824
+
+[cli_16]: aborting job:
+Fatal error in PMPI_Gatherv:
+Invalid count, error stack:
+PMPI_Gatherv(547): MPI_Gatherv failed(sbuf=0x36d1f2740, scount=-1610612736, dtype=USER<struct>, rbuf=0x36d1f2740, rcnts=0x39d6de2f0, displs=0xfbdd9c0, dtype=USER<struct>, root=0, MPI_COMM_WORLD) failed
+PMPI_Gatherv(439): Negative count, value is -1610612736
+
+[cli_2]: aborting job:
+Fatal error in PMPI_Gatherv:
+Invalid count, error stack:
+PMPI_Gatherv(547): MPI_Gatherv failed(sbuf=0x2dd659150, scount=-1610612736, dtype=USER<struct>, rbuf=0x2dd659150, rcnts=0xed47820, displs=0xed478b0, dtype=USER<struct>, root=0, MPI_COMM_WORLD) failed
+PMPI_Gatherv(439): Negative count, value is -1610612736
+
+[cli_4]: aborting job:
+Fatal error in PMPI_Gatherv:
+Invalid count, error stack:
+PMPI_Gatherv(547): MPI_Gatherv failed(sbuf=0x3217db310, scount=-2147483648, dtype=USER<struct>, rbuf=0x3217db310, rcnts=0x320ae8af0, displs=0xe848840, dtype=USER<struct>, root=0, MPI_COMM_WORLD) failed
+PMPI_Gatherv(439): Negative count, value is -2147483648
+
+[cli_10]: aborting job:
+Fatal error in PMPI_Gatherv:
+Invalid count, error stack:
+PMPI_Gatherv(547): MPI_Gatherv failed(sbuf=0x408d0b010, scount=-1610612736, dtype=USER<struct>, rbuf=0x408d0b010, rcnts=0x408907cc0, displs=0x1024c9c0, dtype=USER<struct>, root=0, MPI_COMM_WORLD) failed
+PMPI_Gatherv(439): Negative count, value is -1610612736
+
+[cli_12]: aborting job:
+Fatal error in PMPI_Gatherv:
+Invalid count, error stack:
+PMPI_Gatherv(547): MPI_Gatherv failed(sbuf=0x396ea04e0, scount=-1610612736, dtype=USER<struct>, rbuf=0x396ea04e0, rcnts=0x873c0b860, displs=0xf290980, dtype=USER<struct>, root=0, MPI_COMM_WORLD) failed
+PMPI_Gatherv(439): Negative count, value is -1610612736
+
+[cli_20]: aborting job:
+Fatal error in PMPI_Gatherv:
+Invalid count, error stack:
+PMPI_Gatherv(547): MPI_Gatherv failed(sbuf=0x42d974450, scount=-1632124572, dtype=USER<struct>, rbuf=0x42d974450, rcnts=0x42d0780d0, displs=0x42d0768f0, dtype=USER<struct>, root=0, MPI_COMM_WORLD) failed
+PMPI_Gatherv(439): Negative count, value is -1632124572
+
+[cli_14]: aborting job:
+Fatal error in PMPI_Gatherv:
+Invalid count, error stack:
+PMPI_Gatherv(547): MPI_Gatherv failed(sbuf=0x3c90a7150, scount=-1610612736, dtype=USER<struct>, rbuf=0x3c90a7150, rcnts=0x3fe634a40, displs=0xf3d49c0, dtype=USER<struct>, root=0, MPI_COMM_WORLD) failed
+PMPI_Gatherv(439): Negative count, value is -1610612736
+
+[cli_6]: aborting job:
+Fatal error in PMPI_Gatherv:
+Invalid count, error stack:
+PMPI_Gatherv(547): MPI_Gatherv failed(sbuf=0x3ecdffb30, scount=-1073741824, dtype=USER<struct>, rbuf=0x3ecdffb30, rcnts=0xf126880, displs=0xf126910, dtype=USER<struct>, root=0, MPI_COMM_WORLD) failed
+PMPI_Gatherv(439): Negative count, value is -1073741824
+
+[proxy:0:5@cc024] HYD_pmcd_pmip_control_cmd_cb (pm/pmiserv/pmip_cb.c:878): assert (!closed) failed
+[proxy:0:5@cc024] HYDT_dmxu_poll_wait_for_event (tools/demux/demux_poll.c:77): callback returned error status
+[proxy:0:5@cc024] main (pm/pmiserv/pmip.c:200): demux engine error waiting for event
+[proxy:0:2@cc023] HYD_pmcd_pmip_control_cmd_cb (pm/pmiserv/pmip_cb.c:878): assert (!closed) failed
+[proxy:0:2@cc023] HYDT_dmxu_poll_wait_for_event (tools/demux/demux_poll.c:77): callback returned error status
+[proxy:0:2@cc023] main (pm/pmiserv/pmip.c:200): demux engine error waiting for event
+[proxy:0:4@cc031] HYD_pmcd_pmip_control_cmd_cb (pm/pmiserv/pmip_cb.c:878): assert (!closed) failed
+[proxy:0:4@cc031] HYDT_dmxu_poll_wait_for_event (tools/demux/demux_poll.c:77): callback returned error status
+[proxy:0:4@cc031] main (pm/pmiserv/pmip.c:200): demux engine error waiting for event
+[proxy:0:7@cc122] HYD_pmcd_pmip_control_cmd_cb (pm/pmiserv/pmip_cb.c:878): assert (!closed) failed
+[proxy:0:7@cc122] HYDT_dmxu_poll_wait_for_event (tools/demux/demux_poll.c:77): callback returned error status
+[proxy:0:7@cc122] main (pm/pmiserv/pmip.c:200): demux engine error waiting for event
+[proxy:0:1@cc061] HYD_pmcd_pmip_control_cmd_cb (pm/pmiserv/pmip_cb.c:878): assert (!closed) failed
+[proxy:0:1@cc061] HYDT_dmxu_poll_wait_for_event (tools/demux/demux_poll.c:77): callback returned error status
+[proxy:0:1@cc061] main (pm/pmiserv/pmip.c:200): demux engine error waiting for event
+[proxy:0:3@cc066] HYD_pmcd_pmip_control_cmd_cb (pm/pmiserv/pmip_cb.c:878): assert (!closed) failed
+[proxy:0:3@cc066] HYDT_dmxu_poll_wait_for_event (tools/demux/demux_poll.c:77): callback returned error status
+[proxy:0:3@cc066] main (pm/pmiserv/pmip.c:200): demux engine error waiting for event
+[proxy:0:6@cc021] HYD_pmcd_pmip_control_cmd_cb (pm/pmiserv/pmip_cb.c:878): assert (!closed) failed
+[proxy:0:6@cc021] HYDT_dmxu_poll_wait_for_event (tools/demux/demux_poll.c:77): callback returned error status
+[proxy:0:6@cc021] main (pm/pmiserv/pmip.c:200): demux engine error waiting for event
+[mpiexec@cc084] HYDT_bscu_wait_for_completion (tools/bootstrap/utils/bscu_wait.c:75): one of the processes terminated badly; aborting
+[mpiexec@cc084] HYDT_bsci_wait_for_completion (tools/bootstrap/src/bsci_wait.c:22): launcher returned error waiting for completion
+[mpiexec@cc084] HYD_pmci_wait_for_completion (pm/pmiserv/pmiserv_pmci.c:215): launcher returned error waiting for completion
+[mpiexec@cc084] main (ui/mpich/mpiexec.c:336): process manager error waiting for completion

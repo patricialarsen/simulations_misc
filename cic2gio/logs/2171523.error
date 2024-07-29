@@ -1,0 +1,30 @@
+[cli_1]: aborting job:
+Fatal error in PMPI_Gatherv:
+Invalid buffer pointer, error stack:
+PMPI_Gatherv(547): MPI_Gatherv failed(sbuf=MPI_IN_PLACE, scount=8388608, dtype=USER<struct>, rbuf=0x7f18548c6010, rcnts=0x1b9cf10, displs=0x436486b0, dtype=USER<struct>, root=0, MPI_COMM_WORLD) failed
+PMPI_Gatherv(482): sendbuf cannot be MPI_IN_PLACE
+
+[cli_2]: aborting job:
+Fatal error in PMPI_Gatherv:
+Invalid buffer pointer, error stack:
+PMPI_Gatherv(547): MPI_Gatherv failed(sbuf=MPI_IN_PLACE, scount=8388608, dtype=USER<struct>, rbuf=0x7f9c9b86a010, rcnts=0x43d793e0, displs=0x43d791e0, dtype=USER<struct>, root=0, MPI_COMM_WORLD) failed
+PMPI_Gatherv(482): sendbuf cannot be MPI_IN_PLACE
+
+[cli_3]: aborting job:
+Fatal error in PMPI_Gatherv:
+Invalid buffer pointer, error stack:
+PMPI_Gatherv(547): MPI_Gatherv failed(sbuf=MPI_IN_PLACE, scount=8388608, dtype=USER<struct>, rbuf=0x7fa21a617010, rcnts=0x418bfab0, displs=0x4350ede0, dtype=USER<struct>, root=0, MPI_COMM_WORLD) failed
+PMPI_Gatherv(482): sendbuf cannot be MPI_IN_PLACE
+
+[cli_4]: aborting job:
+Fatal error in PMPI_Gatherv:
+Invalid buffer pointer, error stack:
+PMPI_Gatherv(547): MPI_Gatherv failed(sbuf=MPI_IN_PLACE, scount=8388608, dtype=USER<struct>, rbuf=0x7f95017f3010, rcnts=0x4300c0d0, displs=0x4140cbc0, dtype=USER<struct>, root=0, MPI_COMM_WORLD) failed
+PMPI_Gatherv(482): sendbuf cannot be MPI_IN_PLACE
+
+[cli_5]: aborting job:
+Fatal error in PMPI_Gatherv:
+Invalid buffer pointer, error stack:
+PMPI_Gatherv(547): MPI_Gatherv failed(sbuf=MPI_IN_PLACE, scount=8388608, dtype=USER<struct>, rbuf=0x7fe3bcab2010, rcnts=0x276bf10, displs=0x4276dbc0, dtype=USER<struct>, root=0, MPI_COMM_WORLD) failed
+PMPI_Gatherv(482): sendbuf cannot be MPI_IN_PLACE
+

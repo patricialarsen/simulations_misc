@@ -95,8 +95,8 @@ int main(int argc, char ** argv) {
       stringstream ss;
       ss<< rank;
       string str_pix = ss.str();
-      cout << "/eagle/LastJourney/prlarsen/halo_lightcone_LJ/pixels_test4/" + zrange_str + "/cutout_"+str_pix+".hdf5"<< "\n";
-      string new_name = "/eagle/LastJourney/prlarsen/halo_lightcone_LJ/pixels_test4/" + zrange_str + "/cutout_" + str_pix + ".hdf5";
+      cout << "/eagle/LastJourney/prlarsen/halo_lightcone_LJ/pixel_outputs/" + zrange_str + "/cutout_"+str_pix+".hdf5"<< "\n";
+      string new_name = "/eagle/LastJourney/prlarsen/halo_lightcone_LJ/pixel_outputs/" + zrange_str + "/cutout_" + str_pix + ".hdf5";
 
       H5File* file = new H5File(new_name.c_str(), H5F_ACC_TRUNC);
       delete file;
@@ -149,6 +149,9 @@ int main(int argc, char ** argv) {
       printf("step = %s \n", step_s.c_str());
       string mid = "/lc_intrp_halos_matched.";
       //string mid = "/lc_intrp_halos_fof_sod_matched.";
+      // Adding fix for missing 347/259 steps     
+       
+
       string name = base_name + step_s + mid + step_s;
       printf("filename = %s \n", name.c_str());
 
