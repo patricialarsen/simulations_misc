@@ -227,73 +227,7 @@ void get_pix_list_rank(int octant, int rank, int numranks, int64_t npix_lores, v
     return;
 }
 
-int assign_dm_cic(vector<float> &rho, vector<float> &phi, vector<float> &vel, PLParticles* P, T_Healpix_Base<int64_t> map_hires, vector<int64_t> pixnum_start, vector<int64_t> pixnum_end, vector<int64_t> start_idx,  unordered_map<int64_t, int64_t> ring_to_idx){
 
-    int64_t npix = map_hires.Npix();
-    float pixsize = (4.*3.141529/npix);
-    for (int64_t ii=0; ii<(*P).nparticles; ++ii){
-      float xd = (float) (*P).float_data[0]->at(ii);
-      float yd = (float) (*P).float_data[1]->at(ii);
-      float zd = (float) (*P).float_data[2]->at(ii);
-      float vx = (float) (*P).float_data[3]->at(ii);
-      float vy = (float) (*P).float_data[4]->at(ii);
-      float vz = (float) (*P).float_data[5]->at(ii);
-      float phid = (float) (*P).float_data[6]->at(ii);
-
-      float dist_com2 = xd*xd + yd*yd + zd*zd;
-      float vel_los = (vx*xd +vy*yd + vz*zd)/sqrt(dist_com2);
-
-      vec3 vec_val = vec3(xd,yd,zd);
-      pointing point = pointing(vec_val);
-      fix_arr<int64_t,4> neighbs;
-      fix_arr<double,4> weights;
-      map_hires.get_interpol(point,  neighbs, weights);
-
-      // each time a particle has a neigbour on the rank we add the contribution
-      for (int j=0;j<4;j++){
-        int64_t pix_num = neighbs[j];
-        int64_t new_idx = -99;
-        if (ring_to_idx.count(pix_num)){
-	  new_idx = ring_to_idx[pix_num];
-          rho[new_idx] += 1./pixsize*weights[j];
-          phi[new_idx] += phid*weights[j];
-          vel[new_idx] += vel_los*weights[j];
-	}
-      }
-   }
-     return 0;
-}
-
-
-
-int assign_dm_ngp(vector<float> &rho, vector<float> &phi, vector<float> &vel, PLParticles* P, T_Healpix_Base<int64_t> map_hires, vector<int64_t> pixnum_start, vector<int64_t> pixnum_end, vector<int64_t> start_idx,  unordered_map<int64_t, int64_t> ring_to_idx){
-
-    int64_t npix = map_hires.Npix();
-    float pixsize = (4.*3.141529/npix);
-    for (int64_t ii=0; ii<(*P).nparticles; ++ii){
-      float xd = (float) (*P).float_data[0]->at(ii);
-      float yd = (float) (*P).float_data[1]->at(ii);
-      float zd = (float) (*P).float_data[2]->at(ii);
-      float vx = (float) (*P).float_data[3]->at(ii);
-      float vy = (float) (*P).float_data[4]->at(ii);
-      float vz = (float) (*P).float_data[5]->at(ii);
-      float phid = (float) (*P).float_data[6]->at(ii);
-      
-      float dist_com2 = xd*xd + yd*yd + zd*zd;
-      float vel_los = (vx*xd +vy*yd + vz*zd)/sqrt(dist_com2);
-
-      vec3 vec_val = vec3(xd,yd,zd);
-      int64_t pix_num = map_hires.vec2pix(vec_val);
-      int64_t new_idx = -99;
-      if (ring_to_idx.count(pix_num)){
-        new_idx = ring_to_idx[pix_num];
-        rho[new_idx] += 1./pixsize;
-        phi[new_idx] += phid; 
-        vel[new_idx] += vel_los;
-      }
-     }
-     return 0;
-}
 
 
 int check_xray_halo( PLParticles* P, float hval, bool borgcube, bool adiabatic,  float samplerate, string cloudypath){
