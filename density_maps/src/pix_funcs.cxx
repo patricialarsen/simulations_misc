@@ -41,7 +41,7 @@
 //#include "utils_ngp.h"
 #include "pix_funcs.h"
 
-#include "RadiativeCooling.h"
+//#include "RadiativeCooling.h"
 
 using namespace gio;
 using namespace std;
@@ -229,7 +229,7 @@ void get_pix_list_rank(int octant, int rank, int numranks, int64_t npix_lores, v
 
 
 
-
+/*
 int check_xray_halo( PLParticles* P, float hval, bool borgcube, bool adiabatic,  float samplerate, string cloudypath){
 
   int commRank;
@@ -409,7 +409,7 @@ int check_xray_halo( PLParticles* P, float hval, bool borgcube, bool adiabatic, 
 
 
 }
-
+*/
 
 
 
@@ -534,6 +534,8 @@ int assign_sz_xray_cic(vector<float> &rho, vector<float> &phi, vector<float> &ve
 
   // initialize the cloudy tables
   RadiativeCooling* m_radcool = new RadiativeCooling(cloudypath);
+  m_radcool->setTCMB(2.2725f);
+  m_radcool->readCloudyTable(min_a_global,max_a_global);
 
   RAD_T m_al, m_ah;
   RAD_T m_Ypmin, m_dYp;
@@ -717,6 +719,14 @@ int assign_sz_xray_cic(vector<float> &rho, vector<float> &phi, vector<float> &ve
           double mCGS = mass*G_IN_MSUN/hval;//Mass in grams
           double Li_free_Bolo = 0.0;
 	  double Li_free_ROSAT = 0.0;
+
+	  double Ri = X_SOLAR_OVER_Z_SOLAR * (Zi/Xi);
+          //double Ri = X_SOLAR_OVER_Z_SOLAR * (zmetp/Xi); // zmetp is Zi in ours
+          float Yp0 = (Yp-m_Ypmin)/m_dYp;
+          float R0 = (Ri-m_Rmin)/m_dR;
+          float nH0 = (log10(nHi)-m_nHmin)/m_dnH;
+          float T0 = (log10(Ti)-m_Tmin)/m_dT;
+
 	   
 	  // I've confirmed rhoi is equivalent to rhoCGS
           CLOUDY_TAB5D(Li_free_Bolo, X3TablePtr_l, X3TablePtr_h, m_al, m_ah, aa, Yp0, R0, nH0, T0, m_nYp, m_nT, m_nnH, m_nR);
