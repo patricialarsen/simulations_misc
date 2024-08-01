@@ -24,3 +24,37 @@ int check_xray_halo( PLParticles* P, float hval, bool borgcube, bool adiabatic, 
 
 
 void initialize_pixel_hydro(int pix_val,  T_Healpix_Base<int> map_lores, T_Healpix_Base<int64_t> map_hires, vector<float> &rho , vector<float> &phi, vector<float> &vel, vector<float> &ksz, vector<double> &tsz, vector<double> &xray1, vector<double> &xray2, int64_t &count, vector<int64_t> &start_idx, vector<int64_t> &end_idx, vector<int64_t> &pixnum_start, vector<int64_t> &pixnum_end, int rank_diff,  unordered_map<int64_t, int64_t>* ring_to_idx);
+
+//TODO: remember to define RAD_T
+
+#ifdef UV_CLOUDY_TALBES
+  RAD_T m_al, m_ah;
+  RAD_T m_Ypmin, m_dYp;
+  RAD_T m_Rmin, m_dR;
+  RAD_T m_nHmin, m_dnH;
+  RAD_T m_Tmin, m_dT;
+  int m_nYp;
+  int m_nR;
+  int m_nnH;
+  int m_nT;
+  int64_t m_tsize;
+  vector<RAD_T>* lcTable_l;
+  vector<RAD_T>* lhTable_l;
+  vector<RAD_T>* feTable_l;
+  vector<RAD_T>* fnTable_l;
+  vector<RAD_T>* lcTable_h;
+  vector<RAD_T>* lhTable_h;
+  vector<RAD_T>* feTable_h;
+  vector<RAD_T>* fnTable_h;
+  vector<RAD_T>* X0Table_l;
+  vector<RAD_T>* X1Table_l;
+  vector<RAD_T>* X2Table_l;
+  vector<RAD_T>* X3Table_l;
+  vector<RAD_T>* X0Table_h;
+  vector<RAD_T>* X1Table_h;
+  vector<RAD_T>* X2Table_h;
+  vector<RAD_T>* X3Table_h;
+#endif
+
+
+

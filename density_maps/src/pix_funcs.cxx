@@ -411,6 +411,8 @@ int check_xray_halo( PLParticles* P, float hval, bool borgcube, bool adiabatic, 
 }
 
 
+
+
 int assign_sz_xray_cic(vector<float> &rho, vector<float> &phi, vector<float> &vel,vector<float> &ksz, vector<double> &tsz, vector<double> &xray1, vector<double> &xray2, PLParticles* P, T_Healpix_Base<int64_t> map_hires, vector<int64_t> pixnum_start, vector<int64_t> pixnum_end, vector<int64_t> start_idx,  unordered_map<int64_t, int64_t> ring_to_idx, float hval, bool borgcube, bool adiabatic, float samplerate, string cloudypath){
 
   int commRank;
@@ -531,20 +533,67 @@ int assign_sz_xray_cic(vector<float> &rho, vector<float> &phi, vector<float> &ve
   }
 
   // initialize the cloudy tables
-
-  #ifdef HYBRID_SG
   RadiativeCooling* m_radcool = new RadiativeCooling(cloudypath);
-  if (!adiabatic) {
-    double Tcmb = 2.725f;
-    m_radcool->setTCMB(Tcmb);
-    m_radcool->readCloudyScaleFactor((RAD_T)aa_av);
+
+  RAD_T m_al, m_ah;
+  RAD_T m_Ypmin, m_dYp;
+  RAD_T m_Rmin, m_dR;
+  RAD_T m_nHmin, m_dnH;
+  RAD_T m_Tmin, m_dT;
+  int m_nYp;
+  int m_nR;
+  int m_nnH;
+  int m_nT;
+  int64_t m_tsize;
+  vector<RAD_T>* lcTable_l;
+  vector<RAD_T>* lhTable_l;
+  vector<RAD_T>* feTable_l;
+  vector<RAD_T>* fnTable_l;
+  vector<RAD_T>* lcTable_h;
+  vector<RAD_T>* lhTable_h;
+  vector<RAD_T>* feTable_h;
+  vector<RAD_T>* fnTable_h;
+  vector<RAD_T>* X0Table_l;
+  vector<RAD_T>* X1Table_l;
+  vector<RAD_T>* X2Table_l;
+  vector<RAD_T>* X3Table_l;
+  vector<RAD_T>* X0Table_h;
+  vector<RAD_T>* X1Table_h;
+  vector<RAD_T>* X2Table_h;
+  vector<RAD_T>* X3Table_h;
+
+  // TODO: check check check check. I think this should come in from the header but we'll see
+  RAD_T* X0TablePtr_l;
+  RAD_T* X0TablePtr_h;
+  RAD_T* X3TablePtr_l;
+  RAD_T* X3TablePtr_h;
+
+  // note: need to set m_al an m_ah correctly for scale factor interpolation
+  m_radcool->getTableParameters(m_al, m_ah, m_Ypmin, m_dYp, m_Rmin, m_dR, m_nHmin, m_dnH, m_Tmin, m_dT,
+                         m_nYp, m_nR, m_nnH, m_nT, m_tsize);
+  m_radcool->getTableData(&lcTable_l, &lhTable_l, &feTable_l, &fnTable_l, &lcTable_h, &lhTable_h, &feTable_h, &fnTable_h,
+                               &X0Table_l, &X1Table_l, &X2Table_l, &X3Table_l, &X0Table_h, &X1Table_h, &X2Table_h, &X3Table_h);
+  int64_t tabsize = int64_t(m_nYp)*int64_t(m_nR)*int64_t(m_nnH)*int64_t(m_nT);
+  assert(tabsize == m_tsize);//sanity check
+
+  if(m_radcool != NULL) { //TODO: I think this mask is not needed, we are not at the individual particle level yet
+    X0TablePtr_l = X0Table_l->data(); // these tables are now in the header
+    X0TablePtr_h = X0Table_h->data();
+    X3TablePtr_l = X3Table_l->data();
+    X3TablePtr_h = X3Table_h->data();
+  }
+
+
+  //if (!adiabatic) {
+    //double Tcmb = 2.725f;
+    //m_radcool->setTCMB(Tcmb); // no longer needed?
+    //m_radcool->readCloudyScaleFactor((RAD_T)aa_av); // TODO: now a table read, can use min_a_global, max_a_global
     if (commRank==0){
     cout << "Initialized cloudy tables"<<endl;
     }
     
 
-  }
-  #endif
+  //}
   double tsz_tot2 = 0;
   double tsz_tot3 = 0;
   double tsz_tot4 = 0;
@@ -632,7 +681,28 @@ int assign_sz_xray_cic(vector<float> &rho, vector<float> &phi, vector<float> &ve
         #ifdef HYBRID_SG
         if ((Ti>0)&&(isNormGas(mask))){
 	// change to this
+	
+	// TODO: Q - do I need to update the CLOUDY calls for SZ as well?
 	RAD_T lambda = (*m_radcool)(Ti, (RAD_T)rhoi, (RAD_T)Zi, (RAD_T)Yp, (RAD_T)aa_av, mui, &iter, false, &nHIi, &nei, &LCval, &LHval, &mue);
+
+        //TODO: possibly new - don't think so?
+         //RAD_T lambda = -(*m_radcool)(RAD_T(Ti), RAD_T(rhoInput), RAD_T(zmetp), RAD_T(Yp), RAD_T(aa), mup, &iter, false, &nHIi, &nei, &LCval, &LHval, &mue);//call returns nHIi and ne in 1/nH units
+#ifdef UVCONVERT
+//If UVCONVERT IS ON Lambda_code = lambda_CGS * KM_IN_MPC * UU_SI/RHO_CGS... So we want to make lambda in CGS unnits and apply conversions below
+         double convFactor = RHO_CGS/(KM_IN_MPC*UU_SI);
+         lambda *= convFactor;
+         LCval *= convFactor;
+         LHval *= convFactor;
+#endif
+//TODO: new stuff 
+//#ifdef UV_CLOUDY_TALBES
+	     double Ri = X_SOLAR_OVER_Z_SOLAR * (Zi/Xi);
+             //double Ri = X_SOLAR_OVER_Z_SOLAR * (zmetp/Xi); // zmetp is Zi in ours 
+             float Yp0 = (Yp-m_Ypmin)/m_dYp;
+             float R0 = (Ri-m_Rmin)/m_dR;
+             float nH0 = (log10(nHi)-m_nHmin)/m_dnH;
+             float T0 = (log10(Ti)-m_Tmin)/m_dT;
+//#endif
 
         //RAD_T lambda = (*m_radcool)(Ti, (RAD_T)rhoi, (RAD_T)Zi, (RAD_T)Yi, (RAD_T)aa_av, mui, &iter, false, &nHIi, &nei);
         nei *= nHi;
@@ -645,54 +715,15 @@ int assign_sz_xray_cic(vector<float> &rho, vector<float> &phi, vector<float> &ve
         if(XrayGasCondition(mask, Ti)){
           //Calculate L500:
           double mCGS = mass*G_IN_MSUN/hval;//Mass in grams
-          double Li_free = 0.0;
+          double Li_free_Bolo = 0.0;
+	  double Li_free_ROSAT = 0.0;
 	   
 	  // I've confirmed rhoi is equivalent to rhoCGS
-          PRIMORDIAL_FREE_FREE_EMISSIVITY(Li_free, Ti, rhoi, mCGS);
+          CLOUDY_TAB5D(Li_free_Bolo, X3TablePtr_l, X3TablePtr_h, m_al, m_ah, aa, Yp0, R0, nH0, T0, m_nYp, m_nT, m_nnH, m_nR);
+          Li_free_Bolo = Vi*nHi*nHi*pow(10.0, Li_free_Bolo); // Table is in log10(L/nH^2) units
+          CLOUDY_TAB5D(Li_free_ROSAT, X0TablePtr_l, X0TablePtr_h, m_al, m_ah, aa, Yp0, R0, nH0, T0, m_nYp, m_nT, m_nnH, m_nR);
+          Li_free_ROSAT = Vi*nHi*nHi*pow(10.0, Li_free_ROSAT); // Table is in log10(L/nH^2) units
 
-	  double Li_free_analytic = 0.0; 
-	  double Xe = 1.16; 
-	  double Xi = 1.079;
-	  double Z = sqrt(1.15);
-	  double gff = 1.3;
-	  double planck = 6.6261e-27; // in cm^2*g/s
-	  // KB_CONST is in Erg/K, planck is in cm^2 g /s 
-	  // T should be in Kelvin (check)
-	  //
-	  // Erg/K *s /cm^2 / g *sqrt(K) * V?
-	  // prefactor is 
-	  // Erg/K  s/g/cm/cm  K^1/2 / cm / cm / cm 
-	  //
-	  // total = 
-	  //
-	  //  ( ) -> gives number density so /cm^3 /cm^3 * cm^3 *K^1/2
-	  //  -> K^1/2 / cm^3
-	  //
-	  // V is g/cm^3 
-	  // 6.8e-38 erg  K^1/2 cm^3 
-	  //
-	  double prefactor = 6.8e-38*KB_CONST/planck*Z*Z*gff*Xe*Xi/(Xi+Xe)/(Xi+Xe); // units Erg/K cm^-2 g^-1 s 
-	  // units here are confusing
-          double scaling = sqrt(Ti)*(rhoi/mui/MH)*(rhoi/mui/MH)*Vi;  // units K^1/2 cm^-3
-								     // MH rather than MP because of mui definition
-	  Li_free_analytic = prefactor * scaling; 
-          // they then claim a erg K^1/2 cm^3 in Pakmor which I guess gives 
-	  // erg^2  s cm^-2/g units in total. 
-	  //
-	  // luminosity should be in erg/s
-	  // an erg is g cm^2/s^2
-	  // so erg  * g cm^2 /s^2 * s *cm^-2 /g
-	  // gives erg/s 
-
-          //Apply frequency band 
-          double Bolo_int = exp(-XRAY_BAND_BOLO_EMIN/(KB_KEV*Ti*aa)) - exp(-XRAY_BAND_BOLO_EMAX/(KB_KEV*Ti*aa));
-	  //Integrate bolometric band (note the 1/aa scalefactor for redshift dependence)
-          double ROSAT_int = exp(-XRAY_BAND_ROSAT_EMIN/(KB_KEV*Ti*aa)) - exp(-XRAY_BAND_ROSAT_EMAX/(KB_KEV*Ti*aa));
-	  //Integrate ROSAT band (note the 1/aa scalefactor for redshift dependence)
-
-          Li_free_Bolo = Li_free*Bolo_int;//Li_free*Bolo_int;//Bolometric Luminosity
-          Li_free_ROSAT = Li_free*ROSAT_int;//ROSAT Luminosity
-						   // for now let's swap the Bolo luminosity for the analytic one
         }
         #endif
       } 
