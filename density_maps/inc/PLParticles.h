@@ -3,12 +3,12 @@
 #include "BasicDefinition.h"
 
 
-//#include "particle_def_hydro.h"
+#include "particle_def_hydro.h"
 
 //##_bhp.h
 
 //#ifndef HYBRID
-#include "particle_def.h"
+//#include "particle_def.h"
 //#else
 //#include "particle_def_hydro.h"
 //#endif

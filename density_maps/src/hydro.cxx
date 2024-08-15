@@ -79,10 +79,9 @@ int main(int argc, char *argv[]) {
      }
   #endif
 
-
-  if(argc != 10) {
+  if(argc != 12) {
      if (commRank==0){
-     fprintf(stderr,"USAGE: %s <inputfile> <outputfile> <nside> <nside_low> <step> <hval> <samplerate> <start_step> <nsteps> \n", argv[0]);
+     fprintf(stderr,"USAGE: %s <inputfile> <outputfile> <nside> <nside_low> <step> <hval> <samplerate> <start_step> <nsteps> <output_downsampled> <downsampling_rate> \n", argv[0]);
      }
      exit(-1);
   }
@@ -100,6 +99,8 @@ int main(int argc, char *argv[]) {
   int start_step = atoi(argv[8]);
   int nsteps = atoi(argv[9]);
 
+  char output_downsampled = argv[10][0]; // T or F
+  float downsampling_rate = atof(argv[11]);
 
   double rank1 = log2(nside);
   double rank2 = log2(nside_low);
@@ -156,15 +157,18 @@ int main(int argc, char *argv[]) {
 
 
   int64_t count = 0; 
-  vector<float> rho, phi, vel, ksz; // should generalize this so we're initializing it for an array of maps or a single map 
+  vector<double> rho, phi, vel, ksz; // should generalize this so we're initializing it for an array of maps or a single map  - should these be floats?
   vector<double> tsz;
   vector<double> xray_band1;
   vector<double> xray_band2;
+  vector<double> xray_band3;
+  vector<double> xray_band4;
+  vector<double> temperature;
 
   for (int ii=0;ii< lores_pix.size() ;++ii){
   int pix_val = lores_pix[ii];
   // initialize all pixels on rank
-  initialize_pixel_hydro(pix_val, map_lores, map_hires, rho, phi, vel,ksz,tsz,xray_band1, xray_band2, count, start_idx,end_idx,pix_nums_start, pix_nums_end, rank_diff, &ring_to_idx);
+  initialize_pixel_hydro(pix_val, map_lores, map_hires, rho, phi, vel,ksz,tsz,xray_band1, xray_band2, xray_band3, xray_band4, temperature, count, start_idx,end_idx,pix_nums_start, pix_nums_end, rank_diff, &ring_to_idx);
   // make sure this is retaining this correctly
   }  
 
@@ -188,13 +192,17 @@ int main(int argc, char *argv[]) {
 
   
   for (int ii=0; ii<lores_pix.size(); ++ii){  
-  clear_pixel_hydro(start_idx[ii], rank_diff,  rho, phi, vel, ksz, tsz, xray_band1, xray_band2);  
+  clear_pixel_hydro(start_idx[ii], rank_diff,  rho, phi, vel, ksz, tsz, xray_band1, xray_band2, xray_band3, xray_band4, temperature);  
   }
     
 
-
-
-  read_and_redistribute(mpiioName, commRanks, &P, map_lores, map_hires, rank_diff);
+  if (output_downsampled == 'T'){
+      string downsampled_file = outfile + "_downsampledparticles";
+      read_and_redistribute(mpiioName, commRanks, &P, map_lores, map_hires, rank_diff, true, downsampling_rate, downsampled_file);
+  }
+  else{
+      read_and_redistribute(mpiioName, commRanks, &P, map_lores, map_hires, rank_diff);
+  }
 
   MPI_Barrier(MPI_COMM_WORLD);
   t4 = MPI_Wtime();
@@ -203,7 +211,7 @@ int main(int argc, char *argv[]) {
   }
 
 
-  int status = assign_sz_xray_cic(rho, phi, vel,ksz,tsz, xray_band1, xray_band2, &P, map_hires, pix_nums_start, pix_nums_end,start_idx, ring_to_idx, hval, borgcube, adiabatic,  samplerate, cloudypath);
+  int status = assign_sz_xray_cic(rho, phi, vel,ksz,tsz, xray_band1, xray_band2, xray_band3, xray_band4, temperature, &P, map_hires, pix_nums_start, pix_nums_end,start_idx, ring_to_idx, hval, borgcube, adiabatic,  samplerate, cloudypath);
 
   
 
@@ -213,7 +221,7 @@ int main(int argc, char *argv[]) {
     printf("CIC time is %f\n", t5 - t4 );
   }
 
-  write_files_hydro(outfile, step,start_idx, end_idx, pix_nums_start, rho, phi, vel,ksz,tsz,xray_band1, xray_band2,npix_hires);
+  write_files_hydro(outfile, step,start_idx, end_idx, pix_nums_start, rho, phi, vel, ksz, tsz, xray_band1, xray_band2, xray_band3, xray_band4, temperature, npix_hires);
 
   MPI_Barrier(MPI_COMM_WORLD);
   t6 = MPI_Wtime();
