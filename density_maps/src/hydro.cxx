@@ -185,10 +185,14 @@ int main(int argc, char *argv[]) {
 	  
   char step[10*sizeof(char)];
   char mpiioName[512];
+  char mpiioName_down[512];
 
   sprintf(step,"%d",start_step+jj);
   strcpy(mpiioName,mpiioName_base);
   strcat(mpiioName,step);
+  strcpy(mpiioName_down,mpiioName_base);
+  strcat(mpiioName_down,step);
+  strcat(mpiioName_down,"_downsampled.gio");
 
   
   for (int ii=0; ii<lores_pix.size(); ++ii){  
@@ -197,7 +201,7 @@ int main(int argc, char *argv[]) {
     
 
   if (output_downsampled == 'T'){
-      string downsampled_file = outfile + "_downsampledparticles";
+      string downsampled_file = outfile + step + "_downsampled.gio";
       read_and_redistribute(mpiioName, commRanks, &P, map_lores, map_hires, rank_diff, true, downsampling_rate, downsampled_file);
   }
   else{
