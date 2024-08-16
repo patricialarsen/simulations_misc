@@ -13,6 +13,7 @@
 #include <fstream>
 #include <sstream>
 #include <algorithm>
+#include <filesystem>
 
 #include <vector>
 #include <unordered_map>
@@ -44,6 +45,8 @@
 
 using namespace std;
 using namespace gio;
+
+namespace fs = std::filesystem;
 
 //TODO: Nick: thread safety, general pixelization
 int main(int argc, char *argv[]) {
@@ -79,9 +82,9 @@ int main(int argc, char *argv[]) {
      }
   #endif
 
-  if(argc != 12) {
+  if(argc != 13) {
      if (commRank==0){
-     fprintf(stderr,"USAGE: %s <inputfile> <outputfile> <nside> <nside_low> <step> <hval> <samplerate> <start_step> <nsteps> <output_downsampled> <downsampling_rate> \n", argv[0]);
+     fprintf(stderr,"USAGE: %s <inputfile> <outpath> <outputfile> <nside> <nside_low> <step> <hval> <samplerate> <start_step> <nsteps> <output_downsampled> <downsampling_rate> \n", argv[0]);
      }
      exit(-1);
   }
@@ -90,17 +93,20 @@ int main(int argc, char *argv[]) {
   strcpy(filename,argv[1]);
   const char *mpiioName_base = filename;
 
-  int64_t nside = atoi(argv[3]);
-  int64_t nside_low = atoi(argv[4]);
-  string stepnumber = argv[5];
-  string outfile = argv[2];
-  float hval = atof(argv[6]);
-  float samplerate = atof(argv[7]);
-  int start_step = atoi(argv[8]);
-  int nsteps = atoi(argv[9]);
+  int64_t nside = atoi(argv[4]);
+  int64_t nside_low = atoi(argv[5]);
+  string stepnumber = argv[6];
 
-  char output_downsampled = argv[10][0]; // T or F
-  float downsampling_rate = atof(argv[11]);
+  string outpath = argv[2];
+  string outfile = argv[3];
+  outfile = outpath + outfile; 
+  float hval = atof(argv[7]);
+  float samplerate = atof(argv[8]);
+  int start_step = atoi(argv[9]);
+  int nsteps = atoi(argv[10]);
+
+  char output_downsampled = argv[11][0]; // T or F
+  float downsampling_rate = atof(argv[12]);
 
   double rank1 = log2(nside);
   double rank2 = log2(nside_low);
@@ -165,6 +171,17 @@ int main(int argc, char *argv[]) {
   vector<double> xray_band4;
   vector<double> temperature;
 
+  if (output_downsampled == 'T'){
+    string downsampled_path = outpath + "downsampled_particles";
+    if (fs:: exists(downsampled_path)){
+	    cout << "Downsampling directory exists\n";
+    }
+    else{
+	fs::create_directory(downsampled_path);
+    }
+  }
+
+
   for (int ii=0;ii< lores_pix.size() ;++ii){
   int pix_val = lores_pix[ii];
   // initialize all pixels on rank
@@ -201,7 +218,17 @@ int main(int argc, char *argv[]) {
     
 
   if (output_downsampled == 'T'){
-      string downsampled_file = outfile + step + "_downsampled.gio";
+    string downsampled_path_step = outpath + "downsampled_particles/STEP" + step;
+
+    if (fs:: exists(downsampled_path_step)){
+            cout << "Downsampling directory for step exists\n";
+    }
+    else{
+        fs::create_directory(downsampled_path_step);
+    }
+    
+
+      string downsampled_file = downsampled_path_step + "/" + step + "_downsampled.gio";
       read_and_redistribute(mpiioName, commRanks, &P, map_lores, map_hires, rank_diff, true, downsampling_rate, downsampled_file);
   }
   else{

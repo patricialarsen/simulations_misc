@@ -21,5 +21,6 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/global/homes/p/plarsen/plarsen_git/Heal
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/global/homes/p/plarsen/plarsen_git/cfitsio-4.4.0/build/lib/
 export OMP_NUM_THREADS=8
 
-srun -n 8 --cpu-bind=cores -c16 ./hydro_xray /pscratch/sd/p/plarsen/HACC_LC/600/m000p.lc.mpicosmo.  /pscratch/sd/p/plarsen/HACC_LC/600/lc_hydro_cloudy 4096 2 600 0.6766 1.0 600 10 T 0.01
+
+srun -n 8 --cpu-bind=cores -c16 ./hydro_xray /pscratch/sd/p/plarsen/HACC_LC/600/m000p.lc.mpicosmo.  /pscratch/sd/p/plarsen/HACC_LC/600/ lc_hydro_cloudy 4096 2 600 0.6766 1.0 600 10 T 0.01
 

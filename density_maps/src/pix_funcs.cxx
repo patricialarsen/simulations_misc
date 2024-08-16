@@ -820,26 +820,231 @@ int assign_sz_xray_cic(vector<double> &rho, vector<double> &phi, vector<double> 
   delete m_radcool;
   #endif
    // for each pixel apply this scaling 
+   int64_t tsz_nzero = 0;
+   int64_t ksz_nzero = 0;
+   int64_t xray1_nzero = 0;
+   int64_t xray2_nzero = 0;
+   int64_t xray3_nzero = 0;
+   int64_t xray4_nzero = 0;
+   int64_t temp_nzero = 0;
+   int64_t rho_nzero = 0;
+   int64_t phi_nzero = 0;
+   int64_t vel_nzero = 0;
+
+   int64_t tsz_nzero_global = 0;
+   int64_t ksz_nzero_global = 0;
+   int64_t xray1_nzero_global = 0;
+   int64_t xray2_nzero_global = 0;
+   int64_t xray3_nzero_global = 0;
+   int64_t xray4_nzero_global = 0;
+   int64_t temp_nzero_global = 0;
+   int64_t rho_nzero_global = 0;
+   int64_t phi_nzero_global = 0;
+   int64_t vel_nzero_global = 0;
+
+
    double tsz_tot = 0;
+   double ksz_tot = 0;
    double xray1_tot = 0;
+   double xray2_tot = 0;
+   double xray3_tot = 0;
+   double xray4_tot = 0;
+   double temp_tot = 0;
+   double rho_tot = 0;
+   double phi_tot = 0;
+   double vel_tot = 0;
+
+   double tsz_tot_global = 0;
+   double ksz_tot_global = 0;
+   double xray1_tot_global = 0;
+   double xray2_tot_global = 0;
+   double xray3_tot_global = 0;
+   double xray4_tot_global = 0;
+   double temp_tot_global = 0;
+   double rho_tot_global = 0;
+   double phi_tot_global = 0;
+   double vel_tot_global = 0;
+
+   double tsz_min = 1.e20;
+   double ksz_min = 1.e20;
+   double xray1_min = 1.e20;
+   double xray2_min = 1.e20;
+   double xray3_min = 1.e20;
+   double xray4_min = 1.e20;
+   double temp_min = 1.e20;
+   double rho_min = 1.e20;
+   double phi_min = 1.e20;
+   double vel_min = 1.e20;
+   
+
+   double tsz_min_global = 1.e20;
+   double ksz_min_global = 1.e20;
+   double xray1_min_global = 1.e20;
+   double xray2_min_global = 1.e20;
+   double xray3_min_global = 1.e20;
+   double xray4_min_global = 1.e20;
+   double temp_min_global = 1.e20;
+   double rho_min_global = 1.e20;
+   double phi_min_global = 1.e20;
+   double vel_min_global = 1.e20;
+
+
+   double tsz_max = -1.e20;
+   double ksz_max = -1.e20;
+   double xray1_max = -1.e20;
+   double xray2_max = -1.e20;
+   double xray3_max = -1.e20;
+   double xray4_max = -1.e20;
+   double temp_max = -1.e20;
+   double rho_max = -1.e20;
+   double phi_max = -1.e20;
+   double vel_max = -1.e20;
+
+   double tsz_max_global = -1.e20;
+   double ksz_max_global = -1.e20;
+   double xray1_max_global = -1.e20;
+   double xray2_max_global = -1.e20;
+   double xray3_max_global = -1.e20;
+   double xray4_max_global = -1.e20;
+   double temp_max_global = -1.e20;
+   double rho_max_global = -1.e20;
+   double phi_max_global = -1.e20;
+   double vel_max_global = -1.e20;
+
+
    for (int64_t j=0; j<ksz.size(); j++){
      tsz[j] = tsz[j]*TSZ_CONV;
-     tsz_tot += tsz[j];
      ksz[j] = ksz[j]*KSZ_CONV;
      xray1[j] = xray1[j]*XRAY_CONV;
-     xray1_tot += xray1[j];
      xray2[j] = xray2[j]*XRAY_CONV;
      xray3[j] = xray3[j]*XRAY_CONV;
      xray4[j] = xray4[j]*XRAY_CONV;
 
-    }
-  if (commRank==0){
+     tsz_tot += tsz[j];
+     ksz_tot += ksz[j];
+     xray1_tot += xray1[j];
+     xray2_tot += xray2[j];
+     xray3_tot += xray3[j];
+     xray4_tot += xray4[j];
+     temp_tot += temp[j];
+     rho_tot += rho[j];
+     phi_tot += phi[j];
+     vel_tot += vel[j];
 
-   cout << "map tsz sum = "<< tsz_tot << endl;
-   cout << "particle tsz sum = "<< tsz_tot2*TSZ_CONV << endl;
+     if (tsz[j]!=0)
+         tsz_nzero += 1;
+     if (ksz[j]!=0)
+         ksz_nzero += 1;
+     if (xray1[j]!=0)
+         xray1_nzero += 1;
+     if (xray2[j]!=0)
+         xray2_nzero += 1;
+     if (xray3[j]!=0)
+         xray3_nzero += 1;
+     if (xray4[j]!=0)
+         xray4_nzero += 1;
+     if (temp[j]!=0)
+         temp_nzero += 1;
+     if (rho[j]!=0)
+         rho_nzero += 1;
+     if (phi[j]!=0)
+         phi_nzero += 1;
+     if (vel[j]!=0)
+         vel_nzero += 1;
+ 
+     tsz_min = (tsz[j]<tsz_min)?tsz[j]:tsz_min;
+     ksz_min = (ksz[j]<ksz_min)?ksz[j]:ksz_min;
+     xray1_min = (xray1[j]<xray1_min)?xray1[j]:xray1_min;
+     xray2_min = (xray2[j]<xray2_min)?xray2[j]:xray2_min;
+     xray3_min = (xray3[j]<xray3_min)?xray3[j]:xray3_min;
+     xray4_min = (xray4[j]<xray4_min)?xray4[j]:xray4_min;
+     temp_min = (ksz[j]<ksz_min)?ksz[j]:ksz_min;
+     rho_min = (rho[j]<rho_min)?rho[j]:rho_min;
+     phi_min = (phi[j]<phi_min)?phi[j]:phi_min;
+     vel_min = (vel[j]<vel_min)?vel[j]:vel_min;
+
+     tsz_max = (tsz[j]>tsz_max)?tsz[j]:tsz_max;
+     ksz_max = (ksz[j]>ksz_max)?ksz[j]:ksz_max;
+     xray1_max = (xray1[j]>xray1_max)?xray1[j]:xray1_max;
+     xray2_max = (xray2[j]>xray2_max)?xray2[j]:xray2_max;
+     xray3_max = (xray3[j]>xray3_max)?xray3[j]:xray3_max;
+     xray4_max = (xray4[j]>xray4_max)?xray4[j]:xray4_max;
+     temp_max = (ksz[j]>ksz_max)?ksz[j]:ksz_max;
+     rho_max = (rho[j]>rho_max)?rho[j]:rho_max;
+     phi_max = (phi[j]>phi_max)?phi[j]:phi_max;
+     vel_max = (vel[j]>vel_max)?vel[j]:vel_max;
+
+    } 
+  // alter
+  MPI_Reduce(&tsz_tot,&tsz_tot_global,1,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+  MPI_Reduce(&tsz_nzero,&tsz_nzero_global,1,MPI_INT64_T,MPI_SUM,0,MPI_COMM_WORLD);
+  MPI_Reduce(&tsz_min,&tsz_min_global,1,MPI_DOUBLE,MPI_MIN,0,MPI_COMM_WORLD);
+  MPI_Reduce(&tsz_max,&tsz_max_global,1,MPI_DOUBLE,MPI_MAX,0,MPI_COMM_WORLD);
+
+  MPI_Reduce(&ksz_tot,&ksz_tot_global,1,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+  MPI_Reduce(&ksz_nzero,&ksz_nzero_global,1,MPI_INT64_T,MPI_SUM,0,MPI_COMM_WORLD);
+  MPI_Reduce(&ksz_min,&ksz_min_global,1,MPI_DOUBLE,MPI_MIN,0,MPI_COMM_WORLD);
+  MPI_Reduce(&ksz_max,&ksz_max_global,1,MPI_DOUBLE,MPI_MAX,0,MPI_COMM_WORLD);
+
+  MPI_Reduce(&xray1_tot,&xray1_tot_global,1,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+  MPI_Reduce(&xray1_nzero,&xray1_nzero_global,1,MPI_INT64_T,MPI_SUM,0,MPI_COMM_WORLD);
+  MPI_Reduce(&xray1_min,&xray1_min_global,1,MPI_DOUBLE,MPI_MIN,0,MPI_COMM_WORLD);
+  MPI_Reduce(&xray1_max,&xray1_max_global,1,MPI_DOUBLE,MPI_MAX,0,MPI_COMM_WORLD);
+
+  MPI_Reduce(&xray2_tot,&xray2_tot_global,1,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+  MPI_Reduce(&xray2_nzero,&xray2_nzero_global,1,MPI_INT64_T,MPI_SUM,0,MPI_COMM_WORLD);
+  MPI_Reduce(&xray2_min,&xray2_min_global,1,MPI_DOUBLE,MPI_MIN,0,MPI_COMM_WORLD);
+  MPI_Reduce(&xray2_max,&xray2_max_global,1,MPI_DOUBLE,MPI_MAX,0,MPI_COMM_WORLD);
+
+  MPI_Reduce(&xray3_tot,&xray3_tot_global,1,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+  MPI_Reduce(&xray3_nzero,&xray3_nzero_global,1,MPI_INT64_T,MPI_SUM,0,MPI_COMM_WORLD);
+  MPI_Reduce(&xray3_min,&xray3_min_global,1,MPI_DOUBLE,MPI_MIN,0,MPI_COMM_WORLD);
+  MPI_Reduce(&xray3_max,&xray3_max_global,1,MPI_DOUBLE,MPI_MAX,0,MPI_COMM_WORLD);
+
+  MPI_Reduce(&xray4_tot,&xray4_tot_global,1,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+  MPI_Reduce(&xray4_nzero,&xray4_nzero_global,1,MPI_INT64_T,MPI_SUM,0,MPI_COMM_WORLD);
+  MPI_Reduce(&xray4_min,&xray4_min_global,1,MPI_DOUBLE,MPI_MIN,0,MPI_COMM_WORLD);
+  MPI_Reduce(&xray4_max,&xray4_max_global,1,MPI_DOUBLE,MPI_MAX,0,MPI_COMM_WORLD);
+
+  MPI_Reduce(&temp_tot,&temp_tot_global,1,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+  MPI_Reduce(&temp_nzero,&temp_nzero_global,1,MPI_INT64_T,MPI_SUM,0,MPI_COMM_WORLD);
+  MPI_Reduce(&temp_min,&temp_min_global,1,MPI_DOUBLE,MPI_MIN,0,MPI_COMM_WORLD);
+  MPI_Reduce(&temp_max,&temp_max_global,1,MPI_DOUBLE,MPI_MAX,0,MPI_COMM_WORLD);
+
+  MPI_Reduce(&rho_tot,&rho_tot_global,1,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+  MPI_Reduce(&rho_nzero,&rho_nzero_global,1,MPI_INT64_T,MPI_SUM,0,MPI_COMM_WORLD);
+  MPI_Reduce(&rho_min,&rho_min_global,1,MPI_DOUBLE,MPI_MIN,0,MPI_COMM_WORLD);
+  MPI_Reduce(&rho_max,&rho_max_global,1,MPI_DOUBLE,MPI_MAX,0,MPI_COMM_WORLD);
+
+  MPI_Reduce(&phi_tot,&phi_tot_global,1,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+  MPI_Reduce(&phi_nzero,&phi_nzero_global,1,MPI_INT64_T,MPI_SUM,0,MPI_COMM_WORLD);
+  MPI_Reduce(&phi_min,&phi_min_global,1,MPI_DOUBLE,MPI_MIN,0,MPI_COMM_WORLD);
+  MPI_Reduce(&phi_max,&phi_max_global,1,MPI_DOUBLE,MPI_MAX,0,MPI_COMM_WORLD);
+
+  MPI_Reduce(&vel_tot,&vel_tot_global,1,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+  MPI_Reduce(&vel_nzero,&vel_nzero_global,1,MPI_INT64_T,MPI_SUM,0,MPI_COMM_WORLD);
+  MPI_Reduce(&vel_min,&vel_min_global,1,MPI_DOUBLE,MPI_MIN,0,MPI_COMM_WORLD);
+  MPI_Reduce(&vel_max,&vel_max_global,1,MPI_DOUBLE,MPI_MAX,0,MPI_COMM_WORLD);
+
+
+  if (commRank==0){
+    // add outputs 
+   cout << "map tsz sum = "<< tsz_tot_global << ", min = " << tsz_min_global << ", max = "<< tsz_max_global  << ", number of zeros = " << tsz_nzero_global <<  endl;
+   cout << "map ksz sum = "<< ksz_tot_global << ", min = " << ksz_min_global << ", max = "<< ksz_max_global  << ", number of zeros = " << ksz_nzero_global <<  endl;
+   cout << "map xray1 sum = "<< xray1_tot_global << ", min = " << xray1_min_global << ", max = "<< xray1_max_global  << ", number of zeros = " << xray1_nzero_global <<  endl;
+   cout << "map xray2 sum = "<< xray2_tot_global << ", min = " << xray2_min_global << ", max = "<< xray2_max_global  << ", number of zeros = " << xray2_nzero_global <<  endl;
+   cout << "map xray3 sum = "<< xray3_tot_global << ", min = " << xray3_min_global << ", max = "<< xray3_max_global  << ", number of zeros = " << xray3_nzero_global <<  endl;
+   cout << "map xray4 sum = "<< xray4_tot_global << ", min = " << xray4_min_global << ", max = "<< xray4_max_global  << ", number of zeros = " << xray4_nzero_global <<  endl;
+   cout << "map temp sum = "<< temp_tot_global << ", min = " << temp_min_global << ", max = "<< temp_max_global  << ", number of zeros = " << temp_nzero_global <<  endl;
+   cout << "map rho sum = "<< rho_tot_global << ", min = " << rho_min_global << ", max = "<< rho_max_global  << ", number of zeros = " << rho_nzero_global <<  endl;
+   cout << "map phi sum = "<< phi_tot_global << ", min = " << phi_min_global << ", max = "<< phi_max_global  << ", number of zeros = " << phi_nzero_global <<  endl;
+   cout << "map vel sum = "<< vel_tot_global << ", min = " << vel_min_global << ", max = "<< vel_max_global  << ", number of zeros = " << vel_nzero_global <<  endl;
+
+
+   /*cout << "particle tsz sum = "<< tsz_tot2*TSZ_CONV << endl;
    cout << "particle tsz sum (adiabatic with read mu ) = "<< tsz_tot3*TSZ_CONV << endl;
    cout << "particle tsz sum (adiabatic with mu0) = "<< tsz_tot4*TSZ_CONV << endl;
-   cout << "xray sum = "<< xray1_tot << endl;
+   cout << "xray sum = "<< xray1_tot << endl;*/
 
 }
 
