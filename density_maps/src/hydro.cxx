@@ -13,6 +13,7 @@
 #include <fstream>
 #include <sstream>
 #include <algorithm>
+#include <filesystem>
 
 #include <vector>
 #include <unordered_map>
@@ -45,6 +46,8 @@
 using namespace std;
 using namespace gio;
 
+namespace fs = std::filesystem;
+
 //TODO: Nick: thread safety, general pixelization
 int main(int argc, char *argv[]) {
 
@@ -59,7 +62,7 @@ int main(int argc, char *argv[]) {
   // arguments that need to be added 
   bool borgcube = false;
   bool adiabatic = false;
-  string cloudypath = "/pscratch/sd/p/plarsen/cloudy/";
+  string cloudypath = "/pscratch/sd/p/plarsen/cloudy/CloudyRates_FG20_Shielded.bin";
   // string cloudypath = "/lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_SEED_1.25e6_NPERH_AGN_2_NEWCOSMO/output/";
 
   #ifndef HYBRID_SG
@@ -79,10 +82,9 @@ int main(int argc, char *argv[]) {
      }
   #endif
 
-
-  if(argc != 10) {
+  if(argc != 13) {
      if (commRank==0){
-     fprintf(stderr,"USAGE: %s <inputfile> <outputfile> <nside> <nside_low> <step> <hval> <samplerate> <start_step> <nsteps> \n", argv[0]);
+     fprintf(stderr,"USAGE: %s <inputfile> <outpath> <outputfile> <nside> <nside_low> <step> <hval> <samplerate> <start_step> <nsteps> <output_downsampled> <downsampling_rate> \n", argv[0]);
      }
      exit(-1);
   }
@@ -91,15 +93,20 @@ int main(int argc, char *argv[]) {
   strcpy(filename,argv[1]);
   const char *mpiioName_base = filename;
 
-  int64_t nside = atoi(argv[3]);
-  int64_t nside_low = atoi(argv[4]);
-  string stepnumber = argv[5];
-  string outfile = argv[2];
-  float hval = atof(argv[6]);
-  float samplerate = atof(argv[7]);
-  int start_step = atoi(argv[8]);
-  int nsteps = atoi(argv[9]);
+  int64_t nside = atoi(argv[4]);
+  int64_t nside_low = atoi(argv[5]);
+  string stepnumber = argv[6];
 
+  string outpath = argv[2];
+  string outfile = argv[3];
+  outfile = outpath + outfile; 
+  float hval = atof(argv[7]);
+  float samplerate = atof(argv[8]);
+  int start_step = atoi(argv[9]);
+  int nsteps = atoi(argv[10]);
+
+  char output_downsampled = argv[11][0]; // T or F
+  float downsampling_rate = atof(argv[12]);
 
   double rank1 = log2(nside);
   double rank2 = log2(nside_low);
@@ -156,15 +163,29 @@ int main(int argc, char *argv[]) {
 
 
   int64_t count = 0; 
-  vector<float> rho, phi, vel, ksz; // should generalize this so we're initializing it for an array of maps or a single map 
+  vector<double> rho, phi, vel, ksz; // should generalize this so we're initializing it for an array of maps or a single map  - should these be floats?
   vector<double> tsz;
   vector<double> xray_band1;
   vector<double> xray_band2;
+  vector<double> xray_band3;
+  vector<double> xray_band4;
+  vector<double> temperature;
+
+  if (output_downsampled == 'T'){
+    string downsampled_path = outpath + "downsampled_particles";
+    if (fs:: exists(downsampled_path)){
+	    cout << "Downsampling directory exists\n";
+    }
+    else{
+	fs::create_directory(downsampled_path);
+    }
+  }
+
 
   for (int ii=0;ii< lores_pix.size() ;++ii){
   int pix_val = lores_pix[ii];
   // initialize all pixels on rank
-  initialize_pixel_hydro(pix_val, map_lores, map_hires, rho, phi, vel,ksz,tsz,xray_band1, xray_band2, count, start_idx,end_idx,pix_nums_start, pix_nums_end, rank_diff, &ring_to_idx);
+  initialize_pixel_hydro(pix_val, map_lores, map_hires, rho, phi, vel,ksz,tsz,xray_band1, xray_band2, xray_band3, xray_band4, temperature, count, start_idx,end_idx,pix_nums_start, pix_nums_end, rank_diff, &ring_to_idx);
   // make sure this is retaining this correctly
   }  
 
@@ -181,20 +202,38 @@ int main(int argc, char *argv[]) {
 	  
   char step[10*sizeof(char)];
   char mpiioName[512];
+  char mpiioName_down[512];
 
   sprintf(step,"%d",start_step+jj);
   strcpy(mpiioName,mpiioName_base);
   strcat(mpiioName,step);
+  strcpy(mpiioName_down,mpiioName_base);
+  strcat(mpiioName_down,step);
+  strcat(mpiioName_down,"_downsampled.gio");
 
   
   for (int ii=0; ii<lores_pix.size(); ++ii){  
-  clear_pixel_hydro(start_idx[ii], rank_diff,  rho, phi, vel, ksz, tsz, xray_band1, xray_band2);  
+  clear_pixel_hydro(start_idx[ii], rank_diff,  rho, phi, vel, ksz, tsz, xray_band1, xray_band2, xray_band3, xray_band4, temperature);  
   }
     
 
+  if (output_downsampled == 'T'){
+    string downsampled_path_step = outpath + "downsampled_particles/STEP" + step;
 
+    if (fs:: exists(downsampled_path_step)){
+            cout << "Downsampling directory for step exists\n";
+    }
+    else{
+        fs::create_directory(downsampled_path_step);
+    }
+    
 
-  read_and_redistribute(mpiioName, commRanks, &P, map_lores, map_hires, rank_diff);
+      string downsampled_file = downsampled_path_step + "/" + step + "_downsampled.gio";
+      read_and_redistribute(mpiioName, commRanks, &P, map_lores, map_hires, rank_diff, true, downsampling_rate, downsampled_file);
+  }
+  else{
+      read_and_redistribute(mpiioName, commRanks, &P, map_lores, map_hires, rank_diff);
+  }
 
   MPI_Barrier(MPI_COMM_WORLD);
   t4 = MPI_Wtime();
@@ -203,7 +242,7 @@ int main(int argc, char *argv[]) {
   }
 
 
-  int status = assign_sz_xray_cic(rho, phi, vel,ksz,tsz, xray_band1, xray_band2, &P, map_hires, pix_nums_start, pix_nums_end,start_idx, ring_to_idx, hval, borgcube, adiabatic,  samplerate, cloudypath);
+  int status = assign_sz_xray_cic(rho, phi, vel,ksz,tsz, xray_band1, xray_band2, xray_band3, xray_band4, temperature, &P, map_hires, pix_nums_start, pix_nums_end,start_idx, ring_to_idx, hval, borgcube, adiabatic,  samplerate, cloudypath);
 
   
 
@@ -213,7 +252,7 @@ int main(int argc, char *argv[]) {
     printf("CIC time is %f\n", t5 - t4 );
   }
 
-  write_files_hydro(outfile, step,start_idx, end_idx, pix_nums_start, rho, phi, vel,ksz,tsz,xray_band1, xray_band2,npix_hires);
+  write_files_hydro(outfile, step,start_idx, end_idx, pix_nums_start, rho, phi, vel, ksz, tsz, xray_band1, xray_band2, xray_band3, xray_band4, temperature, npix_hires);
 
   MPI_Barrier(MPI_COMM_WORLD);
   t6 = MPI_Wtime();

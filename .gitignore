@@ -6,6 +6,9 @@ check_halo_direct/run_test
 density_maps/*.error
 density_maps/*.cobaltlog
 density_maps/*.output
+denstiy_maps/logs/*
+density_maps/*.o
+density_maps/obj/*.o
 
 pixelize_halo_lightcones/LJ/*.error
 pixelize_halo_lightcones/LJ/*.cobaltlog
