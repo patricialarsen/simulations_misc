@@ -57,24 +57,30 @@ int main(int argc, char *argv[]) {
 
   // arguments that need to be added 
 
-  if(argc != 9) {
+  if(argc != 11) {
      if (commRank==0){
-     fprintf(stderr,"USAGE: %s <inputfile> <outputfile> <nside> <nside_low> <step> <samplerate> <start_step> <nsteps> \n", argv[0]);
+     fprintf(stderr,"USAGE: %s <inputpath> <inputname> <infolders> <outputfile> <nside> <nside_low> <step> <samplerate> <start_step> <nsteps> \n", argv[0]);
      }
      exit(-1);
   }
 
-  char filename[512];
-  strcpy(filename,argv[1]);
-  const char *mpiioName_base = filename;
+  char filepath[512];
+  strcpy(filepath,argv[1]);
+  const char *mpiioName_base = filepath;
 
-  int64_t nside = atoi(argv[3]);
-  int64_t nside_low = atoi(argv[4]);
-  string stepnumber = argv[5];
-  string outfile = argv[2];
-  float samplerate = atof(argv[6]);
-  int start_step = atoi(argv[7]);
-  int nsteps = atoi(argv[8]);
+  char filename[512];
+  strcpy(filename,argv[2]);
+  const char *mpiioName_file = filename;
+
+  bool folders = atoi(argv[3]); // should be 0 if false
+
+  int64_t nside = atoi(argv[5]);
+  int64_t nside_low = atoi(argv[6]);
+  string stepnumber = argv[7];
+  string outfile = argv[4];
+  float samplerate = atof(argv[8]);
+  int start_step = atoi(argv[9]);
+  int nsteps = atoi(argv[10]);
 
 
   double rank1 = log2(nside);
@@ -152,14 +158,25 @@ int main(int argc, char *argv[]) {
 
   MPI_Barrier(MPI_COMM_WORLD);
   t3 = MPI_Wtime();
-	  
+
+
   char step[10*sizeof(char)];
   char mpiioName[512];
-
   sprintf(step,"%d",start_step+jj);
-  strcpy(mpiioName,mpiioName_base);
-  strcat(mpiioName,step);
 
+  if (folders){
+  strcpy(mpiioName, mpiioName_base);
+  strcat(mpiioName, "step_");
+  strcat(mpiioName, step);
+  strcat(mpiioName, "/");
+  strcat(mpiioName, mpiioName_file);
+  strcat(mpiioName, step);	  
+  }
+  else{
+  strcpy(mpiioName, mpiioName_base);
+  strcat(mpiioName, mpiioName_file);
+  strcat(mpiioName, step);
+  }
   
   for (int ii=0; ii<lores_pix.size(); ++ii){  
   clear_pixel(start_idx[ii], rank_diff,  rho, phi, vel);  
