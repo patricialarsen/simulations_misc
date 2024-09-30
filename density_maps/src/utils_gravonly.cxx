@@ -19,6 +19,7 @@
 //#include "chealpix.h"
 #include "GenericIO.h"
 
+#include <random>
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
@@ -148,16 +149,101 @@ void redistribute_particles(PLParticles* P, vector<int> send_counts, int numrank
     }
 
 
+void output_downsampled_particles(PLParticles* P, float downsampling_rate, string file_name, string input_file_name){
+
+  GenericIO GIO(MPI_COMM_WORLD,input_file_name);
+  GIO.openAndReadHeader(GenericIO::MismatchRedistribute);
+  size_t num_elems = GIO.readNumElems();
+  size_t subsize = round(downsampling_rate*num_elems);
+
+  double PhysOrigin[3];
+  double PhysScale[3];
+  GIO.readPhysOrigin(PhysOrigin);
+  GIO.readPhysScale(PhysScale);
+
+  GenericIO NewGIO(MPI_COMM_WORLD,file_name);
+  NewGIO.setNumElems(subsize);
+
+  for (int d=0; d < 3; ++d){
+          NewGIO.setPhysOrigin(PhysOrigin[d], d);
+          NewGIO.setPhysScale(PhysScale[d], d);
+  }
+
+  vector<int64_t> indices(num_elems);
+  for (int64_t i = 0; i<num_elems; i++){
+  indices[i] = i;
+  }
+
+  //NOTE: warning here that random_shuffle is deprecated because of default behaviour.
+  // I think it should be fine but support is limited
+  random_device rd;
+  mt19937 g(rd());
+  shuffle(indices.begin(), indices.end(),g);
+  //random_shuffle(indices.begin(), indices.end(), drand48elmt);
+
+  vector<vector<float>> var_data_floats(N_FLOATS);
+  vector<vector<int>> var_data_ints(N_INTS);
+  vector<vector<int64_t>> var_data_int64s(N_INT64S);
+  vector<vector<double>> var_data_doubles(N_DOUBLES);
+  vector<vector<MASK_T>> var_data_masks(N_MASKS);
+
+  for (int i = 0; i < N_FLOATS; ++i){
+      var_data_floats[i].resize(subsize + NewGIO.requestedExtraSpace()/sizeof(float));
+      for (int64_t j=0; j<subsize; j++){
+          var_data_floats[i][j] =  (*P->float_data[i])[indices[j]];
+      }
+      NewGIO.addVariable((const string)float_names[i], var_data_floats[i], true); // no positional info
+  }
+  for (int i = 0; i < N_INTS; ++i){
+      var_data_ints[i].resize(subsize + NewGIO.requestedExtraSpace()/sizeof(int));
+      for (int64_t j=0; j<subsize; j++){
+          var_data_ints[i][j] =  (*P->int_data[i])[indices[j]];
+      }
+      NewGIO.addVariable((const string)int_names[i], var_data_ints[i], true); // no positional info
+  }
+  for (int i = 0; i < N_INT64S; ++i){
+      var_data_int64s[i].resize(subsize + NewGIO.requestedExtraSpace()/sizeof(int64_t));
+      for (int64_t j=0; j<subsize; j++){
+          var_data_int64s[i][j] =  (*P->int64_data[i])[indices[j]];
+      }
+      NewGIO.addVariable((const string)int64_names[i], var_data_int64s[i], true); // no positional info
+  }
+  for (int i = 0; i < N_DOUBLES; ++i){
+      var_data_doubles[i].resize(subsize + NewGIO.requestedExtraSpace()/sizeof(double));
+      for (int64_t j=0; j<subsize; j++){
+          var_data_doubles[i][j] =  (*P->double_data[i])[indices[j]];
+      }
+      NewGIO.addVariable((const string)double_names[i], var_data_doubles[i], true); // no positional info
+  }
+  for (int i = 0; i < N_MASKS; ++i){
+      var_data_masks[i].resize(subsize + NewGIO.requestedExtraSpace()/sizeof(MASK_T));
+      for (int64_t j=0; j<subsize; j++){
+          var_data_masks[i][j] =  (*P->mask_data[i])[indices[j]];
+      }
+      NewGIO.addVariable((const string)mask_names[i], var_data_masks[i], true); // no positional info
+  }
+
+  NewGIO.write();
+  MPI_Barrier(MPI_COMM_WORLD);
+
+}
 
 
-void read_and_redistribute(string file_name, int numranks, PLParticles* P,  T_Healpix_Base<int> map_lores, T_Healpix_Base<int64_t> map_hires, int rank_diff){
+
+void read_and_redistribute(string file_name, int numranks, PLParticles* P,  T_Healpix_Base<int> map_lores, T_Healpix_Base<int64_t> map_hires, int rank_diff, bool output_downsampled, float downsampling_rate, string file_name_output){
 
     int status;
     vector<int> send_count(numranks,0);
 
     read_particles(P, file_name);
+    if (output_downsampled){
+        assert(downsampling_rate<1.0);
+        assert(downsampling_rate>0.0);
+        output_downsampled_particles( P, downsampling_rate, file_name_output, file_name);
+    }
     status = compute_ranks_count( P,  map_lores, map_hires, numranks, send_count, rank_diff); 
     redistribute_particles(P, send_count,numranks,map_lores, map_hires, rank_diff);
+
 
     return;
 

@@ -85,7 +85,6 @@ int main(int argc, char *argv[]) {
          cout << "adiabatic option enabled, overwriting subgrid def";
      }
   #endif
-  //TODO add folder option
   if(argc != 15) {
      if (commRank==0){
      fprintf(stderr,"USAGE: %s <inputpath> <inputfile> <folders> <outpath> <outputfile> <nside> <nside_low> <step> <hval> <samplerate> <start_step> <nsteps> <output_downsampled> <downsampling_rate> \n", argv[0]);
@@ -103,21 +102,20 @@ int main(int argc, char *argv[]) {
 
   bool folders = atoi(argv[3]); // should be 0 if false
 
+  int64_t nside = atoi(argv[6]);
+  int64_t nside_low = atoi(argv[7]);
+  string stepnumber = argv[8];
 
-  int64_t nside = atoi(argv[4]);
-  int64_t nside_low = atoi(argv[5]);
-  string stepnumber = argv[6];
-
-  string outpath = argv[2];
-  string outfile = argv[3];
+  string outpath = argv[4];
+  string outfile = argv[5];
   outfile = outpath + outfile; 
-  float hval = atof(argv[7]);
-  float samplerate = atof(argv[8]);
-  int start_step = atoi(argv[9]);
-  int nsteps = atoi(argv[10]);
+  float hval = atof(argv[9]);
+  float samplerate = atof(argv[10]);
+  int start_step = atoi(argv[11]);
+  int nsteps = atoi(argv[12]);
 
-  char output_downsampled = argv[11][0]; // T or F
-  float downsampling_rate = atof(argv[12]);
+  char output_downsampled = argv[13][0]; // T or F
+  float downsampling_rate = atof(argv[14]);
 
   double rank1 = log2(nside);
   double rank2 = log2(nside_low);

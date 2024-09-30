@@ -57,9 +57,9 @@ int main(int argc, char *argv[]) {
 
   // arguments that need to be added 
 
-  if(argc != 11) {
+  if(argc != 14) {
      if (commRank==0){
-     fprintf(stderr,"USAGE: %s <inputpath> <inputname> <infolders> <outputfile> <nside> <nside_low> <step> <samplerate> <start_step> <nsteps> \n", argv[0]);
+     fprintf(stderr,"USAGE: %s <inputpath> <inputname> <infolders> <outpath> <outputfile> <nside> <nside_low> <step> <samplerate> <start_step> <nsteps> <output_downsampled> <downsampling_rate> \n", argv[0]);
      }
      exit(-1);
   }
@@ -74,14 +74,19 @@ int main(int argc, char *argv[]) {
 
   bool folders = atoi(argv[3]); // should be 0 if false
 
-  int64_t nside = atoi(argv[5]);
-  int64_t nside_low = atoi(argv[6]);
-  string stepnumber = argv[7];
-  string outfile = argv[4];
-  float samplerate = atof(argv[8]);
-  int start_step = atoi(argv[9]);
-  int nsteps = atoi(argv[10]);
+  int64_t nside = atoi(argv[6]);
+  int64_t nside_low = atoi(argv[7]);
+  string stepnumber = argv[8];
+  string outpath = argv[4];
+  string outfile = argv[5];
+  outfile = outpath + outfile;
 
+  float samplerate = atof(argv[9]);
+  int start_step = atoi(argv[10]);
+  int nsteps = atoi(argv[11]);
+
+  char output_downsampled = argv[12][0]; // T or F
+  float downsampling_rate = atof(argv[13]);
 
   double rank1 = log2(nside);
   double rank2 = log2(nside_low);
@@ -140,6 +145,18 @@ int main(int argc, char *argv[]) {
   int64_t count = 0; 
   vector<double> rho, phi, vel; // should generalize this so we're initializing it for an array of maps or a single map 
 
+
+  if (output_downsampled == 'T'){
+    string downsampled_path = outpath + "downsampled_particles";
+    if (fs:: exists(downsampled_path)){
+            cout << "Downsampling directory exists\n";
+    }
+    else{
+        fs::create_directory(downsampled_path);
+    }
+  }
+
+
   for (int ii=0;ii< lores_pix.size() ;++ii){
   int pix_val = lores_pix[ii];
   // initialize all pixels on rank
@@ -183,7 +200,22 @@ int main(int argc, char *argv[]) {
   }
     
 
-  read_and_redistribute(mpiioName, commRanks, &P, map_lores, map_hires, rank_diff);
+  if (output_downsampled == 'T'){
+    string downsampled_path_step = outpath + "downsampled_particles/STEP" + step;
+
+    if (fs:: exists(downsampled_path_step)){
+            cout << "Downsampling directory for step exists\n";
+    }
+    else{
+        fs::create_directory(downsampled_path_step);
+    }
+      string downsampled_file = downsampled_path_step + "/" + step + "_downsampled.gio";
+      read_and_redistribute(mpiioName, commRanks, &P, map_lores, map_hires, rank_diff, true, downsampling_rate, downsampled_file);
+  }
+  else{
+      read_and_redistribute(mpiioName, commRanks, &P, map_lores, map_hires, rank_diff);
+  }
+
 
   MPI_Barrier(MPI_COMM_WORLD);
   t4 = MPI_Wtime();
