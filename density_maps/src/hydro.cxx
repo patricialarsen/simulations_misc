@@ -62,7 +62,11 @@ int main(int argc, char *argv[]) {
   // arguments that need to be added 
   bool borgcube = false;
   bool adiabatic = false;
-  string cloudypath = "/pscratch/sd/p/plarsen/cloudy/CloudyRates_FG20_Shielded.bin";
+
+  //TODO: need new cloudy path 
+  //
+  string cloudypath = "/lustre/orion/hep142/proj-shared/nfrontiere/new_calibration/XRAY/UVData/CloudyRates_FG20_Shielded.bin";
+  //string cloudypath = "/pscratch/sd/p/plarsen/cloudy/CloudyRates_FG20_Shielded.bin";
   // string cloudypath = "/lus/eagle/projects/CosDiscover/nfrontiere/576MPC_RUNS/challenge_problem_576MPC_SEED_1.25e6_NPERH_AGN_2_NEWCOSMO/output/";
 
   #ifndef HYBRID_SG
@@ -81,17 +85,24 @@ int main(int argc, char *argv[]) {
          cout << "adiabatic option enabled, overwriting subgrid def";
      }
   #endif
-
-  if(argc != 13) {
+  //TODO add folder option
+  if(argc != 15) {
      if (commRank==0){
-     fprintf(stderr,"USAGE: %s <inputfile> <outpath> <outputfile> <nside> <nside_low> <step> <hval> <samplerate> <start_step> <nsteps> <output_downsampled> <downsampling_rate> \n", argv[0]);
+     fprintf(stderr,"USAGE: %s <inputpath> <inputfile> <folders> <outpath> <outputfile> <nside> <nside_low> <step> <hval> <samplerate> <start_step> <nsteps> <output_downsampled> <downsampling_rate> \n", argv[0]);
      }
      exit(-1);
   }
 
+  char filepath[512];
+  strcpy(filepath,argv[1]);
+  const char *mpiioName_base = filepath;
+
   char filename[512];
-  strcpy(filename,argv[1]);
-  const char *mpiioName_base = filename;
+  strcpy(filename,argv[2]);
+  const char *mpiioName_file = filename;
+
+  bool folders = atoi(argv[3]); // should be 0 if false
+
 
   int64_t nside = atoi(argv[4]);
   int64_t nside_low = atoi(argv[5]);
@@ -202,14 +213,25 @@ int main(int argc, char *argv[]) {
 	  
   char step[10*sizeof(char)];
   char mpiioName[512];
-  char mpiioName_down[512];
 
   sprintf(step,"%d",start_step+jj);
-  strcpy(mpiioName,mpiioName_base);
-  strcat(mpiioName,step);
-  strcpy(mpiioName_down,mpiioName_base);
-  strcat(mpiioName_down,step);
-  strcat(mpiioName_down,"_downsampled.gio");
+  //strcpy(mpiioName,mpiioName_base);
+  //strcat(mpiioName,step);
+  // TODO: add folder layout, something like the below
+
+  if (folders){
+  strcpy(mpiioName, mpiioName_base); // must have trailing /
+  strcat(mpiioName, "step_");
+  strcat(mpiioName, step);
+  strcat(mpiioName, "/");
+  strcat(mpiioName, mpiioName_file);
+  strcat(mpiioName, step);
+  }
+  else{
+  strcpy(mpiioName, mpiioName_base);
+  strcat(mpiioName, mpiioName_file);
+  strcat(mpiioName, step);
+  }
 
   
   for (int ii=0; ii<lores_pix.size(); ++ii){  

@@ -9,6 +9,10 @@ density_maps/*.output
 denstiy_maps/logs/*
 density_maps/*.o
 density_maps/obj/*.o
+density_maps/*.out
+density_maps/adiabatic_bhp
+density_maps/hydro_xray
+density_maps/hydro_p
 
 pixelize_halo_lightcones/LJ/*.error
 pixelize_halo_lightcones/LJ/*.cobaltlog

@@ -15,7 +15,12 @@ export OMP_NUM_THREADS=7
 
 INPUT=/lustre/orion/hep114/proj-shared/Challenge_problems/Challenge_hydro/L1856_N7424/output/LC
 #OUTPUT=/lustre/orion/hep142/proj-shared/prlarsen/maps/lc_tot
-OUTPUT=/lustre/orion/hep142/proj-shared/Challenge_problems/Challenge_hydro/L1856_N7424/MAPS/lc_tot
+OUTPUT=/lustre/orion/hep142/proj-shared/Challenge_problems/Challenge_hydro/L1856_N7424/MAPS/
+#lc_tot
 
 # the 1 here is whether subfolders are turned on: 0=False, 1=True
-srun -N 256 -n 2048 -c 7 ./hydro_xray ${INPUT}/ m000p.lc.mpicosmo. 1 ${OUTPUT} 8192 32 153 0.6766 1.0 153 5
+# old
+#srun -N 256 -n 2048 -c 7 ./hydro_xray ${INPUT}/ m000p.lc.mpicosmo. 1 ${OUTPUT} 8192 32 153 0.6766 1.0 153 5
+
+srun -N 256 -n 2048 -c 7 ./hydro_xray ${INPUT}/ m000p.lc.mpicosmo. 1 ${OUTPUT} lc_tot 8192 32 153 0.6766 1.0 153 5 T 0.01
+
