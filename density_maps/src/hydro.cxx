@@ -37,6 +37,10 @@
 #include "utils.h"
 #include "pix_funcs.h"
 
+#ifdef HACC_NVRAM
+#include "HaccIOUtil.h"
+#endif
+
 
 #define POSVEL_T float
 #define ID_T int64_t
@@ -85,12 +89,22 @@ int main(int argc, char *argv[]) {
          cout << "adiabatic option enabled, overwriting subgrid def";
      }
   #endif
+
+#ifndef HACC_NVRAM   
   if(argc != 15) {
      if (commRank==0){
      fprintf(stderr,"USAGE: %s <inputpath> <inputfile> <folders> <outpath> <outputfile> <nside> <nside_low> <step> <hval> <samplerate> <start_step> <nsteps> <output_downsampled> <downsampling_rate> \n", argv[0]);
      }
      exit(-1);
   }
+#else
+  if(argc != 16) {
+     if (commRank==0){
+     fprintf(stderr,"USAGE: %s <inputpath> <inputfile> <folders> <outpath> <outputfile> <nside> <nside_low> <step> <hval> <samplerate> <start_step> <nsteps> <output_downsampled> <downsampling_rate> <m_outInterBase> \n", argv[0]);
+     }
+     exit(-1);
+  }
+#endif
 
   char filepath[512];
   strcpy(filepath,argv[1]);
@@ -116,6 +130,15 @@ int main(int argc, char *argv[]) {
 
   char output_downsampled = argv[13][0]; // T or F
   float downsampling_rate = atof(argv[14]);
+
+#ifdef HACC_NVRAM
+  string m_outInterBase = argv[15];
+  int m_localRank, m_RPN, m_gio_nvram_file;
+  assert(m_outInterBase != "");
+  RankPerNode(m_RPN, m_localRank);
+  m_gio_nvram_file = FileRankAssignment(commRanks/m_RPN,false,true);//File number for this rank on this node
+  HACCNodeIOInfo::initialize(commRank, m_localRank, m_RPN, m_gio_nvram_file, m_outInterBase);//Initialize HACCNodeIO
+#endif
 
   double rank1 = log2(nside);
   double rank2 = log2(nside_low);
@@ -179,7 +202,7 @@ int main(int argc, char *argv[]) {
   vector<double> xray_band3;
   vector<double> xray_band4;
   vector<double> temperature;
-
+ /*
   if (output_downsampled == 'T'){
     string downsampled_path = outpath + "downsampled_particles";
     if (fs:: exists(downsampled_path)){
@@ -189,6 +212,7 @@ int main(int argc, char *argv[]) {
 	fs::create_directory(downsampled_path);
     }
   }
+  */
 
 
   for (int ii=0;ii< lores_pix.size() ;++ii){
@@ -210,9 +234,12 @@ int main(int argc, char *argv[]) {
   t3 = MPI_Wtime();
 	  
   char step[10*sizeof(char)];
+  char step_next[10*sizeof(char)];
   char mpiioName[512];
+  char mpiioName_next[512];
 
   sprintf(step,"%d",start_step+jj);
+  sprintf(step_next,"%d",start_step+jj+1);
   //strcpy(mpiioName,mpiioName_base);
   //strcat(mpiioName,step);
   // TODO: add folder layout, something like the below
@@ -224,11 +251,24 @@ int main(int argc, char *argv[]) {
   strcat(mpiioName, "/");
   strcat(mpiioName, mpiioName_file);
   strcat(mpiioName, step);
+
+  strcpy(mpiioName_next, mpiioName_base); // must have trailing /
+  strcat(mpiioName_next, "step_");
+  strcat(mpiioName_next, step_next);
+  strcat(mpiioName_next, "/");
+  strcat(mpiioName_next, mpiioName_file);
+  strcat(mpiioName_next, step_next);
+
   }
   else{
   strcpy(mpiioName, mpiioName_base);
   strcat(mpiioName, mpiioName_file);
   strcat(mpiioName, step);
+
+  strcpy(mpiioName_next, mpiioName_base);
+  strcat(mpiioName_next, mpiioName_file);
+  strcat(mpiioName_next, step_next);
+
   }
 
   
@@ -238,27 +278,28 @@ int main(int argc, char *argv[]) {
     
 
   if (output_downsampled == 'T'){
-    string downsampled_path_step = outpath + "downsampled_particles/STEP" + step;
+    //string downsampled_path_step = outpath + "downsampled_particles/STEP" + step;
+    string downsampled_path_step = modifyPath(outpath, "downsampled_particles", string(step));
 
-    if (fs:: exists(downsampled_path_step)){
+    /*if (fs:: exists(downsampled_path_step)){
             cout << "Downsampling directory for step exists\n";
     }
     else{
         fs::create_directory(downsampled_path_step);
-    }
+    }*/
     
 
       string downsampled_file = downsampled_path_step + "/" + step + "_downsampled.gio";
-      read_and_redistribute(mpiioName, commRanks, &P, map_lores, map_hires, rank_diff, true, downsampling_rate, downsampled_file);
+      read_and_redistribute(mpiioName, mpiioName_next, commRanks, &P, map_lores, map_hires, rank_diff, true, downsampling_rate, downsampled_file);
   }
   else{
-      read_and_redistribute(mpiioName, commRanks, &P, map_lores, map_hires, rank_diff);
+      read_and_redistribute(mpiioName, mpiioName_next, commRanks, &P, map_lores, map_hires, rank_diff);
   }
 
   MPI_Barrier(MPI_COMM_WORLD);
   t4 = MPI_Wtime();
   if (commRank==0){
-    printf( "Redistribute time is %f\n", t4 - t3 );
+    printf( "Read and redistribute time is %f\n", t4 - t3 );
   }
 
 
@@ -295,6 +336,10 @@ int main(int argc, char *argv[]) {
   if (commRank==0){
   printf( "Elapsed time is %f\n", t2 - t1 );
   }
+
+#ifdef HACC_NVRAM
+  HACCIOShutdown();
+#endif
 
   MPI_Barrier(MPI_COMM_WORLD);
   MPI_Finalize();

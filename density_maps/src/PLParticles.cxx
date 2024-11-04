@@ -91,3 +91,41 @@ void PLParticles::Resize(size_t n) {
   }
 }
 
+void PLParticles::Transform(const std::vector<int>& indices) {
+    if (this->is_allocated) {
+        this->nparticles = indices.size();
+
+        for (size_t i = 0; i < indices.size(); ++i) {//I dont think this is thread safe so not using pragma
+            this->pix_index->at(i) = this->pix_index->at(indices[i]);
+            this->rank->at(i) = this->rank->at(indices[i]);
+            for (int j = 0; j < N_FLOATS; ++j)
+                this->float_data[j]->at(i) = this->float_data[j]->at(indices[i]);
+            for (int j = 0; j < N_DOUBLES; ++j)
+                this->double_data[j]->at(i) = this->double_data[j]->at(indices[i]);
+            for (int j = 0; j < N_INTS; ++j)
+                this->int_data[j]->at(i) = this->int_data[j]->at(indices[i]);
+            for (int j = 0; j < N_INT64S; ++j)
+                this->int64_data[j]->at(i) = this->int64_data[j]->at(indices[i]);
+            for (int j = 0; j < N_MASKS; ++j)
+                this->mask_data[j]->at(i) = this->mask_data[j]->at(indices[i]);
+        }
+
+        // Resize the data
+        this->pix_index->resize(this->nparticles);
+        this->rank->resize(this->nparticles);
+
+        for (int i = 0; i < N_FLOATS; ++i)
+            this->float_data[i]->resize(this->nparticles);
+        for (int i = 0; i < N_DOUBLES; ++i)
+            this->double_data[i]->resize(this->nparticles);
+        for (int i = 0; i < N_INTS; ++i)
+            this->int_data[i]->resize(this->nparticles);
+        for (int i = 0; i < N_INT64S; ++i)
+            this->int64_data[i]->resize(this->nparticles);
+        for (int i = 0; i < N_MASKS; ++i)
+            this->mask_data[i]->resize(this->nparticles);
+    } else {
+        std::cerr << "ERROR: Can't resize -- vectors are not allocated." << std::endl;
+    }
+}
+

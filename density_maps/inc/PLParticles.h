@@ -4,6 +4,7 @@
 
 
 #include "particle_def_hydro.h"
+//#include "particle_def.h"
 
 //##_bhp.h
 
@@ -50,5 +51,6 @@ public:
   void Allocate(size_t n=0);
   void Deallocate();
   void Resize(size_t);
+  void Transform(const std::vector<int>&);
 };
 
