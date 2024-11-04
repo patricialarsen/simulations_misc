@@ -41,7 +41,7 @@
 //#include "utils_ngp.h"
 #include "pix_funcs.h"
 
-#include "RadiativeCooling.h"
+//#include "RadiativeCooling.h"
 
 using namespace gio;
 using namespace std;
@@ -88,7 +88,8 @@ int compute_rank_partsky(int pix_val, int numranks, vector<int> pix_list){
 int get_lores_pix(int64_t pix_val, int rank_diff, T_Healpix_Base<int64_t> map_hires){
      int64_t pix_val_nest = map_hires.ring2nest(pix_val); // if in ring order 
      int64_t len_pixel = pow(4,rank_diff);
-     int npix_low = (int)((float)pix_val_nest/(float)len_pixel); // you want this to truncate
+     int64_t npix_low_tmp = pix_val_nest/len_pixel; // you want this to truncate
+     int npix_low = (int)npix_low_tmp;
      return npix_low; 
 }
 
@@ -229,7 +230,7 @@ void get_pix_list_rank(int octant, int rank, int numranks, int64_t npix_lores, v
 
 
 
-
+/*
 int check_xray_halo( PLParticles* P, float hval, bool borgcube, bool adiabatic,  float samplerate, string cloudypath){
 
   int commRank;
@@ -409,9 +410,11 @@ int check_xray_halo( PLParticles* P, float hval, bool borgcube, bool adiabatic, 
 
 
 }
+*/
 
 
-int assign_sz_xray_cic(vector<float> &rho, vector<float> &phi, vector<float> &vel,vector<float> &ksz, vector<double> &tsz, vector<double> &xray1, vector<double> &xray2, PLParticles* P, T_Healpix_Base<int64_t> map_hires, vector<int64_t> pixnum_start, vector<int64_t> pixnum_end, vector<int64_t> start_idx,  unordered_map<int64_t, int64_t> ring_to_idx, float hval, bool borgcube, bool adiabatic, float samplerate, string cloudypath){
+
+int assign_sz_xray_cic(vector<double> &rho, vector<double> &phi, vector<double> &vel,vector<double> &ksz, vector<double> &tsz, vector<double> &xray1, vector<double> &xray2, vector<double> &xray3, vector<double> &xray4, vector<double> &temp, PLParticles* P, T_Healpix_Base<int64_t> map_hires, vector<int64_t> pixnum_start, vector<int64_t> pixnum_end, vector<int64_t> start_idx,  unordered_map<int64_t, int64_t> ring_to_idx, float hval, bool borgcube, bool adiabatic, float samplerate, string cloudypath){
 
   int commRank;
   MPI_Comm_rank(MPI_COMM_WORLD, &commRank);
@@ -529,22 +532,85 @@ int assign_sz_xray_cic(vector<float> &rho, vector<float> &phi, vector<float> &ve
      cout << "mu values: average = "<< mu_av << ", minimum value = "<< min_mu_global << ", maximum value = " << max_mu_global<< endl;
 
   }
-
+ 
+  
   // initialize the cloudy tables
-
-  #ifdef HYBRID_SG
   RadiativeCooling* m_radcool = new RadiativeCooling(cloudypath);
-  if (!adiabatic) {
-    double Tcmb = 2.725f;
-    m_radcool->setTCMB(Tcmb);
-    m_radcool->readCloudyScaleFactor((RAD_T)aa_av);
+  m_radcool->setTCMB(2.2725f);
+  m_radcool->readCloudyTable(min_a_global,max_a_global);
+
     if (commRank==0){
-    cout << "Initialized cloudy tables"<<endl;
+    cout << "Initialized cloudy tables (new version) at "<< cloudypath <<endl;
+    }
+
+  RAD_T m_al, m_ah;
+  RAD_T m_Ypmin, m_dYp;
+  RAD_T m_Rmin, m_dR;
+  RAD_T m_nHmin, m_dnH;
+  RAD_T m_Tmin, m_dT;
+  int m_nYp;
+  int m_nR;
+  int m_nnH;
+  int m_nT;
+  int64_t m_tsize;
+  vector<RAD_T>* lcTable_l;
+  vector<RAD_T>* lhTable_l;
+  vector<RAD_T>* feTable_l;
+  vector<RAD_T>* fnTable_l;
+  vector<RAD_T>* lcTable_h;
+  vector<RAD_T>* lhTable_h;
+  vector<RAD_T>* feTable_h;
+  vector<RAD_T>* fnTable_h;
+  vector<RAD_T>* X0Table_l;
+  vector<RAD_T>* X1Table_l;
+  vector<RAD_T>* X2Table_l;
+  vector<RAD_T>* X3Table_l;
+  vector<RAD_T>* X0Table_h;
+  vector<RAD_T>* X1Table_h;
+  vector<RAD_T>* X2Table_h;
+  vector<RAD_T>* X3Table_h;
+
+  // TODO: check check check check. I think this should come in from the header but we'll see
+  RAD_T* X0TablePtr_l;
+  RAD_T* X0TablePtr_h;
+  RAD_T* X1TablePtr_l;
+  RAD_T* X1TablePtr_h;
+  RAD_T* X2TablePtr_l;
+  RAD_T* X2TablePtr_h;
+  RAD_T* X3TablePtr_l;
+  RAD_T* X3TablePtr_h;
+
+  // note: need to set m_al an m_ah correctly for scale factor interpolation
+  m_radcool->getTableParameters(m_al, m_ah, m_Ypmin, m_dYp, m_Rmin, m_dR, m_nHmin, m_dnH, m_Tmin, m_dT,
+                         m_nYp, m_nR, m_nnH, m_nT, m_tsize);
+  m_radcool->getTableData(&lcTable_l, &lhTable_l, &feTable_l, &fnTable_l, &lcTable_h, &lhTable_h, &feTable_h, &fnTable_h,
+                               &X0Table_l, &X1Table_l, &X2Table_l, &X3Table_l, &X0Table_h, &X1Table_h, &X2Table_h, &X3Table_h);
+  int64_t tabsize = int64_t(m_nYp)*int64_t(m_nR)*int64_t(m_nnH)*int64_t(m_nT);
+  assert(tabsize == m_tsize);//sanity check
+
+  if(m_radcool != NULL) { //TODO: I think this mask is not needed, we are not at the individual particle level yet
+    X0TablePtr_l = X0Table_l->data(); // these tables are now in the header
+    X0TablePtr_h = X0Table_h->data();
+    X1TablePtr_l = X1Table_l->data();
+    X1TablePtr_h = X1Table_h->data();
+    X2TablePtr_l = X2Table_l->data();
+    X2TablePtr_h = X2Table_h->data();
+    X3TablePtr_l = X3Table_l->data();
+    X3TablePtr_h = X3Table_h->data();
+
+  }
+
+
+  //if (!adiabatic) {
+    //double Tcmb = 2.725f;
+    //m_radcool->setTCMB(Tcmb); // no longer needed?
+    //m_radcool->readCloudyScaleFactor((RAD_T)aa_av); // TODO: now a table read, can use min_a_global, max_a_global
+    if (commRank==0){
+    cout << "Initialized cloudy tables (new version) "<<endl;
     }
     
 
-  }
-  #endif
+  //}
   double tsz_tot2 = 0;
   double tsz_tot3 = 0;
   double tsz_tot4 = 0;
@@ -617,6 +683,8 @@ int assign_sz_xray_cic(vector<float> &rho, vector<float> &phi, vector<float> &ve
          cout << "temperature value less than 0 , uu= "<< uu << endl;
 
       }*/
+
+      
       RAD_T nHi  = rhoi*Xi*INV_MH; // density / mass in g
       RAD_T nHIi = 0.0;
       RAD_T nei = 0.0;
@@ -626,13 +694,36 @@ int assign_sz_xray_cic(vector<float> &rho, vector<float> &phi, vector<float> &ve
       RAD_T mue = 0.0;
       double Li_free_Bolo = 0.0;
       double Li_free_ROSAT = 0.0; 
+      double Li_free_ErositaLo = 0.0;
+      double Li_free_ErositaHi = 0.0;
 
 
       if (!adiabatic) {
         #ifdef HYBRID_SG
         if ((Ti>0)&&(isNormGas(mask))){
 	// change to this
+	
+	// TODO: Q - do I need to update the CLOUDY calls for SZ as well?
 	RAD_T lambda = (*m_radcool)(Ti, (RAD_T)rhoi, (RAD_T)Zi, (RAD_T)Yp, (RAD_T)aa_av, mui, &iter, false, &nHIi, &nei, &LCval, &LHval, &mue);
+
+        //TODO: possibly new - don't think so?
+         //RAD_T lambda = -(*m_radcool)(RAD_T(Ti), RAD_T(rhoInput), RAD_T(zmetp), RAD_T(Yp), RAD_T(aa), mup, &iter, false, &nHIi, &nei, &LCval, &LHval, &mue);//call returns nHIi and ne in 1/nH units
+#ifdef UVCONVERT
+//If UVCONVERT IS ON Lambda_code = lambda_CGS * KM_IN_MPC * UU_SI/RHO_CGS... So we want to make lambda in CGS unnits and apply conversions below
+         double convFactor = RHO_CGS/(KM_IN_MPC*UU_SI);
+         lambda *= convFactor;
+         LCval *= convFactor;
+         LHval *= convFactor;
+#endif
+//TODO: new stuff 
+//#ifdef UV_CLOUDY_TALBES
+	     double Ri = X_SOLAR_OVER_Z_SOLAR * (Zi/Xi);
+             //double Ri = X_SOLAR_OVER_Z_SOLAR * (zmetp/Xi); // zmetp is Zi in ours 
+             float Yp0 = (Yp-m_Ypmin)/m_dYp;
+             float R0 = (Ri-m_Rmin)/m_dR;
+             float nH0 = (log10(nHi)-m_nHmin)/m_dnH;
+             float T0 = (log10(Ti)-m_Tmin)/m_dT;
+//#endif
 
         //RAD_T lambda = (*m_radcool)(Ti, (RAD_T)rhoi, (RAD_T)Zi, (RAD_T)Yi, (RAD_T)aa_av, mui, &iter, false, &nHIi, &nei);
         nei *= nHi;
@@ -645,54 +736,28 @@ int assign_sz_xray_cic(vector<float> &rho, vector<float> &phi, vector<float> &ve
         if(XrayGasCondition(mask, Ti)){
           //Calculate L500:
           double mCGS = mass*G_IN_MSUN/hval;//Mass in grams
-          double Li_free = 0.0;
+          //double Li_free_Bolo = 0.0;
+	  //double Li_free_ROSAT = 0.0;
+
+	  double Ri = X_SOLAR_OVER_Z_SOLAR * (Zi/Xi);
+          //double Ri = X_SOLAR_OVER_Z_SOLAR * (zmetp/Xi); // zmetp is Zi in ours
+          float Yp0 = (Yp-m_Ypmin)/m_dYp;
+          float R0 = (Ri-m_Rmin)/m_dR;
+          float nH0 = (log10(nHi)-m_nHmin)/m_dnH;
+          float T0 = (log10(Ti)-m_Tmin)/m_dT;
+
 	   
 	  // I've confirmed rhoi is equivalent to rhoCGS
-          PRIMORDIAL_FREE_FREE_EMISSIVITY(Li_free, Ti, rhoi, mCGS);
+          CLOUDY_TAB5D(Li_free_Bolo, X3TablePtr_l, X3TablePtr_h, m_al, m_ah, aa, Yp0, R0, nH0, T0, m_nYp, m_nT, m_nnH, m_nR);
+          Li_free_Bolo = Vi*nHi*nHi*pow(10.0, Li_free_Bolo); // Table is in log10(L/nH^2) units
+          CLOUDY_TAB5D(Li_free_ROSAT, X0TablePtr_l, X0TablePtr_h, m_al, m_ah, aa, Yp0, R0, nH0, T0, m_nYp, m_nT, m_nnH, m_nR);
+          Li_free_ROSAT = Vi*nHi*nHi*pow(10.0, Li_free_ROSAT); // Table is in log10(L/nH^2) units
+          CLOUDY_TAB5D(Li_free_ErositaLo, X1TablePtr_l, X1TablePtr_h, m_al, m_ah, aa, Yp0, R0, nH0, T0, m_nYp, m_nT, m_nnH, m_nR);
+          Li_free_ErositaLo = Vi*nHi*nHi*pow(10.0, Li_free_ErositaLo); // Table is in log10(L/nH^2) units
+          CLOUDY_TAB5D(Li_free_ErositaHi, X2TablePtr_l, X2TablePtr_h, m_al, m_ah, aa, Yp0, R0, nH0, T0, m_nYp, m_nT, m_nnH, m_nR);
+          Li_free_ErositaHi = Vi*nHi*nHi*pow(10.0, Li_free_ErositaHi); // Table is in log10(L/nH^2) units
 
-	  double Li_free_analytic = 0.0; 
-	  double Xe = 1.16; 
-	  double Xi = 1.079;
-	  double Z = sqrt(1.15);
-	  double gff = 1.3;
-	  double planck = 6.6261e-27; // in cm^2*g/s
-	  // KB_CONST is in Erg/K, planck is in cm^2 g /s 
-	  // T should be in Kelvin (check)
-	  //
-	  // Erg/K *s /cm^2 / g *sqrt(K) * V?
-	  // prefactor is 
-	  // Erg/K  s/g/cm/cm  K^1/2 / cm / cm / cm 
-	  //
-	  // total = 
-	  //
-	  //  ( ) -> gives number density so /cm^3 /cm^3 * cm^3 *K^1/2
-	  //  -> K^1/2 / cm^3
-	  //
-	  // V is g/cm^3 
-	  // 6.8e-38 erg  K^1/2 cm^3 
-	  //
-	  double prefactor = 6.8e-38*KB_CONST/planck*Z*Z*gff*Xe*Xi/(Xi+Xe)/(Xi+Xe); // units Erg/K cm^-2 g^-1 s 
-	  // units here are confusing
-          double scaling = sqrt(Ti)*(rhoi/mui/MH)*(rhoi/mui/MH)*Vi;  // units K^1/2 cm^-3
-								     // MH rather than MP because of mui definition
-	  Li_free_analytic = prefactor * scaling; 
-          // they then claim a erg K^1/2 cm^3 in Pakmor which I guess gives 
-	  // erg^2  s cm^-2/g units in total. 
-	  //
-	  // luminosity should be in erg/s
-	  // an erg is g cm^2/s^2
-	  // so erg  * g cm^2 /s^2 * s *cm^-2 /g
-	  // gives erg/s 
 
-          //Apply frequency band 
-          double Bolo_int = exp(-XRAY_BAND_BOLO_EMIN/(KB_KEV*Ti*aa)) - exp(-XRAY_BAND_BOLO_EMAX/(KB_KEV*Ti*aa));
-	  //Integrate bolometric band (note the 1/aa scalefactor for redshift dependence)
-          double ROSAT_int = exp(-XRAY_BAND_ROSAT_EMIN/(KB_KEV*Ti*aa)) - exp(-XRAY_BAND_ROSAT_EMAX/(KB_KEV*Ti*aa));
-	  //Integrate ROSAT band (note the 1/aa scalefactor for redshift dependence)
-
-          Li_free_Bolo = Li_free*Bolo_int;//Li_free*Bolo_int;//Bolometric Luminosity
-          Li_free_ROSAT = Li_free*ROSAT_int;//ROSAT Luminosity
-						   // for now let's swap the Bolo luminosity for the analytic one
         }
         #endif
       } 
@@ -724,13 +789,16 @@ int assign_sz_xray_cic(vector<float> &rho, vector<float> &phi, vector<float> &ve
           // ideally we should add a flag for SFGas and wind to revert to the adiabatic electron density value
           if (adiabatic){
             tsz[new_idx] += mass*mu*uu/dist_com2*weights[j];   // a^2 factors cancel out in ui and dist_comov2  
-            ksz[new_idx] += mass*vel_los/dist_com2/aa*weights[j]; // one factor of a cancels from v_los and dist_comov2	  
+            ksz[new_idx] += mass*vel_los/dist_com2/aa*weights[j]; // one factor of a cancels from v_los and dist_comov2	 
           }	    
   	  else{
             tsz[new_idx] += ne_scaled*mu*uu/dist_com2*weights[j];
             ksz[new_idx] += ne_scaled*vel_los/dist_com2/aa*weights[j]; // one factor of a cancels from v_los and dist_comov2
-	    xray1[new_idx] += Li_free_Bolo/dist_com2*MPC_IN_CM*MPC_IN_CM*aa*aa*hval*hval*weights[j];
-            xray2[new_idx] += Li_free_ROSAT/dist_com2*MPC_IN_CM*MPC_IN_CM*aa*aa*hval*hval*weights[j]; // factor of a^2 from luminosity distance		    
+	    xray4[new_idx] += Li_free_Bolo/dist_com2*MPC_IN_CM*MPC_IN_CM*aa*aa*hval*hval*weights[j];
+            xray1[new_idx] += Li_free_ROSAT/dist_com2*MPC_IN_CM*MPC_IN_CM*aa*aa*hval*hval*weights[j]; // factor of a^2 from luminosity distance		    
+            xray2[new_idx] += Li_free_ErositaLo/dist_com2*MPC_IN_CM*MPC_IN_CM*aa*aa*hval*hval*weights[j];
+            xray3[new_idx] += Li_free_ErositaHi/dist_com2*MPC_IN_CM*MPC_IN_CM*aa*aa*hval*hval*weights[j]; // factor of a^2 from luminosity distance        
+	    temp[new_idx]  += Ti*Li_free_Bolo/dist_com2*MPC_IN_CM*MPC_IN_CM*aa*aa*hval*hval*weights[j];  
           }
 
           tsz_tot2 += ne_scaled*mui*uu/dist_com2*weights[j];
@@ -753,28 +821,241 @@ int assign_sz_xray_cic(vector<float> &rho, vector<float> &phi, vector<float> &ve
   delete m_radcool;
   #endif
    // for each pixel apply this scaling 
+   int64_t tsz_nzero = 0;
+   int64_t ksz_nzero = 0;
+   int64_t xray1_nzero = 0;
+   int64_t xray2_nzero = 0;
+   int64_t xray3_nzero = 0;
+   int64_t xray4_nzero = 0;
+   int64_t temp_nzero = 0;
+   int64_t rho_nzero = 0;
+   int64_t phi_nzero = 0;
+   int64_t vel_nzero = 0;
+
+   int64_t tsz_nzero_global = 0;
+   int64_t ksz_nzero_global = 0;
+   int64_t xray1_nzero_global = 0;
+   int64_t xray2_nzero_global = 0;
+   int64_t xray3_nzero_global = 0;
+   int64_t xray4_nzero_global = 0;
+   int64_t temp_nzero_global = 0;
+   int64_t rho_nzero_global = 0;
+   int64_t phi_nzero_global = 0;
+   int64_t vel_nzero_global = 0;
+
+
    double tsz_tot = 0;
+   double ksz_tot = 0;
+   double xray1_tot = 0;
+   double xray2_tot = 0;
+   double xray3_tot = 0;
+   double xray4_tot = 0;
+   double temp_tot = 0;
+   double rho_tot = 0;
+   double phi_tot = 0;
+   double vel_tot = 0;
+
+   double tsz_tot_global = 0;
+   double ksz_tot_global = 0;
+   double xray1_tot_global = 0;
+   double xray2_tot_global = 0;
+   double xray3_tot_global = 0;
+   double xray4_tot_global = 0;
+   double temp_tot_global = 0;
+   double rho_tot_global = 0;
+   double phi_tot_global = 0;
+   double vel_tot_global = 0;
+
+   double tsz_min = 1.e20;
+   double ksz_min = 1.e20;
+   double xray1_min = 1.e20;
+   double xray2_min = 1.e20;
+   double xray3_min = 1.e20;
+   double xray4_min = 1.e20;
+   double temp_min = 1.e20;
+   double rho_min = 1.e20;
+   double phi_min = 1.e20;
+   double vel_min = 1.e20;
+   
+
+   double tsz_min_global = 1.e20;
+   double ksz_min_global = 1.e20;
+   double xray1_min_global = 1.e20;
+   double xray2_min_global = 1.e20;
+   double xray3_min_global = 1.e20;
+   double xray4_min_global = 1.e20;
+   double temp_min_global = 1.e20;
+   double rho_min_global = 1.e20;
+   double phi_min_global = 1.e20;
+   double vel_min_global = 1.e20;
+
+
+   double tsz_max = -1.e20;
+   double ksz_max = -1.e20;
+   double xray1_max = -1.e20;
+   double xray2_max = -1.e20;
+   double xray3_max = -1.e20;
+   double xray4_max = -1.e20;
+   double temp_max = -1.e20;
+   double rho_max = -1.e20;
+   double phi_max = -1.e20;
+   double vel_max = -1.e20;
+
+   double tsz_max_global = -1.e20;
+   double ksz_max_global = -1.e20;
+   double xray1_max_global = -1.e20;
+   double xray2_max_global = -1.e20;
+   double xray3_max_global = -1.e20;
+   double xray4_max_global = -1.e20;
+   double temp_max_global = -1.e20;
+   double rho_max_global = -1.e20;
+   double phi_max_global = -1.e20;
+   double vel_max_global = -1.e20;
+
+
    for (int64_t j=0; j<ksz.size(); j++){
      tsz[j] = tsz[j]*TSZ_CONV;
-     tsz_tot += tsz[j];
      ksz[j] = ksz[j]*KSZ_CONV;
      xray1[j] = xray1[j]*XRAY_CONV;
      xray2[j] = xray2[j]*XRAY_CONV;
-    }
-  if (commRank==0){
+     xray3[j] = xray3[j]*XRAY_CONV;
+     xray4[j] = xray4[j]*XRAY_CONV;
 
-   cout << "map tsz sum = "<< tsz_tot << endl;
-   cout << "particle tsz sum = "<< tsz_tot2*TSZ_CONV << endl;
+     tsz_tot += tsz[j];
+     ksz_tot += ksz[j];
+     xray1_tot += xray1[j];
+     xray2_tot += xray2[j];
+     xray3_tot += xray3[j];
+     xray4_tot += xray4[j];
+     temp_tot += temp[j];
+     rho_tot += rho[j];
+     phi_tot += phi[j];
+     vel_tot += vel[j];
+
+     if (tsz[j]!=0)
+         tsz_nzero += 1;
+     if (ksz[j]!=0)
+         ksz_nzero += 1;
+     if (xray1[j]!=0)
+         xray1_nzero += 1;
+     if (xray2[j]!=0)
+         xray2_nzero += 1;
+     if (xray3[j]!=0)
+         xray3_nzero += 1;
+     if (xray4[j]!=0)
+         xray4_nzero += 1;
+     if (temp[j]!=0)
+         temp_nzero += 1;
+     if (rho[j]!=0)
+         rho_nzero += 1;
+     if (phi[j]!=0)
+         phi_nzero += 1;
+     if (vel[j]!=0)
+         vel_nzero += 1;
+ 
+     tsz_min = (tsz[j]<tsz_min)?tsz[j]:tsz_min;
+     ksz_min = (ksz[j]<ksz_min)?ksz[j]:ksz_min;
+     xray1_min = (xray1[j]<xray1_min)?xray1[j]:xray1_min;
+     xray2_min = (xray2[j]<xray2_min)?xray2[j]:xray2_min;
+     xray3_min = (xray3[j]<xray3_min)?xray3[j]:xray3_min;
+     xray4_min = (xray4[j]<xray4_min)?xray4[j]:xray4_min;
+     temp_min = (ksz[j]<ksz_min)?ksz[j]:ksz_min;
+     rho_min = (rho[j]<rho_min)?rho[j]:rho_min;
+     phi_min = (phi[j]<phi_min)?phi[j]:phi_min;
+     vel_min = (vel[j]<vel_min)?vel[j]:vel_min;
+
+     tsz_max = (tsz[j]>tsz_max)?tsz[j]:tsz_max;
+     ksz_max = (ksz[j]>ksz_max)?ksz[j]:ksz_max;
+     xray1_max = (xray1[j]>xray1_max)?xray1[j]:xray1_max;
+     xray2_max = (xray2[j]>xray2_max)?xray2[j]:xray2_max;
+     xray3_max = (xray3[j]>xray3_max)?xray3[j]:xray3_max;
+     xray4_max = (xray4[j]>xray4_max)?xray4[j]:xray4_max;
+     temp_max = (ksz[j]>ksz_max)?ksz[j]:ksz_max;
+     rho_max = (rho[j]>rho_max)?rho[j]:rho_max;
+     phi_max = (phi[j]>phi_max)?phi[j]:phi_max;
+     vel_max = (vel[j]>vel_max)?vel[j]:vel_max;
+
+    } 
+  // alter
+  MPI_Reduce(&tsz_tot,&tsz_tot_global,1,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+  MPI_Reduce(&tsz_nzero,&tsz_nzero_global,1,MPI_INT64_T,MPI_SUM,0,MPI_COMM_WORLD);
+  MPI_Reduce(&tsz_min,&tsz_min_global,1,MPI_DOUBLE,MPI_MIN,0,MPI_COMM_WORLD);
+  MPI_Reduce(&tsz_max,&tsz_max_global,1,MPI_DOUBLE,MPI_MAX,0,MPI_COMM_WORLD);
+
+  MPI_Reduce(&ksz_tot,&ksz_tot_global,1,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+  MPI_Reduce(&ksz_nzero,&ksz_nzero_global,1,MPI_INT64_T,MPI_SUM,0,MPI_COMM_WORLD);
+  MPI_Reduce(&ksz_min,&ksz_min_global,1,MPI_DOUBLE,MPI_MIN,0,MPI_COMM_WORLD);
+  MPI_Reduce(&ksz_max,&ksz_max_global,1,MPI_DOUBLE,MPI_MAX,0,MPI_COMM_WORLD);
+
+  MPI_Reduce(&xray1_tot,&xray1_tot_global,1,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+  MPI_Reduce(&xray1_nzero,&xray1_nzero_global,1,MPI_INT64_T,MPI_SUM,0,MPI_COMM_WORLD);
+  MPI_Reduce(&xray1_min,&xray1_min_global,1,MPI_DOUBLE,MPI_MIN,0,MPI_COMM_WORLD);
+  MPI_Reduce(&xray1_max,&xray1_max_global,1,MPI_DOUBLE,MPI_MAX,0,MPI_COMM_WORLD);
+
+  MPI_Reduce(&xray2_tot,&xray2_tot_global,1,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+  MPI_Reduce(&xray2_nzero,&xray2_nzero_global,1,MPI_INT64_T,MPI_SUM,0,MPI_COMM_WORLD);
+  MPI_Reduce(&xray2_min,&xray2_min_global,1,MPI_DOUBLE,MPI_MIN,0,MPI_COMM_WORLD);
+  MPI_Reduce(&xray2_max,&xray2_max_global,1,MPI_DOUBLE,MPI_MAX,0,MPI_COMM_WORLD);
+
+  MPI_Reduce(&xray3_tot,&xray3_tot_global,1,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+  MPI_Reduce(&xray3_nzero,&xray3_nzero_global,1,MPI_INT64_T,MPI_SUM,0,MPI_COMM_WORLD);
+  MPI_Reduce(&xray3_min,&xray3_min_global,1,MPI_DOUBLE,MPI_MIN,0,MPI_COMM_WORLD);
+  MPI_Reduce(&xray3_max,&xray3_max_global,1,MPI_DOUBLE,MPI_MAX,0,MPI_COMM_WORLD);
+
+  MPI_Reduce(&xray4_tot,&xray4_tot_global,1,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+  MPI_Reduce(&xray4_nzero,&xray4_nzero_global,1,MPI_INT64_T,MPI_SUM,0,MPI_COMM_WORLD);
+  MPI_Reduce(&xray4_min,&xray4_min_global,1,MPI_DOUBLE,MPI_MIN,0,MPI_COMM_WORLD);
+  MPI_Reduce(&xray4_max,&xray4_max_global,1,MPI_DOUBLE,MPI_MAX,0,MPI_COMM_WORLD);
+
+  MPI_Reduce(&temp_tot,&temp_tot_global,1,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+  MPI_Reduce(&temp_nzero,&temp_nzero_global,1,MPI_INT64_T,MPI_SUM,0,MPI_COMM_WORLD);
+  MPI_Reduce(&temp_min,&temp_min_global,1,MPI_DOUBLE,MPI_MIN,0,MPI_COMM_WORLD);
+  MPI_Reduce(&temp_max,&temp_max_global,1,MPI_DOUBLE,MPI_MAX,0,MPI_COMM_WORLD);
+
+  MPI_Reduce(&rho_tot,&rho_tot_global,1,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+  MPI_Reduce(&rho_nzero,&rho_nzero_global,1,MPI_INT64_T,MPI_SUM,0,MPI_COMM_WORLD);
+  MPI_Reduce(&rho_min,&rho_min_global,1,MPI_DOUBLE,MPI_MIN,0,MPI_COMM_WORLD);
+  MPI_Reduce(&rho_max,&rho_max_global,1,MPI_DOUBLE,MPI_MAX,0,MPI_COMM_WORLD);
+
+  MPI_Reduce(&phi_tot,&phi_tot_global,1,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+  MPI_Reduce(&phi_nzero,&phi_nzero_global,1,MPI_INT64_T,MPI_SUM,0,MPI_COMM_WORLD);
+  MPI_Reduce(&phi_min,&phi_min_global,1,MPI_DOUBLE,MPI_MIN,0,MPI_COMM_WORLD);
+  MPI_Reduce(&phi_max,&phi_max_global,1,MPI_DOUBLE,MPI_MAX,0,MPI_COMM_WORLD);
+
+  MPI_Reduce(&vel_tot,&vel_tot_global,1,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+  MPI_Reduce(&vel_nzero,&vel_nzero_global,1,MPI_INT64_T,MPI_SUM,0,MPI_COMM_WORLD);
+  MPI_Reduce(&vel_min,&vel_min_global,1,MPI_DOUBLE,MPI_MIN,0,MPI_COMM_WORLD);
+  MPI_Reduce(&vel_max,&vel_max_global,1,MPI_DOUBLE,MPI_MAX,0,MPI_COMM_WORLD);
+
+
+  if (commRank==0){
+    // add outputs 
+   cout << "map tsz sum = "<< tsz_tot_global << ", min = " << tsz_min_global << ", max = "<< tsz_max_global  << ", number of zeros = " << tsz_nzero_global <<  endl;
+   cout << "map ksz sum = "<< ksz_tot_global << ", min = " << ksz_min_global << ", max = "<< ksz_max_global  << ", number of zeros = " << ksz_nzero_global <<  endl;
+   cout << "map xray1 sum = "<< xray1_tot_global << ", min = " << xray1_min_global << ", max = "<< xray1_max_global  << ", number of zeros = " << xray1_nzero_global <<  endl;
+   cout << "map xray2 sum = "<< xray2_tot_global << ", min = " << xray2_min_global << ", max = "<< xray2_max_global  << ", number of zeros = " << xray2_nzero_global <<  endl;
+   cout << "map xray3 sum = "<< xray3_tot_global << ", min = " << xray3_min_global << ", max = "<< xray3_max_global  << ", number of zeros = " << xray3_nzero_global <<  endl;
+   cout << "map xray4 sum = "<< xray4_tot_global << ", min = " << xray4_min_global << ", max = "<< xray4_max_global  << ", number of zeros = " << xray4_nzero_global <<  endl;
+   cout << "map temp sum = "<< temp_tot_global << ", min = " << temp_min_global << ", max = "<< temp_max_global  << ", number of zeros = " << temp_nzero_global <<  endl;
+   cout << "map rho sum = "<< rho_tot_global << ", min = " << rho_min_global << ", max = "<< rho_max_global  << ", number of zeros = " << rho_nzero_global <<  endl;
+   cout << "map phi sum = "<< phi_tot_global << ", min = " << phi_min_global << ", max = "<< phi_max_global  << ", number of zeros = " << phi_nzero_global <<  endl;
+   cout << "map vel sum = "<< vel_tot_global << ", min = " << vel_min_global << ", max = "<< vel_max_global  << ", number of zeros = " << vel_nzero_global <<  endl;
+
+
+   /*cout << "particle tsz sum = "<< tsz_tot2*TSZ_CONV << endl;
    cout << "particle tsz sum (adiabatic with read mu ) = "<< tsz_tot3*TSZ_CONV << endl;
    cout << "particle tsz sum (adiabatic with mu0) = "<< tsz_tot4*TSZ_CONV << endl;
+   cout << "xray sum = "<< xray1_tot << endl;*/
 
 }
+
    return 0;
 }
 
 
 
-
+/* NOTE: do not use  - this needs updating to the new CLOUDY method
+ *
 int assign_sz_ngp(vector<float> &rho, vector<float> &phi, vector<float> &vel,vector<float> &ksz, vector<float> &tsz, PLParticles* P, T_Healpix_Base<int64_t> map_hires, vector<int64_t> pixnum_start, vector<int64_t> pixnum_end, vector<int64_t> start_idx,  unordered_map<int64_t, int64_t> ring_to_idx){
 
     int64_t npix = map_hires.Npix();
@@ -843,8 +1124,9 @@ int assign_sz_ngp(vector<float> &rho, vector<float> &phi, vector<float> &vel,vec
  
      return 0;
 }
+*/
 
-void clear_pixel_hydro(int64_t start_idx, int rank_diff, vector<float> &rho , vector<float> &phi, vector<float> &vel, vector<float> &ksz, vector<double> &tsz, vector<double> &xray1, vector<double> &xray2){
+void clear_pixel_hydro(int64_t start_idx, int rank_diff, vector<double> &rho , vector<double> &phi, vector<double> &vel, vector<double> &ksz, vector<double> &tsz, vector<double> &xray1, vector<double> &xray2, vector<double> &xray3, vector<double> &xray4, vector<double> &temp){
     int64_t len_pixel = pow(4,rank_diff);
     for (int64_t idx=start_idx; idx<(len_pixel+start_idx); idx++){
         rho[idx] = 0.0;
@@ -854,6 +1136,9 @@ void clear_pixel_hydro(int64_t start_idx, int rank_diff, vector<float> &rho , ve
 	tsz[idx] = 0.0;
 	xray1[idx] = 0.0;
 	xray2[idx] = 0.0;
+        xray3[idx] = 0.0;
+        xray4[idx] = 0.0;
+        temp[idx] = 0.0;
     }
     return;
 }
@@ -870,7 +1155,7 @@ void clear_pixel(int64_t start_idx, int rank_diff, vector<float> &rho , vector<f
 
 
 
-void initialize_pixel_hydro(int pix_val,  T_Healpix_Base<int> map_lores, T_Healpix_Base<int64_t> map_hires, vector<float> &rho , vector<float> &phi, vector<float> &vel, vector<float> &ksz, vector<double> &tsz, vector<double> &xray1, vector<double> &xray2, int64_t &count, vector<int64_t> &start_idx, vector<int64_t> &end_idx, vector<int64_t> &pixnum_start, vector<int64_t> &pixnum_end, int rank_diff,  unordered_map<int64_t, int64_t>* ring_to_idx){
+void initialize_pixel_hydro(int pix_val,  T_Healpix_Base<int> map_lores, T_Healpix_Base<int64_t> map_hires, vector<double> &rho , vector<double> &phi, vector<double> &vel, vector<double> &ksz, vector<double> &tsz, vector<double> &xray1, vector<double> &xray2, vector<double> &xray3, vector<double> &xray4, vector<double> &temp, int64_t &count, vector<int64_t> &start_idx, vector<int64_t> &end_idx, vector<int64_t> &pixnum_start, vector<int64_t> &pixnum_end, int rank_diff,  unordered_map<int64_t, int64_t>* ring_to_idx){
     int64_t npix = map_hires.Npix();
     
     start_idx.push_back(count);
@@ -893,6 +1178,9 @@ void initialize_pixel_hydro(int pix_val,  T_Healpix_Base<int> map_lores, T_Healp
                         tsz.push_back(0.0);
 			xray1.push_back(0.0);
 			xray2.push_back(0.0);
+			xray3.push_back(0.0);
+			xray4.push_back(0.0);
+			temp.push_back(0.0);
                          count++;
     }
      end_idx.push_back(count);

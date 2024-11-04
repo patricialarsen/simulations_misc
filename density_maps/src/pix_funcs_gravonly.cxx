@@ -85,7 +85,8 @@ int compute_rank_partsky(int pix_val, int numranks, vector<int> pix_list){
 int get_lores_pix(int64_t pix_val, int rank_diff, T_Healpix_Base<int64_t> map_hires){
      int64_t pix_val_nest = map_hires.ring2nest(pix_val); // if in ring order 
      int64_t len_pixel = pow(4,rank_diff);
-     int npix_low = (int)((float)pix_val_nest/(float)len_pixel); // you want this to truncate
+     int64_t npix_low_tmp = (pix_val_nest/len_pixel); // you want this to truncate
+     int npix_low = (int)npix_low_tmp;
      return npix_low; 
 }
 

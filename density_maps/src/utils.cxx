@@ -16,7 +16,6 @@
 #include <cmath>
 
 
-#include "chealpix.h"
 #include "GenericIO.h"
 
 #include <cstdlib>
@@ -24,8 +23,10 @@
 #include <cstring>
 #include <cmath>
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <cassert>
+#include <random>
 
 #include <vector>
 
@@ -37,12 +38,15 @@
 #include "healpix_base.h"
 #include "vec3.h"
 
-//#include "particle_def.h"
 #include "PLParticles.h"
-//#include "PLHalos.h"
+
+#include <filesystem>
 
 #include "utils.h"
 #include "pix_funcs.h"
+#ifdef HACC_NVRAM
+#include "HaccIOUtil.h"
+#endif
 
 using namespace gio;
 using namespace std;
@@ -52,11 +56,30 @@ using namespace std;
 #define ID_T int64_t
 #define MASK_T uint16_t
 
+static ptrdiff_t drand48elmt(ptrdiff_t i) {
+  return ptrdiff_t(drand48()*i);
+}
 
 
-void read_particles(PLParticles* P, string file_name) {
+int check_file(string filename){
+    int commRank, commRanks;
+    MPI_Comm_rank(MPI_COMM_WORLD, &commRank);
+    MPI_Comm_size(MPI_COMM_WORLD, &commRanks);
 
-  GenericIO GIO(MPI_COMM_WORLD,file_name,GenericIO::FileIOMPI);
+    int valid = 0;
+    if((commRank == 0) && (access(filename.c_str(), R_OK) == 0)){//using short-circuit
+      valid = 1;
+    }
+    MPI_Bcast(&valid, 1, MPI_INT, 0, MPI_COMM_WORLD); // step is valid
+    return valid;
+}
+
+
+
+
+void read_particles(PLParticles* P, string file_name, string file_name_next) {
+
+  GenericIO GIO(MPI_COMM_WORLD,file_name);
   GIO.openAndReadHeader(GenericIO::MismatchRedistribute);
   size_t num_elems = GIO.readNumElems();
 
@@ -75,6 +98,294 @@ void read_particles(PLParticles* P, string file_name) {
 
   GIO.readData();
   (*P).Resize(num_elems);
+
+  if (check_file(file_name_next)){
+
+  double t1 = MPI_Wtime();
+  int rank, nRanks;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &nRanks);
+	  
+  GenericIO GIO2(MPI_COMM_WORLD,file_name_next);
+  GIO2.openAndReadHeader(GenericIO::MismatchRedistribute);
+  size_t num_elems2 = GIO2.readNumElems();
+  vector<int>rep2;
+  vector<int64_t>id2;
+  rep2.resize(num_elems2 + GIO2.requestedExtraSpace()/sizeof(int));
+  id2.resize(num_elems2 + GIO2.requestedExtraSpace()/sizeof(int64_t));
+  GIO2.addVariable("replication", rep2, true);
+  GIO2.addVariable("id", id2, true);
+  GIO2.readData();
+  rep2.resize(num_elems2);
+  id2.resize(num_elems2);
+
+  /*add nicks stuff*/
+  //Make a struct and MPI datatype to send out data
+  struct Particle_dc {
+    int64_t id;//id
+    int rep;//replication
+    int indx;//index in original array
+    int rank;//rank we are sending to
+    int home;//rank that it originated from
+  };
+  const int nitems = 5;
+  int blocklengths[5] = {1, 1, 1, 1, 1};
+  MPI_Aint offsets[5];
+  MPI_Datatype types[5] = {MPI_INT64_T, MPI_INT, MPI_INT, MPI_INT, MPI_INT};
+  struct Particle_dc particle;
+  MPI_Aint base_address;
+  MPI_Get_address(&particle, &base_address);
+  MPI_Get_address(&particle.id, &offsets[0]);
+  MPI_Get_address(&particle.rep, &offsets[1]);
+  MPI_Get_address(&particle.indx, &offsets[2]);
+  MPI_Get_address(&particle.rank, &offsets[3]);
+  MPI_Get_address(&particle.home, &offsets[4]);
+  for (int i = 0; i < nitems; i++) {
+      offsets[i] -= base_address;
+  }
+  MPI_Datatype particle_type_dc;
+  MPI_Type_create_struct(nitems, blocklengths, offsets, types, &particle_type_dc);
+  MPI_Type_commit(&particle_type_dc);
+
+  //Map to rank based on id. Looks complicated im just jumbling id (using Thomas Wang's 64-bit integer hash function) so its balanced. 
+  auto id_to_rank = [](int64_t particle_id, int numRanks) -> int {
+    uint64_t key = static_cast<uint64_t>(particle_id);
+    key = (~key) + (key << 21);
+    key = key ^ (key >> 24);
+    key = (key + (key << 3)) + (key << 8);
+    key = key ^ (key >> 14);
+    key = (key + (key << 2)) + (key << 4);
+    key = key ^ (key >> 28);
+    key = key + (key << 31);
+    return static_cast<int>(key % numRanks);
+  };
+
+  vector<Particle_dc>P1_send;
+  vector<Particle_dc>P1_recv;
+  vector<int> P1_send_count(nRanks, 0);
+  vector<int> P1_recv_count(nRanks, 0);
+  vector<int> P1_send_offset(nRanks, 0);
+  vector<int> P1_recv_offset(nRanks, 0);
+  P1_send.resize(num_elems);
+  assert(num_elems < numeric_limits<int>::max());
+  assert(num_elems2 < numeric_limits<int>::max());
+
+#ifdef _OPENMP
+#pragma omp parallel for 
+#endif
+  for(size_t i=0; i < num_elems; i++){
+    int64_t id = (*P).int64_data[0]->at(i);// make sure index and rep are always first defined
+    int rep = (*P).int_data[0]->at(i);
+    int sendRank = id_to_rank(id,nRanks);
+    P1_send[i] = {id, rep, int(i), sendRank, rank};
+#ifdef _OPENMP
+#pragma omp atomic
+#endif
+    P1_send_count[sendRank]++;
+  }
+  vector<Particle_dc>P2_send;
+  vector<Particle_dc>P2_recv;
+  vector<int> P2_send_count(nRanks, 0);
+  vector<int> P2_recv_count(nRanks, 0);
+  vector<int> P2_send_offset(nRanks, 0);
+  vector<int> P2_recv_offset(nRanks, 0);
+  P2_send.resize(num_elems2);
+#ifdef _OPENMP
+#pragma omp parallel for 
+#endif
+  for(size_t i=0; i < num_elems2; i++){
+    int64_t id = id2.at(i);
+    int rep = rep2.at(i);
+    int sendRank = id_to_rank(id,nRanks);
+    P2_send[i] = {id, rep, int(i), sendRank, rank};
+#ifdef _OPENMP
+#pragma omp atomic
+#endif
+    P2_send_count[sendRank]++;
+  }
+
+  //sort data by rank to send
+  std::sort(P1_send.begin(), P1_send.end(), [](const Particle_dc& a, const Particle_dc& b) { return a.rank < b.rank;});
+  std::sort(P2_send.begin(), P2_send.end(), [](const Particle_dc& a, const Particle_dc& b) { return a.rank < b.rank;});
+
+  //Pass around sizes
+  MPI_Alltoall( &P1_send_count[0], 1, MPI_INT, &P1_recv_count[0], 1, MPI_INT, MPI_COMM_WORLD);
+  MPI_Alltoall( &P2_send_count[0], 1, MPI_INT, &P2_recv_count[0], 1, MPI_INT, MPI_COMM_WORLD);
+
+  P1_send_offset[0]=0; P1_recv_offset[0]=0;
+  P2_send_offset[0]=0; P2_recv_offset[0]=0;
+  for (int i=1; i<nRanks; ++i) {
+     P1_send_offset[i] = P1_send_offset[i-1] + P1_send_count[i-1];
+     P1_recv_offset[i] = P1_recv_offset[i-1] + P1_recv_count[i-1];
+     P2_send_offset[i] = P2_send_offset[i-1] + P2_send_count[i-1];
+     P2_recv_offset[i] = P2_recv_offset[i-1] + P2_recv_count[i-1];
+  }
+
+  P1_recv.resize(P1_recv_offset.back() + P1_recv_count.back());
+  P2_recv.resize(P2_recv_offset.back() + P2_recv_count.back());
+
+  assert(P1_recv_offset.back() + P1_recv_count.back() < numeric_limits<int>::max());
+  assert(P2_recv_offset.back() + P2_recv_count.back() < numeric_limits<int>::max());
+
+  //Pass around data
+  MPI_Alltoallv(&P1_send[0],&P1_send_count[0],&P1_send_offset[0],particle_type_dc,
+                &P1_recv[0],&P1_recv_count[0],&P1_recv_offset[0],particle_type_dc, MPI_COMM_WORLD);
+  MPI_Alltoallv(&P2_send[0],&P2_send_count[0],&P2_send_offset[0],particle_type_dc,
+                &P2_recv[0],&P2_recv_count[0],&P2_recv_offset[0],particle_type_dc, MPI_COMM_WORLD);
+
+  //Sort by id and replication
+  std::sort(P1_recv.begin(), P1_recv.end(), [](const Particle_dc& a, const Particle_dc& b) {return (a.id < b.id) || (a.id == b.id && a.rep < b.rep);});
+  std::sort(P2_recv.begin(), P2_recv.end(), [](const Particle_dc& a, const Particle_dc& b) {return (a.id < b.id) || (a.id == b.id && a.rep < b.rep);});
+
+  P1_send.clear(); // Clear P1 buffer to store non-duplicate particles from P1 set
+  std::fill(P1_send_count.begin(), P1_send_count.end(), 0);
+
+  int p1_idx = 0;
+  int p2_idx = 0;
+  int p1_size = int(P1_recv.size());
+  int p2_size = int(P2_recv.size());
+  while (p1_idx < p1_size && p2_idx < p2_size) {
+      const Particle_dc& p1 = P1_recv[p1_idx];
+      const Particle_dc& p2 = P2_recv[p2_idx];
+      if (p1.id == p2.id && p1.rep == p2.rep) { // Duplicate found
+          p1_idx++;
+          p2_idx++;
+      } else if (p1.id < p2.id || (p1.id == p2.id && p1.rep < p2.rep)) { // Non-duplicate in P1
+          P1_send.push_back(p1); // Save non-duplicate particle from set 1
+          P1_send_count[p1.home]++;
+          p1_idx++;
+      } else { // Non-duplicate in P2
+          p2_idx++;
+      }
+  }
+  // Add remaining non-duplicate elements from P1_recv
+  for (int i = p1_idx; i < p1_size; i++){
+       const Particle_dc& p1 = P1_recv[i];
+       P1_send.push_back(p1);
+       P1_send_count[p1.home]++;
+  }
+  //Sort data by rank they originated from
+  std::sort(P1_send.begin(), P1_send.end(), [](const Particle_dc& a, const Particle_dc& b) { return a.home < b.home;});
+
+  //Send back sizes and data of first particle set
+  MPI_Alltoall( &P1_send_count[0], 1, MPI_INT, &P1_recv_count[0], 1, MPI_INT, MPI_COMM_WORLD);
+  P1_send_offset[0]=0; P1_recv_offset[0]=0;
+  for (int i=1; i<nRanks; ++i) {
+     P1_send_offset[i] = P1_send_offset[i-1] + P1_send_count[i-1];
+     P1_recv_offset[i] = P1_recv_offset[i-1] + P1_recv_count[i-1];
+  }
+
+  P1_recv.resize(P1_recv_offset.back() + P1_recv_count.back());
+
+  MPI_Alltoallv(&P1_send[0],&P1_send_count[0],&P1_send_offset[0],particle_type_dc,
+                &P1_recv[0],&P1_recv_count[0],&P1_recv_offset[0],particle_type_dc, MPI_COMM_WORLD);
+
+  vector<int>indices(P1_recv.size());//Indices of final set
+#ifdef _OPENMP
+#pragma omp parallel for 
+#endif
+  for(size_t i=0; i < P1_recv.size(); i++)indices[i] = P1_recv[i].indx;
+
+  std::sort(indices.begin(), indices.end());//sort indices
+  int64_t nDup = num_elems - indices.size(); int64_t nSize = num_elems;
+  int64_t totalDup = 0, totalSize = 0;
+  MPI_Allreduce(&nDup, &totalDup, 1, MPI_INT64_T, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Allreduce(&nSize, &totalSize, 1, MPI_INT64_T, MPI_SUM, MPI_COMM_WORLD);
+  double t2 = MPI_Wtime();
+  if(rank == 0)std::cout << "Total duplicates removed = " << totalDup << " total size = " << totalSize << " frac = " << double(totalDup)/double(totalSize) << " time = " << t2-t1 << " (s)" << std::endl;
+  (*P).Transform(indices);//transform data
+
+  MPI_Type_free(&particle_type_dc);//remove MPI datatype
+  }
+}
+
+void output_downsampled_particles(PLParticles* P, float downsampling_rate, string file_name, string input_file_name){
+
+  GenericIO GIO(MPI_COMM_WORLD,input_file_name);
+  GIO.openAndReadHeader(GenericIO::MismatchRedistribute);
+  size_t num_elems = GIO.readNumElems();
+  size_t subsize = round(downsampling_rate*num_elems);
+
+  double PhysOrigin[3]; 
+  double PhysScale[3];
+  GIO.readPhysOrigin(PhysOrigin);
+  GIO.readPhysScale(PhysScale);
+
+#ifdef HACC_NVRAM
+  string IOKey = "maps_downsample_hydro";
+  HACCIOFlush(IOKey);//Flush any previous writes
+  GenericIO NewGIO(MPI_COMM_WORLD, modifyPathNVRAM(file_name));
+  NewGIO.setPartition(HACCNodeIOInfo::getIOData().file_num);
+#else
+  GenericIO NewGIO(MPI_COMM_WORLD,file_name);
+#endif
+  NewGIO.setNumElems(subsize);
+
+  for (int d=0; d < 3; ++d){
+	  NewGIO.setPhysOrigin(PhysOrigin[d], d);
+	  NewGIO.setPhysScale(PhysScale[d], d);
+  }
+
+  vector<int64_t> indices(num_elems);
+  for (int64_t i = 0; i<num_elems; i++){
+  indices[i] = i;
+  }
+
+  //NOTE: warning here that random_shuffle is deprecated because of default behaviour. 
+  // I think it should be fine but support is limited
+  random_device rd; 
+  mt19937 g(rd());
+  shuffle(indices.begin(), indices.end(),g);
+  //random_shuffle(indices.begin(), indices.end(), drand48elmt);
+
+  vector<vector<float>> var_data_floats(N_FLOATS);
+  vector<vector<int>> var_data_ints(N_INTS);
+  vector<vector<int64_t>> var_data_int64s(N_INT64S);
+  vector<vector<double>> var_data_doubles(N_DOUBLES);
+  vector<vector<MASK_T>> var_data_masks(N_MASKS);
+
+  for (int i = 0; i < N_FLOATS; ++i){
+      var_data_floats[i].resize(subsize + NewGIO.requestedExtraSpace()/sizeof(float));
+      for (int64_t j=0; j<subsize; j++){
+          var_data_floats[i][j] =  (*P->float_data[i])[indices[j]];
+      }
+      NewGIO.addVariable((const string)float_names[i], var_data_floats[i], true); // no positional info
+  }
+  for (int i = 0; i < N_INTS; ++i){
+      var_data_ints[i].resize(subsize + NewGIO.requestedExtraSpace()/sizeof(int));
+      for (int64_t j=0; j<subsize; j++){
+          var_data_ints[i][j] =  (*P->int_data[i])[indices[j]];
+      }
+      NewGIO.addVariable((const string)int_names[i], var_data_ints[i], true); // no positional info
+  }
+  for (int i = 0; i < N_INT64S; ++i){
+      var_data_int64s[i].resize(subsize + NewGIO.requestedExtraSpace()/sizeof(int64_t));
+      for (int64_t j=0; j<subsize; j++){
+          var_data_int64s[i][j] =  (*P->int64_data[i])[indices[j]];
+      }
+      NewGIO.addVariable((const string)int64_names[i], var_data_int64s[i], true); // no positional info
+  }
+  for (int i = 0; i < N_DOUBLES; ++i){
+      var_data_doubles[i].resize(subsize + NewGIO.requestedExtraSpace()/sizeof(double));
+      for (int64_t j=0; j<subsize; j++){
+          var_data_doubles[i][j] =  (*P->double_data[i])[indices[j]];
+      }
+      NewGIO.addVariable((const string)double_names[i], var_data_doubles[i], true); // no positional info
+  }
+  for (int i = 0; i < N_MASKS; ++i){
+      var_data_masks[i].resize(subsize + NewGIO.requestedExtraSpace()/sizeof(MASK_T));
+      for (int64_t j=0; j<subsize; j++){
+          var_data_masks[i][j] =  (*P->mask_data[i])[indices[j]];
+      }
+      NewGIO.addVariable((const string)mask_names[i], var_data_masks[i], true); // no positional info
+  }
+
+  NewGIO.write();
+#ifdef HACC_NVRAM
+  HACCIOTransfer(IOKey, file_name);
+#endif
+  MPI_Barrier(MPI_COMM_WORLD);
+
 }
 
 
@@ -152,14 +463,59 @@ void redistribute_particles(PLParticles* P, vector<int> send_counts, int numrank
 
 
 
-void read_and_redistribute(string file_name, int numranks, PLParticles* P,  T_Healpix_Base<int> map_lores, T_Healpix_Base<int64_t> map_hires, int rank_diff){
+void read_and_redistribute(string file_name, string file_name_next, int numranks, PLParticles* P,  T_Healpix_Base<int> map_lores, T_Healpix_Base<int64_t> map_hires, int rank_diff, bool output_downsampled, float downsampling_rate, string file_name_output){
+    int commRank, commRanks;
+    MPI_Comm_rank(MPI_COMM_WORLD, &commRank);
+    MPI_Comm_size(MPI_COMM_WORLD, &commRanks);
 
+    double t1, t2, t3, t4, t5;
     int status;
     vector<int> send_count(numranks,0);
 
-    read_particles(P, file_name);
+    MPI_Barrier(MPI_COMM_WORLD);
+    t1 = MPI_Wtime();
+
+    read_particles(P, file_name, file_name_next);    
+
+    MPI_Barrier(MPI_COMM_WORLD);
+    t2 = MPI_Wtime();
+    if (commRank==0){
+      printf( "Read time is %f\n", t2 - t1 );
+    fflush(stdout);
+    }
+
+
+    if (output_downsampled){
+        assert(downsampling_rate<1.0);
+	assert(downsampling_rate>0.0);
+	output_downsampled_particles( P, downsampling_rate, file_name_output, file_name);
+    }
+
+    MPI_Barrier(MPI_COMM_WORLD);
+    t3 = MPI_Wtime();
+    if (commRank==0){
+      printf( "Output downsampled particle time is %f\n", t3 - t2 );
+    fflush(stdout);
+    }
+
+
     status = compute_ranks_count( P,  map_lores, map_hires, numranks, send_count, rank_diff); 
+    MPI_Barrier(MPI_COMM_WORLD);
+    t4 = MPI_Wtime();
+    if (commRank==0){
+      printf( "Time to compute ranks for communication is %f\n", t4 - t3 );
+    fflush(stdout);
+    }
+
+
     redistribute_particles(P, send_count,numranks,map_lores, map_hires, rank_diff);
+    MPI_Barrier(MPI_COMM_WORLD);
+    t5 = MPI_Wtime();
+    if (commRank==0){
+      printf( "Time for redistribution is %f\n", t5 - t4 );
+    fflush(stdout);
+    }
+
 
     return;
 
@@ -180,85 +536,83 @@ int output_file(int rank, MPI_File &fh, MPI_Request &req , vector<float> &rho, v
 }
 
 int output_file_double(int rank, MPI_File &fh, MPI_Request &req , vector<double> &rho, vector<int64_t> start_idx, vector<int64_t> end_idx, vector<int64_t> pixnum_start){
+    if (start_idx.size()==0){
+      MPI_File_iwrite_at_all(fh,0,NULL,0,MPI_DOUBLE, &req);
+      MPI_Wait(&req, MPI_STATUS_IGNORE);
+    }	    
     for (int i=0;i<start_idx.size();i++){
     int start_tmp = start_idx[i];
     int off_tmp = end_idx[i] - start_idx[i];
     MPI_Offset offset = pixnum_start[i]*sizeof(double);
-    MPI_File_seek(fh,offset,MPI_SEEK_SET);
-    MPI_File_iwrite(fh,&rho[start_tmp],off_tmp,MPI_DOUBLE, &req);
+    MPI_File_iwrite_at_all(fh,offset,&rho[start_tmp],off_tmp,MPI_DOUBLE, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
     }
     return 0;
 }
 
-
-void write_files_hydro(string outfile, string stepnumber,vector<int64_t> start_idx, vector<int64_t> end_idx, vector<int64_t> pix_nums_start, vector<float> rho, vector<float> phi, vector<float> vel, vector<float> ksz, vector<double> tsz, vector<double> xray1, vector<double> xray2, int64_t npix_hires){
+void write_files_hydro(string outfile, string stepnumber,vector<int64_t> start_idx, vector<int64_t> end_idx, vector<int64_t> pix_nums_start, vector<double> rho, vector<double> phi, vector<double> vel, vector<double> ksz, vector<double> tsz, vector<double> xray1, vector<double> xray2, vector<double> xray3, vector<double> xray4, vector<double> temp, int64_t npix_hires){
 
   int commRank, commRanks;
   MPI_Comm_rank(MPI_COMM_WORLD, &commRank);
   MPI_Comm_size(MPI_COMM_WORLD, &commRanks);
 
-  string output_name = outfile + stepnumber + "_dens.bin";
-  string output_name_phi = outfile + stepnumber + "_phi.bin";
-  string output_name_vel = outfile + stepnumber + "_vel.bin";
-  string output_name_ksz = outfile + stepnumber + "_ksz.bin";
-  string output_name_tsz = outfile + stepnumber + "_tsz.bin";
-  string output_name_x1 = outfile + stepnumber + "_xray1.bin";
-  string output_name_x2 = outfile + stepnumber + "_xray2.bin";
+  string IOKey = "healpix_maps";
+  outfile = outfile + stepnumber + ".gio";
+  outfile = modifyPath(outfile, IOKey, stepnumber);
 
+  size_t size_n = 0;
+  for(size_t i=0; i < start_idx.size();i++)size_n += end_idx[i] - start_idx[i];
+  assert(size_n < std::numeric_limits<int>::max());
+  assert(size_n == rho.size());
 
-  const char *name_out = output_name.c_str();
-  const char *name_out_phi = output_name_phi.c_str();
-  const char *name_out_vel = output_name_vel.c_str();
-  const char *name_out_ksz = output_name_ksz.c_str();
-  const char *name_out_tsz = output_name_tsz.c_str();
-  const char *name_out_x1 = output_name_x1.c_str();
-  const char *name_out_x2 = output_name_x2.c_str();
+  size_t idx = 0;
+  vector<int64_t>data_idx(size_n,0);
+  vector<double>spare(size_n,0.0);
+  for(size_t i=0; i < start_idx.size();i++){
+    size_t del = end_idx[i] - start_idx[i];
+    size_t start = start_idx[i];
+    size_t id = pix_nums_start[i];
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for(size_t j=0; j < del; j++){
+      data_idx.at(idx+j) = id + j;
+    }
+    idx += del;
+    assert(idx <= size_n);
+  }
+  assert(idx == size_n);
 
-
-  MPI_File fh, fh_phi, fh_vel, fh_ksz, fh_tsz, fh_x1, fh_x2;
-  MPI_Request req, req_phi, req_vel, req_ksz, req_tsz, req_x1, req_x2;
-
-  MPI_File_open(MPI_COMM_WORLD, name_out, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &fh);
-  MPI_File_open(MPI_COMM_WORLD, name_out_phi, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &fh_phi);
-  MPI_File_open(MPI_COMM_WORLD, name_out_vel, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &fh_vel);
-  MPI_File_open(MPI_COMM_WORLD, name_out_ksz, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &fh_ksz);
-  MPI_File_open(MPI_COMM_WORLD, name_out_tsz, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &fh_tsz);
-  MPI_File_open(MPI_COMM_WORLD, name_out_x1, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &fh_x1);
-  MPI_File_open(MPI_COMM_WORLD, name_out_x2, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &fh_x2);
-
-  MPI_Offset filesize = npix_hires*sizeof(float);
-  MPI_Offset filesize_double = npix_hires*sizeof(double);
-
-  MPI_File_set_size(fh, filesize);
-  MPI_File_set_size(fh_phi, filesize);
-  MPI_File_set_size(fh_vel, filesize);
-  MPI_File_set_size(fh_ksz, filesize);
-  MPI_File_set_size(fh_tsz, filesize_double);
-  MPI_File_set_size(fh_x1, filesize_double);
-  MPI_File_set_size(fh_x2, filesize_double);
-
-
-  int status;
-  status = output_file(commRank, fh, req, rho, start_idx, end_idx,  pix_nums_start);
-  status = output_file(commRank, fh_phi, req_phi, phi, start_idx, end_idx, pix_nums_start);
-  status = output_file(commRank, fh_vel, req_vel, vel, start_idx, end_idx, pix_nums_start);
-  status = output_file(commRank, fh_ksz, req_ksz, ksz, start_idx, end_idx, pix_nums_start);
-  status = output_file_double(commRank, fh_tsz, req_tsz, tsz, start_idx, end_idx, pix_nums_start);
-  status = output_file_double(commRank, fh_x1, req_x1, xray1, start_idx, end_idx, pix_nums_start);
-  status = output_file_double(commRank, fh_x2, req_x2, xray2, start_idx, end_idx, pix_nums_start);
-
-
-  MPI_File_close(&fh);
-  MPI_File_close(&fh_phi);
-  MPI_File_close(&fh_vel);
-  MPI_File_close(&fh_ksz);
-  MPI_File_close(&fh_tsz);
-  MPI_File_close(&fh_x1);
-  MPI_File_close(&fh_x2);
-
-
-  MPI_Barrier(MPI_COMM_WORLD);
+#ifdef HACC_NVRAM
+  HACCIOFlush(IOKey);//Flush any previous writes
+  GenericIO GIO(MPI_COMM_WORLD, modifyPathNVRAM(outfile));
+  GIO.setPartition(HACCNodeIOInfo::getIOData().file_num);
+#else
+  GenericIO GIO(MPI_COMM_WORLD,outfile);
+#endif
+  size_t size_pad = size_n + std::max(GIO.requestedExtraSpace()/sizeof(double), GIO.requestedExtraSpace()/sizeof(int64_t));
+  rho.resize(size_pad); phi.resize(size_pad); vel.resize(size_pad); ksz.resize(size_pad); tsz.resize(size_pad); 
+  xray1.resize(size_pad); xray2.resize(size_pad); xray3.resize(size_pad); xray4.resize(size_pad);
+  temp.resize(size_pad); data_idx.resize(size_pad);
+  GIO.setNumElems(size_n);
+  GIO.addVariable("rho", rho, GenericIO::VarHasExtraSpace);
+  GIO.addVariable("phi", phi, GenericIO::VarHasExtraSpace);
+  GIO.addVariable("vel", vel, GenericIO::VarHasExtraSpace);
+  GIO.addVariable("ksz", ksz, GenericIO::VarHasExtraSpace);
+  GIO.addVariable("tsz", tsz, GenericIO::VarHasExtraSpace);
+  GIO.addVariable("xray1", xray1, GenericIO::VarHasExtraSpace);//ROSAT
+  GIO.addVariable("xray2", xray2, GenericIO::VarHasExtraSpace);//ErositaLo
+  GIO.addVariable("xray3", xray3, GenericIO::VarHasExtraSpace);//ErositaHi
+  GIO.addVariable("xray4", xray4, GenericIO::VarHasExtraSpace);//Bolo
+  GIO.addVariable("temp", temp, GenericIO::VarHasExtraSpace);
+  GIO.addVariable("idx", data_idx, GenericIO::VarHasExtraSpace);
+  GIO.write();
+#ifdef HACC_NVRAM
+  HACCIOTransfer(IOKey, outfile);
+#endif
+  rho.resize(size_n); phi.resize(size_n); vel.resize(size_n); ksz.resize(size_n); tsz.resize(size_n); 
+  xray1.resize(size_n); xray2.resize(size_n); xray3.resize(size_n); xray4.resize(size_n);
+  temp.resize(size_n); data_idx.resize(size_n);
   }
 
 
@@ -285,7 +639,6 @@ void write_files(string outfile, string stepnumber,vector<int64_t> start_idx, ve
   MPI_File_open(MPI_COMM_WORLD, name_out_phi, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &fh_phi);
   MPI_File_open(MPI_COMM_WORLD, name_out_vel, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &fh_vel);
 
-  // PL NOTE: make sure this is in the right place
   MPI_Offset filesize = npix_hires*sizeof(float);
   MPI_File_set_size(fh, filesize);
   MPI_File_set_size(fh_phi, filesize);

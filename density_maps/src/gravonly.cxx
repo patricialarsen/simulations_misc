@@ -35,6 +35,10 @@
 #include "utils_gravonly.h"
 #include "pix_funcs_gravonly.h"
 
+#ifdef HACC_NVRAM
+#include "HaccIOUtil.h"
+#endif
+
 
 #define POSVEL_T float
 #define ID_T int64_t
@@ -43,6 +47,7 @@
 
 using namespace std;
 using namespace gio;
+
 
 //TODO: Nick: thread safety, general pixelization
 int main(int argc, char *argv[]) {
@@ -55,26 +60,61 @@ int main(int argc, char *argv[]) {
   double t1, t2, t3, t4, t5, t6;
   t1 = MPI_Wtime();
 
-  // arguments that need to be added 
-
-  if(argc != 9) {
+#ifndef HACC_NVRAM   
+  if(argc != 14) {
      if (commRank==0){
-     fprintf(stderr,"USAGE: %s <inputfile> <outputfile> <nside> <nside_low> <step> <samplerate> <start_step> <nsteps> \n", argv[0]);
+     fprintf(stderr,"USAGE: %s <inputpath> <inputfile> <folders> <outpath> <outputfile> <nside> <nside_low> <step> <samplerate> <start_step> <nsteps> <output_downsampled> <downsampling_rate> \n", argv[0]);
      }
      exit(-1);
   }
+#else
+  if(argc != 15) {
+     if (commRank==0){
+     fprintf(stderr,"USAGE: %s <inputpath> <inputfile> <folders> <outpath> <outputfile> <nside> <nside_low> <step> <samplerate> <start_step> <nsteps> <output_downsampled> <downsampling_rate> <m_outInterBase> \n", argv[0]);
+     }
+     exit(-1);
+  }
+#endif
+
+
+
+  char filepath[512];
+  strcpy(filepath,argv[1]);
+  const char *mpiioName_base = filepath;
 
   char filename[512];
-  strcpy(filename,argv[1]);
-  const char *mpiioName_base = filename;
+  strcpy(filename,argv[2]);
+  const char *mpiioName_file = filename;
 
-  int64_t nside = atoi(argv[3]);
-  int64_t nside_low = atoi(argv[4]);
-  string stepnumber = argv[5];
-  string outfile = argv[2];
-  float samplerate = atof(argv[6]);
-  int start_step = atoi(argv[7]);
-  int nsteps = atoi(argv[8]);
+  bool folders = atoi(argv[3]); // should be 0 if false
+
+  int64_t nside = atoi(argv[6]);
+  int64_t nside_low = atoi(argv[7]);
+  string stepnumber = argv[8];
+  //string outfile = argv[4];
+
+
+  string outpath = argv[4];
+  string outfile = argv[5];
+  outfile = outpath + outfile;
+
+
+  float samplerate = atof(argv[9]);
+  int start_step = atoi(argv[10]);
+  int nsteps = atoi(argv[11]);
+
+  char output_downsampled = argv[12][0]; // T or F
+  float downsampling_rate = atof(argv[13]);
+
+#ifdef HACC_NVRAM
+  string m_outInterBase = argv[14];
+  int m_localRank, m_RPN, m_gio_nvram_file;
+  assert(m_outInterBase != "");
+  RankPerNode(m_RPN, m_localRank);
+  m_gio_nvram_file = FileRankAssignment(commRanks/m_RPN,false,true);//File number for this rank on this node
+  HACCNodeIOInfo::initialize(commRank, m_localRank, m_RPN, m_gio_nvram_file, m_outInterBase);//Initialize HACCNodeIO
+#endif
+
 
 
   double rank1 = log2(nside);
@@ -152,21 +192,57 @@ int main(int argc, char *argv[]) {
 
   MPI_Barrier(MPI_COMM_WORLD);
   t3 = MPI_Wtime();
-	  
+
+
   char step[10*sizeof(char)];
+  char step_next[10*sizeof(char)];
   char mpiioName[512];
+  char mpiioName_next[512];
 
   sprintf(step,"%d",start_step+jj);
-  strcpy(mpiioName,mpiioName_base);
-  strcat(mpiioName,step);
+  sprintf(step_next,"%d",start_step+jj+1);
+
+  if (folders){
+  strcpy(mpiioName, mpiioName_base);
+  strcat(mpiioName, "step_");
+  strcat(mpiioName, step);
+  strcat(mpiioName, "/");
+  strcat(mpiioName, mpiioName_file);
+  strcat(mpiioName, step);
+
+  strcpy(mpiioName_next, mpiioName_base);
+  strcat(mpiioName_next, "step_");
+  strcat(mpiioName_next, step_next);
+  strcat(mpiioName_next, "/");
+  strcat(mpiioName_next, mpiioName_file);
+  strcat(mpiioName_next, step_next);
+
+  }
+  else{
+  strcpy(mpiioName, mpiioName_base);
+  strcat(mpiioName, mpiioName_file);
+  strcat(mpiioName, step);
+
+  strcpy(mpiioName_next, mpiioName_base);
+  strcat(mpiioName_next, mpiioName_file);
+  strcat(mpiioName_next, step_next);
+
+  }
 
   
   for (int ii=0; ii<lores_pix.size(); ++ii){  
   clear_pixel(start_idx[ii], rank_diff,  rho, phi, vel);  
   }
     
+  if (output_downsampled == 'T'){
+    string downsampled_path_step = modifyPath(outpath, "downsampled_particles", string(step));
+    string downsampled_file = downsampled_path_step + "/" + step + "_downsampled.gio";
+    read_and_redistribute(mpiioName, mpiioName_next, commRanks, &P, map_lores, map_hires, rank_diff, true, downsampling_rate, downsampled_file);
+  }
+  else{
+      read_and_redistribute(mpiioName, mpiioName_next, commRanks, &P, map_lores, map_hires, rank_diff);
+  }
 
-  read_and_redistribute(mpiioName, commRanks, &P, map_lores, map_hires, rank_diff);
 
   MPI_Barrier(MPI_COMM_WORLD);
   t4 = MPI_Wtime();
@@ -208,6 +284,10 @@ int main(int argc, char *argv[]) {
   printf( "Elapsed time is %f\n", t2 - t1 );
   }
 
+#ifdef HACC_NVRAM
+ HACCIOShutdown(); //<-add this tricia
+#endif
+ 
   MPI_Barrier(MPI_COMM_WORLD);
   MPI_Finalize();
 
