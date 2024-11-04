@@ -19,7 +19,6 @@
 //#include "chealpix.h"
 #include "GenericIO.h"
 
-#include <random>
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
@@ -42,6 +41,10 @@
 
 #include "utils_gravonly.h"
 #include "pix_funcs_gravonly.h"
+#ifdef HACC_NVRAM
+#include "HaccIOUtil.h"
+#endif
+
 
 using namespace gio;
 using namespace std;
@@ -50,6 +53,11 @@ using namespace std;
 #define POSVEL_T float
 #define ID_T int64_t
 #define MASK_T uint16_t
+
+
+static ptrdiff_t drand48elmt(ptrdiff_t i) {
+  return ptrdiff_t(drand48()*i);
+}
 
 
 
@@ -74,6 +82,87 @@ void read_particles(PLParticles* P, string file_name) {
 
   GIO.readData();
   (*P).Resize(num_elems);
+}
+
+void output_downsampled_particles(PLParticles* P, float downsampling_rate, string file_name, string input_file_name){
+
+  GenericIO GIO(MPI_COMM_WORLD,input_file_name);
+  GIO.openAndReadHeader(GenericIO::MismatchRedistribute);
+  size_t num_elems = GIO.readNumElems();
+  size_t subsize = round(downsampling_rate*num_elems);
+
+  double PhysOrigin[3];
+  double PhysScale[3];
+  GIO.readPhysOrigin(PhysOrigin);
+  GIO.readPhysScale(PhysScale);
+
+#ifdef HACC_NVRAM
+  string IOKey = "maps_downsample_hydro";
+  HACCIOFlush(IOKey);//Flush any previous writes
+  GenericIO NewGIO(MPI_COMM_WORLD, modifyPathNVRAM(file_name));
+  NewGIO.setPartition(HACCNodeIOInfo::getIOData().file_num);
+#else
+  GenericIO NewGIO(MPI_COMM_WORLD,file_name);
+#endif
+  NewGIO.setNumElems(subsize);
+
+  for (int d=0; d < 3; ++d){
+          NewGIO.setPhysOrigin(PhysOrigin[d], d);
+          NewGIO.setPhysScale(PhysScale[d], d);
+  }
+
+  vector<int64_t> indices(num_elems);
+  for (int64_t i = 0; i<num_elems; i++){
+  indices[i] = i;
+  }
+  vector<vector<float>> var_data_floats(N_FLOATS);
+  vector<vector<int>> var_data_ints(N_INTS);
+  vector<vector<int64_t>> var_data_int64s(N_INT64S);
+  vector<vector<double>> var_data_doubles(N_DOUBLES);
+  vector<vector<MASK_T>> var_data_masks(N_MASKS);
+
+  for (int i = 0; i < N_FLOATS; ++i){
+      var_data_floats[i].resize(subsize + NewGIO.requestedExtraSpace()/sizeof(float));
+      for (int64_t j=0; j<subsize; j++){
+          var_data_floats[i][j] =  (*P->float_data[i])[indices[j]];
+      }
+      NewGIO.addVariable((const string)float_names[i], var_data_floats[i], true); // no positional info
+  }
+  for (int i = 0; i < N_INTS; ++i){
+      var_data_ints[i].resize(subsize + NewGIO.requestedExtraSpace()/sizeof(int));
+      for (int64_t j=0; j<subsize; j++){
+          var_data_ints[i][j] =  (*P->int_data[i])[indices[j]];
+      }
+      NewGIO.addVariable((const string)int_names[i], var_data_ints[i], true); // no positional info
+  }
+  for (int i = 0; i < N_INT64S; ++i){
+      var_data_int64s[i].resize(subsize + NewGIO.requestedExtraSpace()/sizeof(int64_t));
+      for (int64_t j=0; j<subsize; j++){
+          var_data_int64s[i][j] =  (*P->int64_data[i])[indices[j]];
+      }
+      NewGIO.addVariable((const string)int64_names[i], var_data_int64s[i], true); // no positional info
+  }
+  for (int i = 0; i < N_DOUBLES; ++i){
+      var_data_doubles[i].resize(subsize + NewGIO.requestedExtraSpace()/sizeof(double));
+      for (int64_t j=0; j<subsize; j++){
+          var_data_doubles[i][j] =  (*P->double_data[i])[indices[j]];
+      }
+      NewGIO.addVariable((const string)double_names[i], var_data_doubles[i], true); // no positional info
+  }
+  for (int i = 0; i < N_MASKS; ++i){
+      var_data_masks[i].resize(subsize + NewGIO.requestedExtraSpace()/sizeof(MASK_T));
+      for (int64_t j=0; j<subsize; j++){
+          var_data_masks[i][j] =  (*P->mask_data[i])[indices[j]];
+      }
+      NewGIO.addVariable((const string)mask_names[i], var_data_masks[i], true); // no positional info
+  }
+
+  NewGIO.write();
+#ifdef HACC_NVRAM
+  HACCIOTransfer(IOKey, file_name);
+#endif
+  MPI_Barrier(MPI_COMM_WORLD);
+
 }
 
 
@@ -149,101 +238,68 @@ void redistribute_particles(PLParticles* P, vector<int> send_counts, int numrank
     }
 
 
-void output_downsampled_particles(PLParticles* P, float downsampling_rate, string file_name, string input_file_name){
-
-  GenericIO GIO(MPI_COMM_WORLD,input_file_name);
-  GIO.openAndReadHeader(GenericIO::MismatchRedistribute);
-  size_t num_elems = GIO.readNumElems();
-  size_t subsize = round(downsampling_rate*num_elems);
-
-  double PhysOrigin[3];
-  double PhysScale[3];
-  GIO.readPhysOrigin(PhysOrigin);
-  GIO.readPhysScale(PhysScale);
-
-  GenericIO NewGIO(MPI_COMM_WORLD,file_name);
-  NewGIO.setNumElems(subsize);
-
-  for (int d=0; d < 3; ++d){
-          NewGIO.setPhysOrigin(PhysOrigin[d], d);
-          NewGIO.setPhysScale(PhysScale[d], d);
-  }
-
-  vector<int64_t> indices(num_elems);
-  for (int64_t i = 0; i<num_elems; i++){
-  indices[i] = i;
-  }
-
-  //NOTE: warning here that random_shuffle is deprecated because of default behaviour.
-  // I think it should be fine but support is limited
-  random_device rd;
-  mt19937 g(rd());
-  shuffle(indices.begin(), indices.end(),g);
-  //random_shuffle(indices.begin(), indices.end(), drand48elmt);
-
-  vector<vector<float>> var_data_floats(N_FLOATS);
-  vector<vector<int>> var_data_ints(N_INTS);
-  vector<vector<int64_t>> var_data_int64s(N_INT64S);
-  vector<vector<double>> var_data_doubles(N_DOUBLES);
-  vector<vector<MASK_T>> var_data_masks(N_MASKS);
-
-  for (int i = 0; i < N_FLOATS; ++i){
-      var_data_floats[i].resize(subsize + NewGIO.requestedExtraSpace()/sizeof(float));
-      for (int64_t j=0; j<subsize; j++){
-          var_data_floats[i][j] =  (*P->float_data[i])[indices[j]];
-      }
-      NewGIO.addVariable((const string)float_names[i], var_data_floats[i], true); // no positional info
-  }
-  for (int i = 0; i < N_INTS; ++i){
-      var_data_ints[i].resize(subsize + NewGIO.requestedExtraSpace()/sizeof(int));
-      for (int64_t j=0; j<subsize; j++){
-          var_data_ints[i][j] =  (*P->int_data[i])[indices[j]];
-      }
-      NewGIO.addVariable((const string)int_names[i], var_data_ints[i], true); // no positional info
-  }
-  for (int i = 0; i < N_INT64S; ++i){
-      var_data_int64s[i].resize(subsize + NewGIO.requestedExtraSpace()/sizeof(int64_t));
-      for (int64_t j=0; j<subsize; j++){
-          var_data_int64s[i][j] =  (*P->int64_data[i])[indices[j]];
-      }
-      NewGIO.addVariable((const string)int64_names[i], var_data_int64s[i], true); // no positional info
-  }
-  for (int i = 0; i < N_DOUBLES; ++i){
-      var_data_doubles[i].resize(subsize + NewGIO.requestedExtraSpace()/sizeof(double));
-      for (int64_t j=0; j<subsize; j++){
-          var_data_doubles[i][j] =  (*P->double_data[i])[indices[j]];
-      }
-      NewGIO.addVariable((const string)double_names[i], var_data_doubles[i], true); // no positional info
-  }
-  for (int i = 0; i < N_MASKS; ++i){
-      var_data_masks[i].resize(subsize + NewGIO.requestedExtraSpace()/sizeof(MASK_T));
-      for (int64_t j=0; j<subsize; j++){
-          var_data_masks[i][j] =  (*P->mask_data[i])[indices[j]];
-      }
-      NewGIO.addVariable((const string)mask_names[i], var_data_masks[i], true); // no positional info
-  }
-
-  NewGIO.write();
-  MPI_Barrier(MPI_COMM_WORLD);
-
-}
 
 
+void read_and_redistribute(string file_name, int numranks, PLParticles* P,  T_Healpix_Base<int> map_lores, T_Healpix_Base<int64_t> map_hires, int rank_diff,bool output_downsampled, float downsampling_rate, string file_name_output){
 
-void read_and_redistribute(string file_name, int numranks, PLParticles* P,  T_Healpix_Base<int> map_lores, T_Healpix_Base<int64_t> map_hires, int rank_diff, bool output_downsampled, float downsampling_rate, string file_name_output){
+    int commRank, commRanks;
+    MPI_Comm_rank(MPI_COMM_WORLD, &commRank);
+    MPI_Comm_size(MPI_COMM_WORLD, &commRanks);
 
+    double t1, t2, t3, t4, t5;
+	
     int status;
     vector<int> send_count(numranks,0);
 
+    MPI_Barrier(MPI_COMM_WORLD);
+    t1 = MPI_Wtime();
+
     read_particles(P, file_name);
+
+    MPI_Barrier(MPI_COMM_WORLD);
+    t2 = MPI_Wtime();
+    if (commRank==0){
+      printf( "Read time is %f\n", t2 - t1 );
+    fflush(stdout);
+    }
+
+
     if (output_downsampled){
         assert(downsampling_rate<1.0);
         assert(downsampling_rate>0.0);
         output_downsampled_particles( P, downsampling_rate, file_name_output, file_name);
     }
-    status = compute_ranks_count( P,  map_lores, map_hires, numranks, send_count, rank_diff); 
-    redistribute_particles(P, send_count,numranks,map_lores, map_hires, rank_diff);
 
+    MPI_Barrier(MPI_COMM_WORLD);
+    t3 = MPI_Wtime();
+    if (commRank==0){
+      printf( "Output downsampled particle time is %f\n", t3 - t2 );
+    fflush(stdout);
+    }
+
+
+    status = compute_ranks_count( P,  map_lores, map_hires, numranks, send_count, rank_diff);
+    MPI_Barrier(MPI_COMM_WORLD);
+    t4 = MPI_Wtime();
+    if (commRank==0){
+      printf( "Time to compute ranks for communication is %f\n", t4 - t3 );
+    fflush(stdout);
+    }
+
+
+    redistribute_particles(P, send_count,numranks,map_lores, map_hires, rank_diff);
+    MPI_Barrier(MPI_COMM_WORLD);
+    t5 = MPI_Wtime();
+    if (commRank==0){
+      printf( "Time for redistribution is %f\n", t5 - t4 );
+    fflush(stdout);
+    }
+
+
+
+    //read_particles(P, file_name);
+    //status = compute_ranks_count( P,  map_lores, map_hires, numranks, send_count, rank_diff); 
+    //redistribute_particles(P, send_count,numranks,map_lores, map_hires, rank_diff);
 
     return;
 
@@ -277,7 +333,62 @@ int output_file_double(int rank, MPI_File &fh, MPI_Request &req , vector<double>
 
 
 
-void write_files(string outfile, string stepnumber,vector<int64_t> start_idx, vector<int64_t> end_idx, vector<int64_t> pix_nums_start, vector<double> rho, vector<double> phi, vector<double> vel, int64_t npix_hires){ 
+void write_files(string outfile, string stepnumber,vector<int64_t> start_idx, vector<int64_t> end_idx, vector<int64_t> pix_nums_start, vector<double> rho, vector<double> phi, vector<double> vel, int64_t npix_hires){
+  int commRank, commRanks;
+  MPI_Comm_rank(MPI_COMM_WORLD, &commRank);
+  MPI_Comm_size(MPI_COMM_WORLD, &commRanks);
+
+  string IOKey = "healpix_maps";
+  outfile = outfile + stepnumber + ".gio";
+  outfile = modifyPath(outfile, IOKey, stepnumber);
+
+  size_t size_n = 0;
+  for(size_t i=0; i < start_idx.size();i++)size_n += end_idx[i] - start_idx[i];
+  assert(size_n < std::numeric_limits<int>::max());
+  assert(size_n == rho.size());
+
+  size_t idx = 0;
+  vector<int64_t>data_idx(size_n,0);
+  vector<double>spare(size_n,0.0);
+  for(size_t i=0; i < start_idx.size();i++){
+    size_t del = end_idx[i] - start_idx[i];
+    size_t start = start_idx[i];
+    size_t id = pix_nums_start[i];
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for(size_t j=0; j < del; j++){
+      data_idx.at(idx+j) = id + j;
+    }
+    idx += del;
+    assert(idx <= size_n);
+  }
+  assert(idx == size_n);
+
+#ifdef HACC_NVRAM
+  HACCIOFlush(IOKey);//Flush any previous writes
+  GenericIO GIO(MPI_COMM_WORLD, modifyPathNVRAM(outfile));
+  GIO.setPartition(HACCNodeIOInfo::getIOData().file_num);
+#else
+  GenericIO GIO(MPI_COMM_WORLD,outfile);
+#endif
+  size_t size_pad = size_n + std::max(GIO.requestedExtraSpace()/sizeof(double), GIO.requestedExtraSpace()/sizeof(int64_t));
+  rho.resize(size_pad); phi.resize(size_pad); vel.resize(size_pad); 
+  data_idx.resize(size_pad);
+  GIO.setNumElems(size_n);
+  GIO.addVariable("rho", rho, GenericIO::VarHasExtraSpace);
+  GIO.addVariable("phi", phi, GenericIO::VarHasExtraSpace);
+  GIO.addVariable("vel", vel, GenericIO::VarHasExtraSpace);
+  GIO.addVariable("idx", data_idx, GenericIO::VarHasExtraSpace);
+  GIO.write();
+#ifdef HACC_NVRAM
+  HACCIOTransfer(IOKey, outfile);
+#endif
+  rho.resize(size_n); phi.resize(size_n); vel.resize(size_n); 
+  data_idx.resize(size_n);
+}
+
+/*void write_files(string outfile, string stepnumber,vector<int64_t> start_idx, vector<int64_t> end_idx, vector<int64_t> pix_nums_start, vector<double> rho, vector<double> phi, vector<double> vel, int64_t npix_hires){ 
 
   int commRank, commRanks;
   MPI_Comm_rank(MPI_COMM_WORLD, &commRank);
@@ -316,4 +427,4 @@ void write_files(string outfile, string stepnumber,vector<int64_t> start_idx, ve
   MPI_File_close(&fh_vel);
 
   MPI_Barrier(MPI_COMM_WORLD);
-  }
+  }*/
