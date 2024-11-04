@@ -16,7 +16,6 @@
 #include <cmath>
 
 
-#include "chealpix.h"
 #include "GenericIO.h"
 
 #include <cstdlib>
@@ -39,9 +38,7 @@
 #include "healpix_base.h"
 #include "vec3.h"
 
-//#include "particle_def.h"
 #include "PLParticles.h"
-//#include "PLHalos.h"
 
 #include <filesystem>
 
@@ -74,7 +71,7 @@ int check_file(string filename){
       valid = 1;
     }
     MPI_Bcast(&valid, 1, MPI_INT, 0, MPI_COMM_WORLD); // step is valid
-    return valid; 
+    return valid;
 }
 
 
@@ -547,8 +544,6 @@ int output_file_double(int rank, MPI_File &fh, MPI_Request &req , vector<double>
     int start_tmp = start_idx[i];
     int off_tmp = end_idx[i] - start_idx[i];
     MPI_Offset offset = pixnum_start[i]*sizeof(double);
-    //MPI_File_seek(fh,offset,MPI_SEEK_SET);
-    //MPI_File_iwrite(fh,&rho[start_tmp],off_tmp,MPI_DOUBLE, &req);
     MPI_File_iwrite_at_all(fh,offset,&rho[start_tmp],off_tmp,MPI_DOUBLE, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
     }
@@ -605,10 +600,10 @@ void write_files_hydro(string outfile, string stepnumber,vector<int64_t> start_i
   GIO.addVariable("vel", vel, GenericIO::VarHasExtraSpace);
   GIO.addVariable("ksz", ksz, GenericIO::VarHasExtraSpace);
   GIO.addVariable("tsz", tsz, GenericIO::VarHasExtraSpace);
-  GIO.addVariable("xray1", xray1, GenericIO::VarHasExtraSpace);
-  GIO.addVariable("xray2", xray2, GenericIO::VarHasExtraSpace);
-  GIO.addVariable("xray3", xray3, GenericIO::VarHasExtraSpace);
-  GIO.addVariable("xray4", xray4, GenericIO::VarHasExtraSpace);
+  GIO.addVariable("xray1", xray1, GenericIO::VarHasExtraSpace);//ROSAT
+  GIO.addVariable("xray2", xray2, GenericIO::VarHasExtraSpace);//ErositaLo
+  GIO.addVariable("xray3", xray3, GenericIO::VarHasExtraSpace);//ErositaHi
+  GIO.addVariable("xray4", xray4, GenericIO::VarHasExtraSpace);//Bolo
   GIO.addVariable("temp", temp, GenericIO::VarHasExtraSpace);
   GIO.addVariable("idx", data_idx, GenericIO::VarHasExtraSpace);
   GIO.write();
@@ -618,87 +613,6 @@ void write_files_hydro(string outfile, string stepnumber,vector<int64_t> start_i
   rho.resize(size_n); phi.resize(size_n); vel.resize(size_n); ksz.resize(size_n); tsz.resize(size_n); 
   xray1.resize(size_n); xray2.resize(size_n); xray3.resize(size_n); xray4.resize(size_n);
   temp.resize(size_n); data_idx.resize(size_n);
-
-/*
-  string output_name = outfile + stepnumber + "_dens.bin";
-  string output_name_phi = outfile + stepnumber + "_phi.bin";
-  string output_name_vel = outfile + stepnumber + "_vel.bin";
-  string output_name_ksz = outfile + stepnumber + "_ksz.bin";
-  string output_name_tsz = outfile + stepnumber + "_tsz.bin";
-  string output_name_x1 = outfile + stepnumber + "_xray_ROSAT.bin";
-  string output_name_x2 = outfile + stepnumber + "_xray_ErositaLo.bin";
-  string output_name_x3 = outfile + stepnumber + "_xray_ErositaHi.bin";
-  string output_name_x4 = outfile + stepnumber + "_xray_Bolo.bin";
-  string output_name_temp = outfile + stepnumber + "_temp.bin";
-
-
-  const char *name_out = output_name.c_str();
-  const char *name_out_phi = output_name_phi.c_str();
-  const char *name_out_vel = output_name_vel.c_str();
-  const char *name_out_ksz = output_name_ksz.c_str();
-  const char *name_out_tsz = output_name_tsz.c_str();
-  const char *name_out_x1 = output_name_x1.c_str();
-  const char *name_out_x2 = output_name_x2.c_str();
-  const char *name_out_x3 = output_name_x3.c_str();
-  const char *name_out_x4 = output_name_x4.c_str();
-  const char *name_out_temp = output_name_temp.c_str();
-
-
-  MPI_File fh, fh_phi, fh_vel, fh_ksz, fh_tsz, fh_x1, fh_x2, fh_x3, fh_x4, fh_temp;
-  MPI_Request req, req_phi, req_vel, req_ksz, req_tsz, req_x1, req_x2, req_x3, req_x4, req_temp;
-
-  MPI_File_open(MPI_COMM_WORLD, name_out, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &fh);
-  MPI_File_open(MPI_COMM_WORLD, name_out_phi, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &fh_phi);
-  MPI_File_open(MPI_COMM_WORLD, name_out_vel, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &fh_vel);
-  MPI_File_open(MPI_COMM_WORLD, name_out_ksz, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &fh_ksz);
-  MPI_File_open(MPI_COMM_WORLD, name_out_tsz, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &fh_tsz);
-  MPI_File_open(MPI_COMM_WORLD, name_out_x1, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &fh_x1);
-  MPI_File_open(MPI_COMM_WORLD, name_out_x2, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &fh_x2);
-  MPI_File_open(MPI_COMM_WORLD, name_out_x3, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &fh_x3);
-  MPI_File_open(MPI_COMM_WORLD, name_out_x4, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &fh_x4);
-  MPI_File_open(MPI_COMM_WORLD, name_out_temp, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &fh_temp);
-
-  MPI_Offset filesize = npix_hires*sizeof(float);
-  MPI_Offset filesize_double = npix_hires*sizeof(double);
-
-  MPI_File_set_size(fh, filesize_double);
-  MPI_File_set_size(fh_phi, filesize_double);
-  MPI_File_set_size(fh_vel, filesize_double);
-  MPI_File_set_size(fh_ksz, filesize_double);
-  MPI_File_set_size(fh_tsz, filesize_double);
-  MPI_File_set_size(fh_x1, filesize_double);
-  MPI_File_set_size(fh_x2, filesize_double);
-  MPI_File_set_size(fh_x3, filesize_double);
-  MPI_File_set_size(fh_x4, filesize_double);
-  MPI_File_set_size(fh_temp, filesize_double);
-
-
-  int status;
-  status = output_file_double(commRank, fh, req, rho, start_idx, end_idx,  pix_nums_start);
-  status = output_file_double(commRank, fh_phi, req_phi, phi, start_idx, end_idx, pix_nums_start);
-  status = output_file_double(commRank, fh_vel, req_vel, vel, start_idx, end_idx, pix_nums_start);
-  status = output_file_double(commRank, fh_ksz, req_ksz, ksz, start_idx, end_idx, pix_nums_start);
-  status = output_file_double(commRank, fh_tsz, req_tsz, tsz, start_idx, end_idx, pix_nums_start);
-  status = output_file_double(commRank, fh_x1, req_x1, xray1, start_idx, end_idx, pix_nums_start);
-  status = output_file_double(commRank, fh_x2, req_x2, xray2, start_idx, end_idx, pix_nums_start);
-  status = output_file_double(commRank, fh_x3, req_x3, xray3, start_idx, end_idx, pix_nums_start);
-  status = output_file_double(commRank, fh_x4, req_x4, xray4, start_idx, end_idx, pix_nums_start);
-  status = output_file_double(commRank, fh_temp, req_temp, temp, start_idx, end_idx, pix_nums_start);
-
-
-  MPI_File_close(&fh);
-  MPI_File_close(&fh_phi);
-  MPI_File_close(&fh_vel);
-  MPI_File_close(&fh_ksz);
-  MPI_File_close(&fh_tsz);
-  MPI_File_close(&fh_x1);
-  MPI_File_close(&fh_x2);
-  MPI_File_close(&fh_x3);
-  MPI_File_close(&fh_x4);
-  MPI_File_close(&fh_temp);
-
-  MPI_Barrier(MPI_COMM_WORLD);
-*/
   }
 
 
@@ -725,7 +639,6 @@ void write_files(string outfile, string stepnumber,vector<int64_t> start_idx, ve
   MPI_File_open(MPI_COMM_WORLD, name_out_phi, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &fh_phi);
   MPI_File_open(MPI_COMM_WORLD, name_out_vel, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &fh_vel);
 
-  // PL NOTE: make sure this is in the right place
   MPI_Offset filesize = npix_hires*sizeof(float);
   MPI_File_set_size(fh, filesize);
   MPI_File_set_size(fh_phi, filesize);
