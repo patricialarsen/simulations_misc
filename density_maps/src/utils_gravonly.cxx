@@ -323,6 +323,14 @@ void output_downsampled_particles(PLParticles* P, float downsampling_rate, strin
   for (int64_t i = 0; i<num_elems; i++){
   indices[i] = i;
   }
+
+  //NOTE: warning here that random_shuffle is deprecated because of default behaviour. 
+  // I think it should be fine but support is limited
+  random_device rd;
+  mt19937 g(rd());
+  shuffle(indices.begin(), indices.end(),g);
+  //random_shuffle(indices.begin(), indices.end(), drand48elmt);
+  
   vector<vector<float>> var_data_floats(N_FLOATS);
   vector<vector<int>> var_data_ints(N_INTS);
   vector<vector<int64_t>> var_data_int64s(N_INT64S);
