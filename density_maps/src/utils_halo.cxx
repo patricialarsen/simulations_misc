@@ -56,7 +56,7 @@ using namespace std;
 
 void read_halos(PLHalos* P, string file_name) {
 
-  GenericIO GIO(MPI_COMM_WORLD,file_name,GenericIO::FileIOMPI);
+  GenericIO GIO(MPI_COMM_WORLD,file_name);
   GIO.openAndReadHeader(GenericIO::MismatchRedistribute);
   size_t num_elems = GIO.readNumElems();
 
@@ -81,7 +81,7 @@ void read_halos(PLHalos* P, string file_name) {
 
 void read_particles(PLParticles* P, string file_name) {
 
-  GenericIO GIO(MPI_COMM_WORLD,file_name,GenericIO::FileIOMPI);
+  GenericIO GIO(MPI_COMM_WORLD,file_name);
   GIO.openAndReadHeader(GenericIO::MismatchRedistribute);
   size_t num_elems = GIO.readNumElems();
 
