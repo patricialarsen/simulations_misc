@@ -3,7 +3,7 @@
 #include <vector>
 using namespace std;
 
-void read_and_redistribute(string file_name, int numranks, PLParticles* P,  T_Healpix_Base<int> map_lores, T_Healpix_Base<int64_t> map_hires, int rank_diff, bool output_downsampled = false, float downsampling_rate = 1.0, string file_name_output = "");
+void read_and_redistribute(string file_name, string file_name_next, int numranks, PLParticles* P,  T_Healpix_Base<int> map_lores, T_Healpix_Base<int64_t> map_hires, int rank_diff, bool output_downsampled = false, float downsampling_rate = 1.0, string file_name_output = "");
 
 //void read_and_redistribute(string file_name, int numranks, PLParticles* P,  T_Healpix_Base<int> map_lores, T_Healpix_Base<int64_t> map_hires, int rank_diff);
 

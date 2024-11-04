@@ -195,8 +195,12 @@ int main(int argc, char *argv[]) {
 
 
   char step[10*sizeof(char)];
+  char step_next[10*sizeof(char)];
   char mpiioName[512];
+  char mpiioName_next[512];
+
   sprintf(step,"%d",start_step+jj);
+  sprintf(step_next,"%d",start_step+jj+1);
 
   if (folders){
   strcpy(mpiioName, mpiioName_base);
@@ -204,13 +208,27 @@ int main(int argc, char *argv[]) {
   strcat(mpiioName, step);
   strcat(mpiioName, "/");
   strcat(mpiioName, mpiioName_file);
-  strcat(mpiioName, step);	  
+  strcat(mpiioName, step);
+
+  strcpy(mpiioName_next, mpiioName_base);
+  strcat(mpiioName_next, "step_");
+  strcat(mpiioName_next, step_next);
+  strcat(mpiioName_next, "/");
+  strcat(mpiioName_next, mpiioName_file);
+  strcat(mpiioName_next, step_next);
+
   }
   else{
   strcpy(mpiioName, mpiioName_base);
   strcat(mpiioName, mpiioName_file);
   strcat(mpiioName, step);
+
+  strcpy(mpiioName_next, mpiioName_base);
+  strcat(mpiioName_next, mpiioName_file);
+  strcat(mpiioName_next, step_next);
+
   }
+
   
   for (int ii=0; ii<lores_pix.size(); ++ii){  
   clear_pixel(start_idx[ii], rank_diff,  rho, phi, vel);  
@@ -219,13 +237,12 @@ int main(int argc, char *argv[]) {
   if (output_downsampled == 'T'){
     string downsampled_path_step = modifyPath(outpath, "downsampled_particles", string(step));
     string downsampled_file = downsampled_path_step + "/" + step + "_downsampled.gio";
-    read_and_redistribute(mpiioName, commRanks, &P, map_lores, map_hires, rank_diff, true, downsampling_rate, downsampled_file);
+    read_and_redistribute(mpiioName, mpiioName_next, commRanks, &P, map_lores, map_hires, rank_diff, true, downsampling_rate, downsampled_file);
   }
   else{
-      read_and_redistribute(mpiioName, commRanks, &P, map_lores, map_hires, rank_diff);
+      read_and_redistribute(mpiioName, mpiioName_next, commRanks, &P, map_lores, map_hires, rank_diff);
   }
 
-  //read_and_redistribute(mpiioName, commRanks, &P, map_lores, map_hires, rank_diff);
 
   MPI_Barrier(MPI_COMM_WORLD);
   t4 = MPI_Wtime();
