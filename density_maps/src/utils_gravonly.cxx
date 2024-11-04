@@ -74,7 +74,7 @@ int check_file(string filename){
 
 void read_particles(PLParticles* P, string file_name, string file_name_next) {
 
-  GenericIO GIO(MPI_COMM_WORLD,file_name,GenericIO::FileIOMPI);
+  GenericIO GIO(MPI_COMM_WORLD, file_name);
   GIO.openAndReadHeader(GenericIO::MismatchRedistribute);
   size_t num_elems = GIO.readNumElems();
 
