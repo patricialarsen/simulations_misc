@@ -1,15 +1,14 @@
 #include <string>
 #include <vector>
 
-
 #define N_MAPS 3
 #define N_MAPS_HYDRO 10
 using namespace std;
 
 const string map_names_go[N_MAPS] = {
         "phi",
-        "vel",
-        "rho",
+	"vel",
+	"rho",
 };
 
 const string map_names_hydro[N_MAPS_HYDRO] = {
@@ -34,13 +33,15 @@ public:
   size_t npixels;
   bool is_allocated;
 
+  // vector of pixel indices
   vector<int64_t> pix_index;
+  // vector of vector pointers
   vector<vector<double>* > double_data;
 
   MapData():  npixels(0), is_allocated(false),\
        step_number(-1)
   {
-
+    // resizing the vector of pointers to the number of maps
     double_data.resize(N_MAPS);
   };
 

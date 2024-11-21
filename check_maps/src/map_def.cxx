@@ -7,9 +7,11 @@ using namespace std;
 void MapData::Resize(size_t n) {
   if (this->is_allocated) {
     this->npixels = n;
-    this->pix_index.resize(this->npixels);
+    this->pix_index.resize(n);
     for (int i=0; i<N_MAPS; ++i)
-      this->double_data[i]->resize(this->npixels);
+      // this->double_data gives you the vector of pointers 
+      // this->double_data[i] gives you a pointer
+      (*(this->double_data[i])).resize(n); // check this
   }
   else {
     cerr << "ERROR: Can't resize -- vectors are not allocated." << endl;
@@ -22,7 +24,7 @@ void MapDataHydro::Resize(size_t n) {
     this->npixels = n;
     this->pix_index.resize(n);
     for (int i=0; i<N_MAPS_HYDRO; ++i)
-      this->double_data[i]->resize(n);
+      (*(this->double_data[i])).resize(n); // check this
   }
   else {
     cerr << "ERROR: Can't resize -- vectors are not allocated." << endl;
@@ -69,7 +71,7 @@ void MapData::Allocate(size_t n) {
     this->pix_index.resize(n);
 
     for (int i=0; i<N_MAPS; ++i)
-      this->double_data[i] = new vector<double>(this->npixels);
+      this->double_data[i] = new vector<double>(n);
 
   }
   else {
@@ -86,7 +88,7 @@ void MapDataHydro::Allocate(size_t n) {
     this->pix_index.resize(n);
 
     for (int i=0; i<N_MAPS_HYDRO; ++i)
-      this->double_data[i] = new vector<double>(this->npixels);
+      this->double_data[i] = new vector<double>(n);
 
   }
   else {

@@ -34,14 +34,30 @@ int check_file(string filename){
     return valid;
 }
 
+size_t read_gio_header_padded(string file_name){
+  GenericIO GIO(MPI_COMM_WORLD,file_name);
+  GIO.openAndReadHeader(GenericIO::MismatchRedistribute);
+  size_t num_elems = GIO.readNumElems() + GIO.requestedExtraSpace()/sizeof(double);
+  return num_elems;
+}
+size_t read_gio_header(string file_name){
+  GenericIO GIO(MPI_COMM_WORLD,file_name);
+  GIO.openAndReadHeader(GenericIO::MismatchRedistribute);
+  size_t num_elems = GIO.readNumElems(); //+ GIO.requestedExtraSpace()/sizeof(double);
+  return num_elems;
+}
+
+
 void read_map_file_hydro(MapDataHydro* M, string file_name) {
   // reads in maps
   GenericIO GIO(MPI_COMM_WORLD,file_name);
   GIO.openAndReadHeader(GenericIO::MismatchRedistribute);
   size_t num_elems = GIO.readNumElems();
-  cout << "this is the number of elements on my rank " << num_elems << endl;
-  // parallel read
+
+  // parallel read - dereferencing pointer to allocate extra space 
   (*M).Resize(num_elems + GIO.requestedExtraSpace()/sizeof(double));
+
+  //(*M) = value , (*M).double_data[i] is a pointer to the data, *((*M).double_data[i]) should pass you the vector directly
   for (int i=0; i<N_MAPS_HYDRO; i++){
     GIO.addVariable((const string)map_names_hydro[i], *((*M).double_data[i]), true);
   }
@@ -56,7 +72,7 @@ void read_map_file_go(MapData* M, string file_name) {
   GIO.openAndReadHeader(GenericIO::MismatchRedistribute);
   size_t num_elems = GIO.readNumElems();
   // parallel read
-  (*M).Resize(num_elems + GIO.requestedExtraSpace());
+  (*M).Resize(num_elems + GIO.requestedExtraSpace()/sizeof(double));
   for (int i=0; i<N_MAPS; i++)
     GIO.addVariable((const string)map_names_go[i], *((*M).double_data[i]), true);
   GIO.addVariable("idx", (*M).pix_index,true);
@@ -82,18 +98,13 @@ void write_map_file(MapData *M, string file_name, string old_file_name){
           NewGIO.setPhysOrigin(PhysOrigin[d], d);
           NewGIO.setPhysScale(PhysScale[d], d);
   }
-  vector<vector<double>> var_data_doubles(N_MAPS);
+
+  (*M).Resize(num_elems + GIO.requestedExtraSpace()/sizeof(double));
   for (int i = 0; i < N_MAPS; ++i){
-      var_data_doubles[i].resize(size_rank + NewGIO.requestedExtraSpace()/sizeof(double));
-      for (int64_t j=0; j<size_rank; j++){
-          var_data_doubles[i][j] =  (*M->double_data[i])[j];
-      }
-      NewGIO.addVariable((const string)map_names_go[i], var_data_doubles[i], true); // no positional info
+      NewGIO.addVariable((const string)map_names_go[i], *((*M).double_data[i]), true); // no positional info
   }
-  (*M).pix_index.resize(size_rank + NewGIO.requestedExtraSpace()/sizeof(double));
   NewGIO.addVariable("idx", (*M).pix_index, true);
   NewGIO.write();
-  (*M).pix_index.resize(size_rank); // shouldn't be strictly necessary but for safety
   MPI_Barrier(MPI_COMM_WORLD);
 }
 
@@ -115,18 +126,13 @@ void write_map_file_hydro(MapDataHydro *M, string file_name, string old_file_nam
           NewGIO.setPhysOrigin(PhysOrigin[d], d);
           NewGIO.setPhysScale(PhysScale[d], d);
   }
-  vector<vector<double>> var_data_doubles(N_MAPS_HYDRO);
-  for (int i = 0; i < N_MAPS; ++i){
-      var_data_doubles[i].resize(size_rank + NewGIO.requestedExtraSpace()/sizeof(double));
-      for (int64_t j=0; j<size_rank; j++){
-          var_data_doubles[i][j] =  (*M->double_data[i])[j];
-      }
-      NewGIO.addVariable((const string)map_names_hydro[i], var_data_doubles[i], true); // no positional info
+
+  (*M).Resize(num_elems + GIO.requestedExtraSpace()/sizeof(double));
+  for (int i = 0; i < N_MAPS_HYDRO; ++i){
+      NewGIO.addVariable((const string)map_names_hydro[i], *((*M).double_data[i]), true); // no positional info
   }
-  (*M).pix_index.resize(size_rank + NewGIO.requestedExtraSpace()/sizeof(double));
   NewGIO.addVariable("idx", (*M).pix_index, true);
   NewGIO.write();
-  (*M).pix_index.resize(size_rank); // shouldn't be strictly necessary but for safety
   MPI_Barrier(MPI_COMM_WORLD);
 }
 
@@ -139,18 +145,20 @@ int main( int argc, char** argv ) {
   MPI_Comm_rank(MPI_COMM_WORLD, &commRank);
   MPI_Comm_size(MPI_COMM_WORLD, &commRanks);
 
-  if(argc != 8) {
+  if(argc != 9) {
      if (commRank==0){
-     fprintf(stderr,"USAGE: %s <inputpath> <inputfile> <folders> <hydro> <nside> <step_start> <step_end> \n", argv[0]);
+     fprintf(stderr,"USAGE: %s <inputpath> <inputfile> <folders> <hydro> <nside> <step_start> <step_end> <outfile> \n", argv[0]);
      }
      exit(-1);
   }
 
-  //TODO: add output file path for summed data 
   char filepath[512];
   char filename[512];
-  strcpy(filepath,argv[1]);
-  strcpy(filename,argv[2]);
+  char outfile[512];
+  strcpy(filepath, argv[1]);
+  strcpy(filename, argv[2]);
+  strcpy(outfile, argv[8]);
+
   const char *mpiioName_base = filepath;
   const char *mpiioName_file = filename;
 
@@ -164,6 +172,7 @@ int main( int argc, char** argv ) {
   int64_t nside_long = (int64_t)nside;
   int64_t expected_size = nside_long * nside_long * 12;
 
+  string start_file;
   //CHECK 1:  start with a check that all the steps ran and gave an output
   for (int jj=step_start;jj<step_end+1;jj++){
     MPI_Barrier(MPI_COMM_WORLD);
@@ -195,6 +204,9 @@ int main( int argc, char** argv ) {
       exit(-1);
     }
     assert(check_file(mpiioName)); // assert that the check worked
+    if (jj==step_start){
+      start_file = mpiioName;
+    }
   } // close step loop
 
   if (commRank==0){
@@ -204,24 +216,31 @@ int main( int argc, char** argv ) {
   // allocating vectors so these stay in scope for now
   MapDataHydro M, M_sum;
   MapData MG, MG_sum;
+  int64_t nelems_padded = read_gio_header_padded(start_file);
+  int64_t nelems = read_gio_header(start_file);
 
-  M.Allocate();
-  MG.Allocate();
-  M_sum.Allocate();
-  MG_sum.Allocate();
-
+  if (hydro){
+	  M.Allocate(nelems_padded);
+	  M_sum.Allocate(nelems); // allocating extra space for GIO read, will resize back down after read
+  }
+  else{
+	  MG.Allocate(nelems_padded);
+	  MG_sum.Allocate(nelems);
+  }
+  
   ofstream outfile_min, outfile_max, outfile_std, outfile_mean, outfile_count0, outfile_countbad;
   if (commRank==0){
-  outfile_min.open("logfile_min.txt"); // update to an input name
-  outfile_max.open("logfile_max.txt");
-  outfile_std.open("logfile_std.txt"); 
-  outfile_mean.open("logfile_mean.txt"); 
-  outfile_count0.open("logfile_count0.txt"); 
-  outfile_countbad.open("logfile_countbad.txt"); 
+  outfile_min.open("logs/logfile_min.txt");
+  outfile_max.open("logs/logfile_max.txt");
+  outfile_std.open("logs/logfile_std.txt"); 
+  outfile_mean.open("logs/logfile_mean.txt"); 
+  outfile_count0.open("logs/logfile_count0.txt"); 
+  outfile_countbad.open("logs/logfile_countbad.txt"); 
   }
 
+  
 
-  // assert that the pixel indices are the same for each step. Initialize that at the first step then add a check for every subsequent step
+  //TODO: assert that the pixel indices are the same for each step. Initialize that at the first step then add a check for every subsequent step
  
   // CHECKS 2-5 require a map read, confirming number of pixels, outputting mean, stddev, min, max, nzeros, nbad, creating summed map
   for (int jj=step_start;jj<step_end+1;jj++){
@@ -253,16 +272,24 @@ int main( int argc, char** argv ) {
       int64_t size_global;
       int64_t size_rank = M.npixels;
       MPI_Reduce(&size_rank,&size_global,1,MPI_INT64_T,MPI_SUM,0,MPI_COMM_WORLD);
+      MPI_Bcast(&size_global,1,MPI_INT64_T, 0, MPI_COMM_WORLD);
+
       if (size_global!=expected_size){
         if (commRank==0){
           fprintf(stderr,"For step %s, total pixel count is %ld and expected count is %ld  \n", step, size_global, expected_size); // not sure if I need a long here
         }
+        M.Deallocate();
+        M_sum.Deallocate();
+        MPI_Finalize();
         exit(-1);
       }
       assert(size_global==expected_size);
 
       if (jj==step_start){
-      M_sum.Clear(size_rank);
+        M_sum.Clear(size_rank);
+        for (size_t kk=0;kk<M_sum.npixels;kk++){
+          M_sum.pix_index.at(kk) = M.pix_index.at(kk);
+        }
       }
 
       for (int ii=0;ii<N_MAPS_HYDRO;ii++){
@@ -278,6 +305,8 @@ int main( int argc, char** argv ) {
         int64_t count_bad = 0;
         int64_t count_zero_global;
         int64_t count_bad_global;
+	int64_t bad_pixels=0;
+	int64_t bad_pixels_global;
 
         for (int64_t pp=0;pp<M.npixels;pp++){
 	  double val = M.double_data[ii]->at(pp);
@@ -291,7 +320,22 @@ int main( int argc, char** argv ) {
             count_bad++;
 	  }
 	  M_sum.double_data[ii]->at(pp) += M.double_data[ii]->at(pp);
+          if (M_sum.pix_index.at(pp)!=M.pix_index.at(pp)){
+              bad_pixels +=1;
+          }
         }
+        MPI_Reduce(&bad_pixels,&bad_pixels_global,1,MPI_INT64_T,MPI_SUM,0,MPI_COMM_WORLD);
+        MPI_Bcast(&bad_pixels_global,1,MPI_INT64_T, 0, MPI_COMM_WORLD);
+        if (bad_pixels_global>0){
+          if (commRank==0){
+            fprintf(stderr,"For step %s, pixel mismatch relative to starting step for %ld pixels  \n", step, bad_pixels_global); // not sure if I need a long here
+          }
+          M.Deallocate();
+          M_sum.Deallocate();
+          MPI_Finalize();
+          exit(-1);
+        }
+
 
         MPI_Reduce(&max_val,&max_val_global,1,MPI_DOUBLE,MPI_MAX,0,MPI_COMM_WORLD);
         MPI_Reduce(&sum_val,&sum_val_global,1,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
@@ -339,19 +383,32 @@ int main( int argc, char** argv ) {
       // check on number of pixels in the file 
       read_map_file_go(&MG, mpiioName);
       int64_t size_global;
-      int64_t size_rank = M.npixels;
+      int64_t size_rank = MG.npixels;
       MPI_Reduce(&size_rank,&size_global,1,MPI_INT64_T,MPI_SUM,0,MPI_COMM_WORLD);
+      MPI_Bcast(&size_global,1,MPI_INT64_T, 0, MPI_COMM_WORLD);
       if (size_global!=expected_size){
         if (commRank==0){
           fprintf(stderr,"For step %s, total pixel count is %ld and expected count is %ld  \n", step, size_global, expected_size); // not sure if I need a long here
         }
+	MG.Deallocate();
+        MG_sum.Deallocate();
+        MPI_Finalize();
         exit(-1);
       }
       assert(size_global==expected_size);
+      MPI_Barrier(MPI_COMM_WORLD);
+
+       if (commRank==0){
+          fprintf(stdout,"For step %s, total pixel count is correct: %ld and expected count is %ld  \n", step, size_global, expected_size); // not sure if I need a long here
+        }
+
 
       // initialize M_sum to 0s here 
       if (jj==step_start){
         MG_sum.Clear(size_rank);
+        for (size_t kk=0;kk<MG_sum.npixels;kk++){
+          MG_sum.pix_index.at(kk) = MG.pix_index.at(kk);
+        }
       }
 
       for (int ii=0;ii<N_MAPS;ii++){
@@ -367,9 +424,11 @@ int main( int argc, char** argv ) {
         int64_t count_bad = 0;
         int64_t count_zero_global;
         int64_t count_bad_global;
+	int64_t bad_pixels = 0;
+	int64_t bad_pixels_global;
 
-        for (int64_t pp=0;pp<M.npixels;pp++){
-          double val = M.double_data[ii]->at(pp);
+        for (int64_t pp=0;pp<MG.npixels;pp++){
+          double val = MG.double_data[ii]->at(pp);
           min_val = (val<min_val)?val:min_val;
           max_val = (val>max_val)?val:max_val;
           sum_val += val;
@@ -379,8 +438,24 @@ int main( int argc, char** argv ) {
           if (isnan(val) or isinf(val)){
             count_bad++;
           }
-          MG_sum.double_data[ii]->at(pp) += M.double_data[ii]->at(pp);
+          MG_sum.double_data[ii]->at(pp) += MG.double_data[ii]->at(pp);
+          if (MG_sum.pix_index.at(pp)!=MG.pix_index.at(pp)){
+              bad_pixels +=1;
+	  }
         }
+        MPI_Reduce(&bad_pixels,&bad_pixels_global,1,MPI_INT64_T,MPI_SUM,0,MPI_COMM_WORLD);
+        MPI_Bcast(&bad_pixels_global,1,MPI_INT64_T, 0, MPI_COMM_WORLD);
+        if (bad_pixels_global>0){
+          if (commRank==0){
+            fprintf(stderr,"For step %s, pixel mismatch relative to starting step for %ld pixels  \n", step, bad_pixels_global); // not sure if I need a long here
+          }
+          MG.Deallocate();
+          MG_sum.Deallocate();
+          MPI_Finalize();
+          exit(-1);
+        }
+
+
 
         MPI_Reduce(&max_val,&max_val_global,1,MPI_DOUBLE,MPI_MAX,0,MPI_COMM_WORLD);
         MPI_Reduce(&sum_val,&sum_val_global,1,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
@@ -395,8 +470,8 @@ int main( int argc, char** argv ) {
 
         // compute std dev 
         sum_val = 0.0;
-        for (int64_t pp=0;pp<M.npixels;pp++){
-          double val = M.double_data[ii]->at(pp);
+        for (int64_t pp=0;pp<MG.npixels;pp++){
+          double val = MG.double_data[ii]->at(pp);
           sum_val += (val-mean_val_global)*(val-mean_val_global);
         }
         MPI_Reduce(&sum_val,&std_val_global,1,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
@@ -437,12 +512,23 @@ int main( int argc, char** argv ) {
     outfile_countbad.close();
   }
   // write sum to a file 
-
+  if (hydro){
+    write_map_file_hydro(&M_sum, outfile, start_file);
+  }
+  else{
+    write_map_file(&MG_sum, outfile, start_file);
+  }
+  
   MPI_Barrier(MPI_COMM_WORLD);
+  if (hydro){
   M.Deallocate();
-  MG.Deallocate();
   M_sum.Deallocate();
+  }
+  else{
+  MG.Deallocate();
   MG_sum.Deallocate();
+  }
+  
   MPI_Finalize();
   return 0;
 }
